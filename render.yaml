@@ -1,0 +1,43 @@
+# Render Blueprint — يُعدّ كل الخدمات بنقرة واحدة
+# اقرأ: https://render.com/docs/blueprint-spec
+#
+# الاستخدام:
+# 1) سجّل في https://render.com بـ GitHub
+# 2) New → Blueprint → اختر مستودع Z-delevery
+# 3) Render يقرأ هذا الملفّ ويُنشئ الخدمات تلقائياً
+# 4) أكمل بإضافة قيم secrets المُعلّمة sync: false
+
+services:
+  - type: web
+    name: zdelivry-api
+    runtime: docker
+    plan: free
+    region: frankfurt   # الأقرب للجزائر
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: zdelivry-db
+          property: connectionString
+      - key: REDIS_URL
+        value: memory://       # بدون Redis في النشر المجاني — نستخدم تخزيناً داخل الذاكرة
+      - key: DEBUG
+        value: "false"
+      - key: OTP_DEV_MODE
+        value: "true"          # ابقِها true حتى تربط مزوّد SMS
+      - key: ALLOW_ORIGINS
+        value: "*"             # ضيّقها بعد deploy الويب
+      - key: SECRET_KEY
+        generateValue: true    # Render يولّد قيمة قوية تلقائياً
+      - key: ADMIN_PHONES
+        sync: false            # تُكتَب يدوياً في لوحة Render (لتجنّب وضعها في git)
+
+databases:
+  - name: zdelivry-db
+    plan: free
+    databaseName: zdelivry
+    user: zdelivry
+    postgresMajorVersion: 16
+    # تنبيه: قاعدة البيانات المجانية تنتهي صلاحيتها بعد 90 يوماً — تحتاج إعادة إنشاء

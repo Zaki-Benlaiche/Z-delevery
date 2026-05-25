@@ -20,7 +20,7 @@ def fake_redis(monkeypatch):
     from app.services import otp as otp_mod
 
     fake = fakeredis.aioredis.FakeRedis(decode_responses=True)
-    monkeypatch.setattr(otp_mod, "_redis", fake)
+    monkeypatch.setattr(otp_mod, "_store", fake)
     return fake
 
 
