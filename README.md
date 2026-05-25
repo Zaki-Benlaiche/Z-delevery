@@ -15,13 +15,19 @@ Z-delivry/
 │       ├── schemas/        # مخططات Pydantic
 │       ├── services/       # OTP، تسعير الطلبات، إدارة WebSocket
 │       └── api/routers/    # auth / merchants / addresses / orders / drivers / tracking
-├── mobile/                 # تطبيق الزبون — React Native + Expo (SDK 56) + TypeScript
+├── mobile/                 # تطبيق الزبون + السائق — Expo SDK 56 + TypeScript
 │   └── src/
 │       ├── api/            # عميل HTTP لكل المسارات
 │       ├── auth/           # تخزين توكن آمن + سياق الجلسة
 │       ├── screens/        # تسجيل، OTP، الرئيسية، المتجر، السلّة، العناوين، الطلبات، التتبّع
+│       ├── screens/driver/ # السائق: تسجيل، الواجهة الرئيسية، تفاصيل الطلب
 │       ├── store/cart.ts   # سلّة zustand
-│       └── hooks/          # موقع المستخدم + WebSocket التتبّع اللحظي
+│       └── hooks/          # موقع المستخدم + WebSocket + بثّ موقع السائق
+├── web/                    # لوحة التاجر — Vite + React 19 + TypeScript
+│   └── src/
+│       ├── api/            # عميل HTTP (مشترك المنطق مع mobile)
+│       ├── auth/           # تخزين localStorage + سياق
+│       └── pages/          # Login، Setup، Orders، Products، Settings
 └── docker-compose.yml      # قاعدة البيانات + Redis
 ```
 
@@ -53,14 +59,24 @@ uvicorn app.main:app --reload
 
 > **بيانات تجريبية:** بعد أوّل إقلاع للخادم (لإنشاء الجداول)، شغّل `python seed.py` من داخل `backend/` لإضافة 4 متاجر + 16 منتجاً في الجزائر العاصمة.
 
-### 3) تطبيق الزبون
+### 3) تطبيق الزبون والسائق (Mobile)
 ```powershell
 cd mobile
 npm install
 npx expo start
 ```
 ثم امسح QR من تطبيق **Expo Go** على هاتفك (على نفس Wi-Fi).
+> اختيار الدور يحدث عند أوّل تسجيل من شاشة OTP (زبون/سائق) — تطبيق واحد، تجربتان حسب الدور.
 > الجهاز الحقيقي يحتاج تعديل `EXPO_PUBLIC_API_URL` ليشير إلى IP حاسوبك على الشبكة بدلاً من `10.0.2.2` (الذي يصلح فقط لمحاكي Android).
+
+### 4) لوحة التاجر (Web)
+```powershell
+cd web
+npm install
+npm run dev
+```
+افتح http://localhost:5173 — سجّل بدور `merchant`، أنشئ متجرك من شاشة Setup، ثم استقبل الطلبات في صفحة "الطلبات" (تحديث تلقائي كل 5 ثوانٍ).
+> يمكن تجاوز عنوان الـ Backend عبر `VITE_API_URL` في `.env.local`.
 
 ## خريطة الـ API
 
@@ -68,7 +84,7 @@ npx expo start
 |---|---|
 | `POST /api/auth/send-otp` · `POST /api/auth/verify-otp` | مصادقة OTP وإصدار JWT |
 | `GET /api/merchants` (مع `lat`/`lng`/`q`/`type`/`open_only`) | قائمة التجّار مرتّبة بالأقرب |
-| `GET /api/merchants/{id}` · `POST/PATCH /api/merchants` | تفاصيل وإنشاء/تعديل (للتاجر) |
+| `GET /api/merchants/{id}` · `POST/PATCH /api/merchants` · `GET /api/merchants/me` | تفاصيل وإنشاء/تعديل + متجري (للتاجر) |
 | `POST/PATCH/DELETE /api/merchants/{id}/products/...` | إدارة منتجات المتجر |
 | `GET/POST/DELETE /api/addresses` | عناوين الزبون |
 | `POST /api/orders` · `GET /api/orders` · `GET /api/orders/{id}` | إنشاء طلب واستعراضه (مرشّح حسب الدور تلقائياً) |
@@ -98,6 +114,6 @@ POST /api/auth/verify-otp   { "phone": "0555123456", "code": "1234", "name": "ز
 ## خارطة الطريق
 
 - [x] **المرحلة 0:** تأسيس البنية + المصادقة بالـ OTP
-- [x] **المرحلة 1:** المطاعم/المنتجات + الطلبات + التتبّع اللحظي + تطبيق الزبون (MVP)
-- [ ] **المرحلة 2:** تطبيق التاجر/السائق + التقييمات + الكوبونات + التقارير + مدينة ثانية
+- [x] **المرحلة 1:** المطاعم/المنتجات + الطلبات + التتبّع اللحظي + تطبيق الزبون + تطبيق السائق + لوحة التاجر (MVP كامل)
+- [ ] **المرحلة 2:** التقييمات + الكوبونات + التقارير + توثيق السائقين + مدينة ثانية
 - [ ] **المرحلة 3:** الدفع الإلكتروني + التوسّع

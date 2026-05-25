@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import require_role
+from app.api.deps import get_current_user, require_role
 from app.core.database import get_db
 from app.core.geo import haversine_km, make_point, read_point
 from app.models.enums import MerchantType, UserRole
@@ -92,6 +92,28 @@ async def list_merchants(
     if lat is not None and lng is not None:
         out.sort(key=lambda x: (x.distance_km is None, x.distance_km or 0))
     return out
+
+
+@router.get("/me", response_model=MerchantDetail)
+async def my_merchant(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """متجر المستخدم الحالي (للتاجر) — يُسهّل على الواجهات معرفة 'متجري'."""
+    stmt = (
+        select(Merchant)
+        .where(Merchant.user_id == user.id)
+        .options(selectinload(Merchant.products))
+    )
+    merchant = (await db.execute(stmt)).scalar_one_or_none()
+    if merchant is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "لا يوجد متجر مرتبط بحسابك")
+
+    base = _merchant_out(merchant)
+    return MerchantDetail(
+        **base.model_dump(),
+        products=[_product_out(p) for p in merchant.products],
+    )
 
 
 @router.get("/{merchant_id}", response_model=MerchantDetail)
