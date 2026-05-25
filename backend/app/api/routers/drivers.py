@@ -1,0 +1,212 @@
+"""نقاط نهاية السائقين — التسجيل، الحالة، الموقع اللحظي، واستلام الطلبات"""
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.api.deps import require_role
+from app.core.database import get_db
+from app.core.geo import haversine_km, make_point, read_point
+from app.models.driver import Driver
+from app.models.enums import OrderStatus, UserRole
+from app.models.merchant import Merchant
+from app.models.order import Order, OrderTracking
+from app.models.user import User
+from app.schemas.common import LocationOut
+from app.schemas.driver import DriverLocationUpdate, DriverOut, DriverRegister
+from app.schemas.order import OrderItemOut, OrderOut
+from app.services.realtime import manager
+
+router = APIRouter(prefix="/drivers", tags=["السائقون"])
+
+# الحالات التي يكون فيها للسائق طلب نشِط يستحقّ بثّ موقعه
+_ACTIVE_STATUSES = {OrderStatus.PICKED_UP, OrderStatus.ON_THE_WAY}
+
+
+def _driver_out(d: Driver) -> DriverOut:
+    coords = read_point(d.current_location)
+    return DriverOut(
+        id=d.id,
+        user_id=d.user_id,
+        vehicle_type=d.vehicle_type,
+        license_url=d.license_url,
+        is_verified=d.is_verified,
+        is_online=d.is_online,
+        rating=float(d.rating),
+        current_location=LocationOut(lat=coords[0], lng=coords[1]) if coords else None,
+    )
+
+
+def _order_out(o: Order) -> OrderOut:
+    coords = read_point(o.delivery_location)
+    return OrderOut(
+        id=o.id,
+        customer_id=o.customer_id,
+        merchant_id=o.merchant_id,
+        driver_id=o.driver_id,
+        status=o.status,
+        subtotal=float(o.subtotal),
+        delivery_fee=float(o.delivery_fee),
+        commission=float(o.commission),
+        total=float(o.total),
+        payment_method=o.payment_method,
+        payment_status=o.payment_status,
+        delivery_location=LocationOut(lat=coords[0], lng=coords[1]) if coords else None,
+        delivery_details=o.delivery_details,
+        items=[OrderItemOut.model_validate(i) for i in o.items],
+        created_at=o.created_at,
+    )
+
+
+async def _my_driver(user: User, db: AsyncSession) -> Driver:
+    driver = (
+        await db.execute(select(Driver).where(Driver.user_id == user.id))
+    ).scalar_one_or_none()
+    if driver is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "لا يوجد ملف سائق — سجّل أولاً")
+    return driver
+
+
+@router.post("/register", response_model=DriverOut, status_code=status.HTTP_201_CREATED)
+async def register_driver(
+    payload: DriverRegister,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(UserRole.DRIVER, UserRole.ADMIN)),
+):
+    existing = (
+        await db.execute(select(Driver).where(Driver.user_id == user.id))
+    ).scalar_one_or_none()
+    if existing is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "لديك ملف سائق بالفعل")
+    driver = Driver(
+        user_id=user.id,
+        vehicle_type=payload.vehicle_type,
+        license_url=payload.license_url,
+    )
+    db.add(driver)
+    await db.flush()
+    await db.refresh(driver)
+    return _driver_out(driver)
+
+
+@router.get("/me", response_model=DriverOut)
+async def my_driver_profile(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(UserRole.DRIVER, UserRole.ADMIN)),
+):
+    return _driver_out(await _my_driver(user, db))
+
+
+@router.post("/online", response_model=DriverOut)
+async def set_online(
+    is_online: bool = Query(...),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(UserRole.DRIVER, UserRole.ADMIN)),
+):
+    driver = await _my_driver(user, db)
+    driver.is_online = is_online
+    await db.flush()
+    await db.refresh(driver)
+    return _driver_out(driver)
+
+
+@router.post("/location", response_model=DriverOut)
+async def update_location(
+    payload: DriverLocationUpdate,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(UserRole.DRIVER, UserRole.ADMIN)),
+):
+    """تحديث موقع السائق وبثّه للزبائن المتتبّعين لطلباته النشِطة."""
+    driver = await _my_driver(user, db)
+    driver.current_location = make_point(payload.lat, payload.lng)
+    await db.flush()
+
+    active_orders = (
+        await db.execute(
+            select(Order.id).where(
+                Order.driver_id == driver.id, Order.status.in_(_ACTIVE_STATUSES)
+            )
+        )
+    ).scalars().all()
+    for order_id in active_orders:
+        await manager.broadcast(
+            str(order_id),
+            {
+                "type": "driver_location",
+                "order_id": str(order_id),
+                "lat": payload.lat,
+                "lng": payload.lng,
+            },
+        )
+
+    await db.refresh(driver)
+    return _driver_out(driver)
+
+
+@router.get("/available-orders", response_model=list[OrderOut])
+async def available_orders(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(UserRole.DRIVER, UserRole.ADMIN)),
+    lat: float | None = Query(default=None, ge=-90, le=90),
+    lng: float | None = Query(default=None, ge=-180, le=180),
+):
+    """الطلبات الجاهزة/قيد التحضير التي لم يُكلَّف بها سائق بعد، مرتّبة بالأقرب."""
+    stmt = (
+        select(Order)
+        .where(
+            Order.driver_id.is_(None),
+            Order.status.in_([OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.READY]),
+        )
+        .options(selectinload(Order.items))
+    )
+    orders = (await db.execute(stmt)).scalars().all()
+
+    if lat is None or lng is None:
+        return [_order_out(o) for o in orders]
+
+    # الفرز بالقرب من موقع المتجر (نقطة الاستلام)
+    merchant_locs = {
+        m_id: read_point(loc)
+        for m_id, loc in (
+            await db.execute(
+                select(Merchant.id, Merchant.location).where(
+                    Merchant.id.in_({o.merchant_id for o in orders})
+                )
+            )
+        ).all()
+    }
+
+    def _dist(o: Order) -> float:
+        c = merchant_locs.get(o.merchant_id)
+        return haversine_km(lat, lng, c[0], c[1]) if c else float("inf")
+
+    return [_order_out(o) for o in sorted(orders, key=_dist)]
+
+
+@router.post("/orders/{order_id}/claim", response_model=OrderOut)
+async def claim_order(
+    order_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(UserRole.DRIVER, UserRole.ADMIN)),
+):
+    """يتكفّل السائق بطلب غير مُسنَد بعد."""
+    driver = await _my_driver(user, db)
+    stmt = select(Order).where(Order.id == order_id).options(selectinload(Order.items))
+    order = (await db.execute(stmt)).scalar_one_or_none()
+    if order is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "الطلب غير موجود")
+    if order.driver_id is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "الطلب مُسنَد لسائق آخر")
+    if order.status not in (OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.READY):
+        raise HTTPException(status.HTTP_409_CONFLICT, "الطلب غير متاح للاستلام")
+
+    order.driver_id = driver.id
+    db.add(OrderTracking(order_id=order.id, status=order.status, location=driver.current_location))
+    await manager.broadcast(
+        str(order.id),
+        {"type": "driver_assigned", "order_id": str(order.id), "driver_id": str(driver.id)},
+    )
+    await db.flush()
+    return _order_out(order)

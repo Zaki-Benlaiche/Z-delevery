@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>Z-delivry — وثيقة المشروع الكاملة</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", "Tahoma", "Arial", sans-serif;
+    direction: rtl; text-align: right; color: #1f2933;
+    line-height: 1.9; font-size: 12.5px; margin: 0; padding: 0;
+  }
+  h1, h2, h3, h4 { color: #0b6e4f; line-height: 1.5; margin-top: 1.4em; }
+  h1 { font-size: 30px; }
+  h2 { font-size: 22px; border-bottom: 3px solid #0b6e4f; padding-bottom: 6px; page-break-before: always; }
+  h2.first { page-break-before: avoid; }
+  h3 { font-size: 17px; color: #0a8754; }
+  h4 { font-size: 14.5px; color: #11696b; }
+  a { color: #0b6e4f; }
+  code { background: #eef6f2; padding: 2px 5px; border-radius: 4px; font-family: Consolas, monospace; direction: ltr; display: inline-block; font-size: 12px; }
+  pre { background: #0f2e25; color: #d6f5e8; padding: 14px 16px; border-radius: 8px; direction: ltr; text-align: left; overflow-x: auto; font-family: Consolas, monospace; font-size: 11.5px; line-height: 1.55; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 12px; }
+  th, td { border: 1px solid #cfe3da; padding: 8px 10px; text-align: right; vertical-align: top; }
+  th { background: #0b6e4f; color: #fff; font-weight: 600; }
+  tr:nth-child(even) td { background: #f3faf7; }
+  blockquote { background: #fff8e6; border-right: 5px solid #f0a500; margin: 14px 0; padding: 10px 16px; border-radius: 6px; }
+  .tag { display:inline-block; background:#0a8754; color:#fff; border-radius: 20px; padding: 2px 12px; font-size: 11px; margin: 2px; }
+  .cover { text-align: center; padding-top: 120px; page-break-after: always; }
+  .cover h1 { font-size: 56px; color: #0b6e4f; margin-bottom: 0; letter-spacing: 2px; }
+  .cover .sub { font-size: 22px; color: #11696b; margin-top: 10px; }
+  .cover .meta { margin-top: 80px; font-size: 14px; color: #52606d; }
+  .badge-row { margin-top: 30px; }
+  ul, ol { padding-right: 22px; }
+  li { margin: 4px 0; }
+  .phase { background:#f3faf7; border:1px solid #cfe3da; border-radius:10px; padding: 4px 18px; margin: 14px 0; }
+  .kpi { display:inline-block; background:#eef6f2; border-radius:8px; padding:8px 14px; margin:5px; font-weight:600; color:#0b6e4f; }
+  .toc a { text-decoration: none; }
+  .warn { background:#fdecea; border-right:5px solid #e74c3c; padding:10px 16px; border-radius:6px; margin:12px 0; }
+  hr { border:none; border-top:1px dashed #cfe3da; margin: 24px 0; }
+</style>
+</head>
+<body>
+
+<!-- ========== COVER ========== -->
+<div class="cover">
+  <h1>Z-DELIVRY</h1>
+  <div class="sub">منصّة توصيل الطرود والطلبات — للمطاعم ومحلات الملابس</div>
+  <div class="badge-row">
+    <span class="tag">Mobile</span>
+    <span class="tag">Web</span>
+    <span class="tag">تتبّع لحظي</span>
+    <span class="tag">السوق الجزائري</span>
+  </div>
+  <div class="meta">
+    وثيقة المشروع الفنية والتجارية الكاملة<br>
+    الإصدار 1.0 — ماي 2026<br>
+    إعداد: زكريا بن العايش
+  </div>
+</div>
+
+<!-- ========== TOC ========== -->
+<h2 class="first">📑 جدول المحتويات</h2>
+<ol class="toc">
+  <li>الملخّص التنفيذي</li>
+  <li>رؤية المنتج والمشكلة التي يحلّها</li>
+  <li>المستخدمون والأدوار (Personas)</li>
+  <li>نطاق العمل: ما الذي نبنيه؟ (التطبيقات الأربعة)</li>
+  <li>المميزات التفصيلية لكل تطبيق</li>
+  <li>رحلات المستخدم (User Journeys)</li>
+  <li>المعمارية التقنية (Tech Architecture)</li>
+  <li>تصميم قاعدة البيانات</li>
+  <li>أهم واجهات الـ API</li>
+  <li>التتبّع اللحظي والإشعارات</li>
+  <li>الأمان وحماية البيانات</li>
+  <li>اعتبارات خاصة بالسوق الجزائري</li>
+  <li>نموذج العمل والربح</li>
+  <li>خطة التنفيذ بالمراحل (Roadmap)</li>
+  <li>التكاليف التقديرية</li>
+  <li>مؤشرات الأداء (KPIs)</li>
+  <li>المخاطر وكيفية تفاديها</li>
+  <li>استراتيجية الإطلاق والتوسّع</li>
+  <li>الخلاصة والخطوة التالية</li>
+</ol>
+
+<!-- 1 -->
+<h2>1. الملخّص التنفيذي</h2>
+<p><strong>Z-delivry</strong> منصّة توصيل جزائرية تربط بين ثلاثة أطراف: <strong>الزبون</strong> الذي يطلب، و<strong>التاجر</strong> (مطعم أو محل ملابس) الذي يجهّز الطلب، و<strong>السائق</strong> الذي يوصّله. تعمل المنصّة على الهاتف (Android/iOS) وعلى الويب، مع لوحة إدارة مركزية.</p>
+<p>الاستراتيجية: الانطلاق في <strong>مدينة أو مدينتين</strong> لضبط العمليات والجودة، ثم التوسّع تدريجياً إلى باقي الولايات. النموذج الأوّلي (MVP) يركّز على الدفع <strong>نقداً عند الاستلام</strong> والتتبّع المباشر على الخريطة.</p>
+<table>
+  <tr><th>العنصر</th><th>القرار</th></tr>
+  <tr><td>السوق المستهدف</td><td>مدينة/مدينتان في البداية (مثلاً: المدينة الأم + مدينة مجاورة)</td></tr>
+  <tr><td>القطاعات</td><td>المطاعم + محلات الملابس (قابل للتوسّع لاحقاً)</td></tr>
+  <tr><td>المنصّات</td><td>تطبيق محمول (React Native) + ويب (Next.js)</td></tr>
+  <tr><td>الدفع</td><td>نقداً عند الاستلام أولاً، ثم البطاقات المحلية (CIB/Edahabia)</td></tr>
+  <tr><td>نموذج الربح</td><td>عمولة على كل طلب + رسوم التوصيل + اشتراكات/إعلانات للتجار</td></tr>
+</table>
+
+<!-- 2 -->
+<h2>2. رؤية المنتج والمشكلة التي يحلّها</h2>
+<h3>المشكلة</h3>
+<ul>
+  <li>المطاعم والمحلات الصغيرة لا تملك نظام توصيل منظّم وتعتمد على اتصالات هاتفية فوضوية.</li>
+  <li>الزبون لا يعرف أين وصل طلبه ولا متى سيصل.</li>
+  <li>السائقون يعملون بشكل غير منظّم بلا توزيع عادل للطلبات.</li>
+  <li>أصحاب المحلات لا يملكون بيانات عن مبيعاتهم وزبائنهم.</li>
+</ul>
+<h3>الحل: Z-delivry</h3>
+<p>منصّة واحدة تنظّم العملية كاملةً: طلب رقمي واضح → إشعار فوري للتاجر → تعيين أقرب سائق → تتبّع لحظي → تأكيد تسليم → تقييم. مع لوحة بيانات لكل طرف.</p>
+<h3>الميزة التنافسية</h3>
+<ul>
+  <li>تطبيق <strong>خفيف وسريع</strong> يعمل حتى مع إنترنت ضعيف (تحسين خاص للشبكات الجزائرية).</li>
+  <li>دعم كامل للّغة العربية (RTL) والفرنسية.</li>
+  <li>تحديد الموقع على الخريطة بدل العناوين المكتوبة غير الدقيقة.</li>
+  <li>عمولات تنافسية للتجار لكسبهم في البداية.</li>
+</ul>
+
+<!-- 3 -->
+<h2>3. المستخدمون والأدوار (Personas)</h2>
+<table>
+  <tr><th>الدور</th><th>الوصف</th><th>أهم احتياجاته</th></tr>
+  <tr><td>الزبون</td><td>مستهلك يطلب أكلاً أو ملابس</td><td>سهولة الطلب، معرفة السعر مسبقاً، تتبّع، توصيل سريع</td></tr>
+  <tr><td>التاجر</td><td>مطعم أو محل ملابس</td><td>استقبال الطلبات بوضوح، إدارة المنتجات والأسعار، تقارير المبيعات</td></tr>
+  <tr><td>السائق</td><td>عامل التوصيل</td><td>طلبات قريبة، مسار واضح، حساب الأرباح، تأكيد التسليم</td></tr>
+  <tr><td>المدير (أنت)</td><td>مالك المنصّة وفريق الدعم</td><td>متابعة كل شيء، إدارة العمولات، حل النزاعات، الإحصائيات</td></tr>
+</table>
+
+<!-- 4 -->
+<h2>4. نطاق العمل: ما الذي نبنيه؟</h2>
+<p>أربع واجهات تشترك في <strong>Backend واحد</strong> وقاعدة بيانات واحدة:</p>
+<table>
+  <tr><th>#</th><th>الواجهة</th><th>المنصّة</th><th>المستخدم</th></tr>
+  <tr><td>1</td><td>تطبيق الزبون</td><td>Mobile (Android/iOS)</td><td>المستهلك</td></tr>
+  <tr><td>2</td><td>تطبيق السائق</td><td>Mobile</td><td>عامل التوصيل</td></tr>
+  <tr><td>3</td><td>بوابة التاجر</td><td>Web + Mobile</td><td>المطاعم والمحلات</td></tr>
+  <tr><td>4</td><td>لوحة الإدارة</td><td>Web</td><td>أنت وفريقك</td></tr>
+</table>
+<blockquote><strong>قاعدة ذهبية:</strong> لا نبني الأربعة دفعةً واحدة. نبدأ بـ MVP يحتوي الحد الأدنى من كل واجهة لإطلاق أوّل مدينة، ثم نضيف المميزات.</blockquote>
+
+<!-- 5 -->
+<h2>5. المميزات التفصيلية لكل تطبيق</h2>
+
+<h3>📱 أ. تطبيق الزبون</h3>
+<ul>
+  <li>تسجيل/دخول برقم الهاتف + رمز SMS (OTP).</li>
+  <li>تحديد الموقع تلقائياً + حفظ عناوين متعددة (المنزل، العمل).</li>
+  <li>تصفّح المطاعم والمحلات حسب القرب والتصنيف والتقييم.</li>
+  <li>صفحة التاجر: القائمة/المنتجات، الصور، الأسعار، وقت التحضير التقريبي.</li>
+  <li>سلّة الشراء + الخيارات (مقاسات الملابس، إضافات الأكل).</li>
+  <li>حساب رسوم التوصيل تلقائياً حسب المسافة.</li>
+  <li>الدفع نقداً عند الاستلام (لاحقاً: بطاقة).</li>
+  <li>تتبّع الطلب على الخريطة لحظياً + حالات (مقبول/قيد التحضير/في الطريق/مسلّم).</li>
+  <li>إشعارات لكل تغيّر في الحالة.</li>
+  <li>سجلّ الطلبات + إعادة الطلب بضغطة.</li>
+  <li>تقييم التاجر والسائق + كوبونات الخصم.</li>
+</ul>
+
+<h3>🛵 ب. تطبيق السائق</h3>
+<ul>
+  <li>تسجيل مع توثيق الوثائق (رخصة، بطاقة، صورة).</li>
+  <li>زر "متصل/غير متصل" (online/offline).</li>
+  <li>استقبال طلب قريب مع مهلة للقبول/الرفض.</li>
+  <li>خريطة بالمسار إلى التاجر ثم إلى الزبون (Navigation).</li>
+  <li>أزرار الحالة: "وصلت للمطعم" / "استلمت الطلب" / "سلّمت".</li>
+  <li>تأكيد التسليم (رمز/توقيع/صورة).</li>
+  <li>محفظة الأرباح: اليومية، الأسبوعية، السحب.</li>
+  <li>سجلّ الرحلات + التقييمات.</li>
+</ul>
+
+<h3>🏪 ج. بوابة التاجر</h3>
+<ul>
+  <li>تسجيل المحل (الاسم، النوع، الموقع، أوقات العمل، الشعار).</li>
+  <li>إدارة المنتجات/القائمة: إضافة، تعديل، صور، أسعار، توفّر.</li>
+  <li>استقبال الطلبات بصوت تنبيه + قبول/رفض + تحديد وقت التحضير.</li>
+  <li>تحديث حالة الطلب (جاهز للاستلام).</li>
+  <li>تقارير المبيعات اليومية/الشهرية + المنتجات الأكثر طلباً.</li>
+  <li>إدارة العروض والخصومات.</li>
+  <li>تسوية الحسابات مع المنصّة (العمولات).</li>
+</ul>
+
+<h3>🖥️ د. لوحة الإدارة</h3>
+<ul>
+  <li>لوحة مؤشرات (طلبات اليوم، الإيرادات، السائقون النشطون).</li>
+  <li>إدارة المستخدمين (زبائن، تجار، سائقين) — توثيق وحظر.</li>
+  <li>إدارة المناطق الجغرافية ورسوم التوصيل لكل منطقة.</li>
+  <li>متابعة الطلبات الحيّة على خريطة.</li>
+  <li>إدارة العمولات والمدفوعات والتسويات.</li>
+  <li>نظام دعم وحل النزاعات (tickets).</li>
+  <li>إدارة الكوبونات والإشعارات الترويجية.</li>
+</ul>
+
+<!-- 6 -->
+<h2>6. رحلات المستخدم (User Journeys)</h2>
+<h3>رحلة طلب نموذجي</h3>
+<pre>
+الزبون يفتح التطبيق ─▶ يختار محل/مطعم ─▶ يضيف منتجات للسلّة
+   └▶ يحدّد العنوان على الخريطة ─▶ يؤكّد الطلب (دفع عند الاستلام)
+        └▶ يصل إشعار فوري للتاجر ─▶ التاجر يقبل ويحدّد وقت التحضير
+             └▶ النظام يبحث عن أقرب سائق متاح ─▶ السائق يقبل
+                  └▶ السائق يذهب للتاجر ▶ يستلم ▶ يتوجّه للزبون
+                       └▶ تتبّع لحظي على الخريطة ─▶ تسليم + تأكيد
+                            └▶ تقييم متبادل ─▶ تسوية العمولة آلياً
+</pre>
+<h3>حالات الطلب (Order States)</h3>
+<p><code>PENDING</code> → <code>ACCEPTED</code> → <code>PREPARING</code> → <code>READY</code> → <code>PICKED_UP</code> → <code>ON_THE_WAY</code> → <code>DELIVERED</code> (أو <code>CANCELLED</code>)</p>
+
+<!-- 7 -->
+<h2>7. المعمارية التقنية</h2>
+<table>
+  <tr><th>الطبقة</th><th>التقنية المقترحة</th><th>السبب</th></tr>
+  <tr><td>Backend / API</td><td>FastAPI (Python)</td><td>سريع، خفيف، يدعم WebSocket والـ async</td></tr>
+  <tr><td>قاعدة البيانات</td><td>PostgreSQL + PostGIS</td><td>قوية + استعلامات جغرافية (أقرب سائق/مسافات)</td></tr>
+  <tr><td>التخزين المؤقّت/الطوابير</td><td>Redis</td><td>الجلسات، الإشعارات اللحظية، توزيع الطلبات</td></tr>
+  <tr><td>تطبيقات الموبايل</td><td>React Native (Expo)</td><td>كود واحد لـ Android و iOS</td></tr>
+  <tr><td>الويب (تاجر/إدارة)</td><td>Next.js + React</td><td>أداء عالٍ + SEO + لوحات تحكّم</td></tr>
+  <tr><td>الخرائط</td><td>Mapbox أو Google Maps</td><td>التتبّع، المسارات، حساب المسافة</td></tr>
+  <tr><td>الإشعارات</td><td>Firebase Cloud Messaging</td><td>مجاني وموثوق على كل المنصّات</td></tr>
+  <tr><td>التتبّع اللحظي</td><td>WebSocket (Socket.io)</td><td>تحديث موقع السائق آنياً</td></tr>
+  <tr><td>تخزين الملفات/الصور</td><td>S3-compatible (مثل Cloudflare R2)</td><td>رخيص لصور المنتجات</td></tr>
+  <tr><td>الاستضافة</td><td>VPS (DigitalOcean/Hetzner) + Docker</td><td>تحكّم وتكلفة منخفضة</td></tr>
+</table>
+<h3>مخطّط معماري مبسّط</h3>
+<pre>
+[تطبيق الزبون]  [تطبيق السائق]  [بوابة التاجر]  [لوحة الإدارة]
+       \             |              |               /
+        \____________|______________|______________/
+                          │ HTTPS / WebSocket
+                   ┌──────▼───────┐
+                   │   API Gateway │  (FastAPI)
+                   └──────┬───────┘
+        ┌─────────────────┼──────────────────┐
+   ┌────▼────┐      ┌──────▼──────┐     ┌──────▼──────┐
+   │PostgreSQL│      │   Redis     │     │  FCM / Maps │
+   │ +PostGIS │      │ (cache/queue)│    │  (خدمات خارجية)│
+   └─────────┘      └─────────────┘     └─────────────┘
+</pre>
+
+<!-- 8 -->
+<h2>8. تصميم قاعدة البيانات (الجداول الأساسية)</h2>
+<pre>
+users            (id, role, name, phone, email, password_hash, status, created_at)
+addresses        (id, user_id, label, lat, lng, details)
+merchants        (id, user_id, name, type, logo, lat, lng, open_hours, rating, status)
+products         (id, merchant_id, name, description, price, image, category, available)
+product_options  (id, product_id, name, type, extra_price)   -- مقاسات/إضافات
+drivers          (id, user_id, vehicle_type, doc_status, is_online, current_lat, current_lng, rating)
+orders           (id, customer_id, merchant_id, driver_id, status, total, delivery_fee,
+                  commission, payment_method, address_id, created_at)
+order_items      (id, order_id, product_id, qty, unit_price, options)
+order_tracking   (id, order_id, status, lat, lng, timestamp)
+payments         (id, order_id, amount, method, status, settled_at)
+reviews          (id, order_id, from_user, to_target, rating, comment)
+coupons          (id, code, type, value, min_order, expires_at, usage_limit)
+zones            (id, name, polygon, base_delivery_fee, per_km_fee)
+support_tickets  (id, user_id, order_id, subject, status, messages)
+</pre>
+<p><strong>ملاحظة جغرافية:</strong> أعمدة <code>lat/lng</code> تُخزَّن كنوع <code>geography(Point)</code> في PostGIS لإيجاد "أقرب سائق" بسرعة عبر استعلام <code>ST_DWithin</code> / <code>ST_Distance</code>.</p>
+
+<!-- 9 -->
+<h2>9. أهم واجهات الـ API</h2>
+<pre>
+# المصادقة
+POST /auth/send-otp           إرسال رمز للهاتف
+POST /auth/verify-otp         تأكيد الرمز وإصدار توكن
+
+# الزبون
+GET  /merchants?lat=&lng=     قائمة المحلات القريبة
+GET  /merchants/{id}/products منتجات محل
+POST /orders                  إنشاء طلب
+GET  /orders/{id}/track       تتبّع الطلب (WebSocket)
+
+# التاجر
+GET  /merchant/orders         الطلبات الواردة
+PATCH /orders/{id}/status     تحديث الحالة (قبول/تحضير/جاهز)
+POST /merchant/products       إضافة منتج
+
+# السائق
+PATCH /driver/status          online/offline + الموقع
+POST /orders/{id}/accept      قبول طلب
+POST /orders/{id}/deliver     تأكيد التسليم
+
+# الإدارة
+GET  /admin/dashboard         المؤشرات
+GET  /admin/users             إدارة المستخدمين
+POST /admin/zones             مناطق ورسوم
+</pre>
+
+<!-- 10 -->
+<h2>10. التتبّع اللحظي والإشعارات</h2>
+<ul>
+  <li><strong>تحديث موقع السائق:</strong> التطبيق يرسل إحداثيات كل 5–10 ثوانٍ عبر WebSocket إلى الخادم، الذي يبثّها للزبون المتتبّع.</li>
+  <li><strong>تقليل استهلاك البطارية والبيانات:</strong> تقليل التردد حين يكون السائق ثابتاً، واستخدام ضغط الرسائل.</li>
+  <li><strong>الإشعارات (FCM):</strong> تُرسَل عند كل تغيّر حالة (قبول، في الطريق، اقترب، سُلّم) لكل الأطراف.</li>
+  <li><strong>توزيع الطلبات:</strong> خوارزمية تختار أقرب سائق متاح، فإن رفض/تأخّر يُعرض على التالي (مع Redis لإدارة الطابور).</li>
+</ul>
+
+<!-- 11 -->
+<h2>11. الأمان وحماية البيانات</h2>
+<ul>
+  <li>توكنات JWT قصيرة العمر + Refresh tokens.</li>
+  <li>تشفير كلمات المرور (bcrypt/argon2) وتشفير الاتصال (HTTPS/TLS).</li>
+  <li>تحديد الصلاحيات حسب الدور (RBAC) — كل طرف يرى بياناته فقط.</li>
+  <li>التحقّق من الهاتف عبر OTP لمنع الحسابات الوهمية.</li>
+  <li>توثيق وثائق السائقين قبل التفعيل.</li>
+  <li>Rate limiting ضد إساءة الاستخدام، وتسجيل العمليات (audit log).</li>
+  <li>نسخ احتياطي يومي لقاعدة البيانات.</li>
+</ul>
+
+<!-- 12 -->
+<h2>12. اعتبارات خاصة بالسوق الجزائري 🇩🇿</h2>
+<table>
+  <tr><th>الجانب</th><th>التوصية</th></tr>
+  <tr><td>الدفع</td><td>ابدأ بالدفع نقداً عند الاستلام (COD) — هو الأكثر استخداماً. أضف لاحقاً CIB / Edahabia / BaridiMob.</td></tr>
+  <tr><td>العناوين</td><td>اعتمد تحديد الموقع على الخريطة (GPS) لأن العناوين المكتوبة غير دقيقة.</td></tr>
+  <tr><td>اللغة</td><td>عربية (RTL) + فرنسية من البداية، ودارجة في الرسائل الودّية.</td></tr>
+  <tr><td>الإنترنت</td><td>تحسين التطبيق ليعمل مع 3G/شبكات ضعيفة (صور مضغوطة، تحميل تدريجي).</td></tr>
+  <tr><td>الثقة</td><td>أرقام هاتف للدعم + سياسة استرجاع واضحة لكسب ثقة المستخدم الجزائري.</td></tr>
+  <tr><td>التسويق</td><td>فيسبوك وإنستغرام هما الأقوى؛ تعاون مع صفحات المطاعم المحلية.</td></tr>
+</table>
+
+<!-- 13 -->
+<h2>13. نموذج العمل والربح</h2>
+<table>
+  <tr><th>مصدر الدخل</th><th>الوصف</th></tr>
+  <tr><td>عمولة على الطلب</td><td>نسبة (مثلاً 10–20%) من قيمة كل طلب يُدفع من التاجر</td></tr>
+  <tr><td>رسوم التوصيل</td><td>يدفعها الزبون حسب المسافة، تُقسَّم بين السائق والمنصّة</td></tr>
+  <tr><td>اشتراكات التجار</td><td>باقة شهرية للظهور المميّز/تقارير متقدّمة</td></tr>
+  <tr><td>الإعلانات</td><td>إبراز محل في الواجهة الرئيسية مقابل رسوم</td></tr>
+  <tr><td>رسوم خدمة صغيرة</td><td>رسم رمزي على الزبون لكل طلب</td></tr>
+</table>
+<blockquote>في البداية: <strong>خفّض العمولة</strong> لجذب التجار، وقدّم توصيلاً مجانياً أو مخفّضاً للزبائن الأوائل لبناء قاعدة مستخدمين.</blockquote>
+
+<!-- 14 -->
+<h2>14. خطة التنفيذ بالمراحل (Roadmap)</h2>
+
+<div class="phase">
+<h3>المرحلة 0 — التأسيس (أسبوع 1–2)</h3>
+<ul>
+  <li>إعداد المستودع (Git)، بيئة التطوير، Docker.</li>
+  <li>تصميم قاعدة البيانات + هيكل المشروع.</li>
+  <li>تصميم واجهات أولية (Figma) لتطبيق الزبون.</li>
+  <li>إعداد المصادقة بالـ OTP.</li>
+</ul>
+</div>
+
+<div class="phase">
+<h3>المرحلة 1 — MVP لمدينة واحدة (أسبوع 3–10)</h3>
+<ul>
+  <li>تطبيق الزبون: تصفّح، سلّة، طلب، تتبّع، دفع عند الاستلام.</li>
+  <li>بوابة التاجر (ويب): استقبال الطلبات وإدارة المنتجات.</li>
+  <li>تطبيق السائق: قبول الطلبات، الخريطة، تأكيد التسليم.</li>
+  <li>لوحة إدارة أساسية + التتبّع اللحظي + الإشعارات.</li>
+  <li><strong>إطلاق تجريبي مع 5–10 محلات و3–5 سائقين في المدينة الأولى.</strong></li>
+</ul>
+</div>
+
+<div class="phase">
+<h3>المرحلة 2 — التحسين والمدينة الثانية (أسبوع 11–18)</h3>
+<ul>
+  <li>تحليل بيانات الإطلاق وإصلاح المشاكل.</li>
+  <li>إضافة التقييمات، الكوبونات، تقارير التجار.</li>
+  <li>تحسين خوارزمية توزيع السائقين.</li>
+  <li>التوسّع للمدينة الثانية.</li>
+</ul>
+</div>
+
+<div class="phase">
+<h3>المرحلة 3 — النضج والتوسّع (أسبوع 19+)</h3>
+<ul>
+  <li>إضافة الدفع الإلكتروني (CIB/Edahabia).</li>
+  <li>برنامج ولاء، إشعارات ترويجية، إعلانات.</li>
+  <li>التوسّع لمدن/ولايات إضافية.</li>
+  <li>تطبيق iOS كامل + تحسينات الأداء على نطاق أوسع.</li>
+</ul>
+</div>
+
+<!-- 15 -->
+<h2>15. التكاليف التقديرية (شهرياً، تقريبية)</h2>
+<table>
+  <tr><th>البند</th><th>التكلفة التقريبية</th><th>ملاحظة</th></tr>
+  <tr><td>استضافة الخادم (VPS)</td><td>10–40 $ / شهر</td><td>يكفي في البداية، يتوسّع لاحقاً</td></tr>
+  <tr><td>قاعدة البيانات</td><td>ضمن الـ VPS أو 15$ منفصلة</td><td>—</td></tr>
+  <tr><td>الخرائط (Mapbox/Google)</td><td>0–50 $ / شهر</td><td>طبقة مجانية سخية في البداية</td></tr>
+  <tr><td>الإشعارات (FCM)</td><td>مجاني</td><td>—</td></tr>
+  <tr><td>رسائل SMS (OTP)</td><td>حسب الاستخدام (~0.02$/رسالة)</td><td>مزوّد محلي أو Twilio</td></tr>
+  <tr><td>تخزين الصور (R2/S3)</td><td>1–10 $ / شهر</td><td>—</td></tr>
+  <tr><td>حساب Apple Developer</td><td>99 $ / سنة</td><td>لنشر iOS فقط</td></tr>
+  <tr><td>حساب Google Play</td><td>25 $ مرة واحدة</td><td>—</td></tr>
+  <tr><td>اسم النطاق (Domain)</td><td>~12 $ / سنة</td><td>—</td></tr>
+</table>
+<blockquote>إجمالي البداية الواقعي: <strong>تقريباً 30–100 $ شهرياً</strong> للبنية التقنية في مرحلة MVP، عدا تكلفة التطوير والتسويق.</blockquote>
+
+<!-- 16 -->
+<h2>16. مؤشرات الأداء (KPIs)</h2>
+<div>
+  <span class="kpi">عدد الطلبات اليومية</span>
+  <span class="kpi">متوسّط وقت التوصيل</span>
+  <span class="kpi">نسبة الطلبات الملغاة</span>
+  <span class="kpi">عدد التجار النشطين</span>
+  <span class="kpi">عدد السائقين المتصلين</span>
+  <span class="kpi">معدّل احتفاظ الزبائن</span>
+  <span class="kpi">متوسّط قيمة الطلب</span>
+  <span class="kpi">تقييم رضا المستخدم</span>
+</div>
+
+<!-- 17 -->
+<h2>17. المخاطر وكيفية تفاديها</h2>
+<table>
+  <tr><th>الخطر</th><th>الحل</th></tr>
+  <tr><td>قلّة السائقين وقت الذروة</td><td>حوافز للسائقين + توقّع الطلب + رسوم ذروة</td></tr>
+  <tr><td>عدم ثقة الزبون (دفع مسبق)</td><td>الدفع عند الاستلام + سياسة استرجاع</td></tr>
+  <tr><td>تردّد التجار</td><td>عمولة مخفّضة + تدريب + لوحة سهلة</td></tr>
+  <tr><td>طلبات وهمية</td><td>تحقّق OTP + حظر المسيئين</td></tr>
+  <tr><td>إنترنت ضعيف</td><td>تطبيق محسّن + وضع عدم اتصال جزئي</td></tr>
+  <tr><td>منافسة كبيرة</td><td>التركيز على مدينة واحدة وخدمة ممتازة قبل التوسّع</td></tr>
+</table>
+
+<!-- 18 -->
+<h2>18. استراتيجية الإطلاق والتوسّع</h2>
+<ol>
+  <li><strong>اختر المدينة الأولى بعناية:</strong> مدينة تعرفها جيداً، بكثافة سكانية وحركة طلب جيدة.</li>
+  <li><strong>ابدأ صغيراً:</strong> 5–10 محلات مميّزة + عدد كافٍ من السائقين.</li>
+  <li><strong>عروض إطلاق:</strong> توصيل مجاني/مخفّض أول أسبوعين + كوبونات أوّل طلب.</li>
+  <li><strong>التسويق المحلي:</strong> فيسبوك/إنستغرام + تعاون مع المؤثّرين المحليين والمطاعم.</li>
+  <li><strong>اجمع الملاحظات بسرعة وحسّن.</strong></li>
+  <li><strong>وسّع للمدينة الثانية</strong> فقط بعد استقرار العمليات في الأولى.</li>
+</ol>
+
+<!-- 19 -->
+<h2>19. الخلاصة والخطوة التالية</h2>
+<p>Z-delivry مشروع واعد إذا بُني على مراحل وبدأ مركّزاً على مدينة واحدة بخدمة ممتازة. الأساس التقني المقترح (FastAPI + React Native + Next.js + PostgreSQL/PostGIS) خفيف وقابل للتوسّع ويناسب آلاف المستخدمين.</p>
+<h3>الخطوة التالية المقترحة</h3>
+<ol>
+  <li>الموافقة على هذه الوثيقة وتحديد المدينة الأولى.</li>
+  <li>البدء بـ <strong>المرحلة 0</strong>: إعداد المشروع وقاعدة البيانات وتصميم واجهات الزبون.</li>
+  <li>بناء MVP تطبيق الزبون أولاً (الواجهة الأهم).</li>
+</ol>
+<blockquote>عند الجاهزية، أستطيع أن أبدأ معك فعلياً في إعداد هيكل المشروع (Backend + قاعدة البيانات + أول شاشات) خطوة بخطوة.</blockquote>
+
+<hr>
+<p style="text-align:center; color:#52606d; font-size:11px;">
+Z-delivry — وثيقة المشروع الكاملة • الإصدار 1.0 • ماي 2026 • إعداد زكريا بن العايش
+</p>
+
+</body>
+</html>

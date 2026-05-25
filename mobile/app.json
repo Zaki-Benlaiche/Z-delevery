@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Z-delivry",
+    "slug": "z-delivry",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "zdelivry",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.zdelivry.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "نحتاج موقعك لإظهار أقرب المتاجر وضبط عنوان التسليم."
+      }
+    },
+    "android": {
+      "package": "com.zdelivry.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_ANDROID_KEY"
+        }
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "نحتاج موقعك لإظهار أقرب المتاجر."
+        }
+      ]
+    ],
+    "extra": {
+      "apiUrl": "http://10.0.2.2:8000"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: zdelivry_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: zdelivry
+      POSTGRES_PASSWORD: zdelivry_dev_pass
+      POSTGRES_DB: zdelivry
+    ports:
+      - "5432:5432"
+    volumes:
+      - zdelivry_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zdelivry"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: zdelivry_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - zdelivry_redisdata:/data
+
+volumes:
+  zdelivry_pgdata:
+  zdelivry_redisdata:
