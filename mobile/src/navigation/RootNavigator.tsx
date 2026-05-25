@@ -5,6 +5,7 @@ import { useAuth } from "../auth/context";
 import { colors } from "../theme/colors";
 import { AppNavigator } from "./AppNavigator";
 import { AuthNavigator } from "./AuthNavigator";
+import { DriverNavigator } from "./DriverNavigator";
 
 export function RootNavigator() {
   const { loading, user } = useAuth();
@@ -17,9 +18,12 @@ export function RootNavigator() {
     );
   }
 
-  return (
-    <NavigationContainer>
-      {user ? <AppNavigator /> : <AuthNavigator />}
-    </NavigationContainer>
-  );
+  // اختيار البنية حسب دور المستخدم — كل دور يرى تجربته فقط
+  const content = !user
+    ? <AuthNavigator />
+    : user.role === "driver"
+      ? <DriverNavigator />
+      : <AppNavigator />;
+
+  return <NavigationContainer>{content}</NavigationContainer>;
 }

@@ -5,8 +5,10 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Button } from "../components/Button";
 import { Input } from "../components/Input";
 import { Screen } from "../components/Screen";
+import { Segmented } from "../components/Segmented";
 import { useAuth } from "../auth/context";
 import { colors } from "../theme/colors";
+import type { UserRole } from "../api/types";
 import type { AuthStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Otp">;
@@ -16,6 +18,8 @@ export function OtpScreen({ route }: Props) {
   const { signIn } = useAuth();
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
+  // الدور يُستخدَم فقط عند إنشاء حساب جديد؛ الخادم يتجاهله للمستخدمين الموجودين
+  const [role, setRole] = useState<UserRole>("customer");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +36,7 @@ export function OtpScreen({ route }: Props) {
     }
     setLoading(true);
     try {
-      await signIn(phone, code, name || undefined);
+      await signIn(phone, code, name || undefined, role);
       // التنقّل يُعاد توجيهه تلقائياً عبر AppNavigator عند تغيّر حالة المستخدم
     } catch (e) {
       Alert.alert("رمز غير صحيح", (e as Error).message);
@@ -64,6 +68,18 @@ export function OtpScreen({ route }: Props) {
           placeholder="مثال: زكريا"
         />
 
+        <View style={{ gap: 6 }}>
+          <Text style={styles.fieldLabel}>أنت (عند الإنشاء فقط)</Text>
+          <Segmented
+            value={role}
+            onChange={setRole}
+            options={[
+              { value: "customer", label: "زبون" },
+              { value: "driver", label: "سائق" },
+            ]}
+          />
+        </View>
+
         <Button label="تأكيد ودخول" onPress={submit} loading={loading} />
 
         {devOtp ? (
@@ -78,6 +94,7 @@ const styles = StyleSheet.create({
   form: { gap: 16, marginTop: 40 },
   title: { fontSize: 24, fontWeight: "700", color: colors.text, textAlign: "right" },
   subtitle: { fontSize: 15, color: colors.textMuted, textAlign: "right", marginBottom: 8 },
+  fieldLabel: { fontSize: 14, color: colors.text, fontWeight: "500", textAlign: "right" },
   devHint: {
     fontSize: 12,
     color: colors.warning,

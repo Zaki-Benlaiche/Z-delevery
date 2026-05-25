@@ -19,3 +19,14 @@ export type AppStackParamList = {
   AddAddress: undefined;
   OrderTracking: { orderId: string };
 };
+
+export type DriverTabParamList = {
+  DriverHomeTab: undefined;
+  DriverHistoryTab: undefined;
+  DriverAccountTab: undefined;
+};
+
+export type DriverStackParamList = {
+  DriverTabs: undefined;
+  DriverOrder: { orderId: string };
+};
