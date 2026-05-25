@@ -106,6 +106,10 @@ async def set_online(
     user: User = Depends(require_role(UserRole.DRIVER, UserRole.ADMIN)),
 ):
     driver = await _my_driver(user, db)
+    if is_online and not driver.is_verified:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN, "حسابك بانتظار توثيق الإدارة قبل بدء العمل"
+        )
     driver.is_online = is_online
     await db.flush()
     await db.refresh(driver)
@@ -193,6 +197,10 @@ async def claim_order(
 ):
     """يتكفّل السائق بطلب غير مُسنَد بعد."""
     driver = await _my_driver(user, db)
+    if not driver.is_verified:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN, "حسابك بانتظار توثيق الإدارة قبل قبول طلبات"
+        )
     stmt = select(Order).where(Order.id == order_id).options(selectinload(Order.items))
     order = (await db.execute(stmt)).scalar_one_or_none()
     if order is None:

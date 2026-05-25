@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from sqlalchemy import text
 
-from app.api.routers import addresses, auth, drivers, me, merchants, orders, tracking
+from app.api.routers import addresses, admin, auth, drivers, me, merchants, orders, tracking
 from app.core.config import settings
 from app.core.database import Base, engine
 
@@ -48,6 +48,7 @@ app.include_router(merchants.router, prefix="/api")
 app.include_router(addresses.router, prefix="/api")
 app.include_router(orders.router, prefix="/api")
 app.include_router(drivers.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
 app.include_router(tracking.router, prefix="/api")
 
 

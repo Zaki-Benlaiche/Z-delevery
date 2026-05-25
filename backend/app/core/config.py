@@ -24,5 +24,12 @@ class Settings(BaseSettings):
     delivery_fee_per_km: float = 30.0  # رسوم إضافية لكل كيلومتر (دج)
     commission_rate: float = 0.10      # نسبة عمولة المنصّة من قيمة الطلب
 
+    # أرقام هواتف الأدمن (مفصولة بفاصلة) — يُرقَّون تلقائياً عند تسجيل الدخول
+    admin_phones: str = ""
+
+    @property
+    def admin_phone_set(self) -> set[str]:
+        return {p.strip() for p in self.admin_phones.split(",") if p.strip()}
+
 
 settings = Settings()

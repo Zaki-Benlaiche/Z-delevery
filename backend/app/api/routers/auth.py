@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.security import create_access_token, create_refresh_token
 from app.core.database import get_db
+from app.models.enums import UserRole
 from app.models.user import User
 from app.schemas.auth import (
     SendOTPRequest,
@@ -43,6 +44,11 @@ async def verify_otp_and_login(payload: VerifyOTPRequest, db: AsyncSession = Dep
         db.add(user)
         await db.flush()
         is_new = True
+
+    # ترقية تلقائية لأرقام الأدمن المُكوّنة في .env
+    if payload.phone in settings.admin_phone_set and user.role != UserRole.ADMIN:
+        user.role = UserRole.ADMIN
+        await db.flush()
 
     return TokenResponse(
         access_token=create_access_token(str(user.id), user.role.value),

@@ -14,9 +14,11 @@ from app.models.driver import Driver
 from app.models.enums import OrderStatus, PaymentMethod, PaymentStatus, UserRole
 from app.models.merchant import Merchant, Product
 from app.models.order import Order, OrderItem, OrderTracking
+from app.models.rating import Rating
 from app.models.user import Address, User
 from app.schemas.common import LocationOut
 from app.schemas.order import OrderCreate, OrderItemOut, OrderOut, OrderStatusUpdate, TrackingOut
+from app.schemas.rating import RatingCreate, RatingOut
 from app.services.notifications import fire_and_forget, send_push
 from app.services.orders import can_transition, compute_pricing
 from app.services.realtime import manager
@@ -370,3 +372,89 @@ async def cancel_order(
     await _push_status_to_customer(order, db)
     await db.flush()
     return _order_out(order)
+
+
+# ---------- تقييم الطلب ----------
+@router.post("/{order_id}/rate", response_model=RatingOut, status_code=status.HTTP_201_CREATED)
+async def rate_order(
+    order_id: uuid.UUID,
+    payload: RatingCreate,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """يقيّم الزبون تجربته بعد تسليم الطلب — يحدّث متوسّط تقييم التاجر."""
+    order = await db.get(Order, order_id)
+    if order is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "الطلب غير موجود")
+    if order.customer_id != user.id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "لا يمكن تقييم طلب لست صاحبه")
+    if order.status != OrderStatus.DELIVERED:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, "لا يمكن التقييم قبل تسليم الطلب"
+        )
+
+    # تفادي التقييم المكرّر (مع UniqueConstraint كحاجز ثانٍ على مستوى DB)
+    existing = (
+        await db.execute(select(Rating).where(Rating.order_id == order_id))
+    ).scalar_one_or_none()
+    if existing is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "سبق وقيّمت هذا الطلب")
+
+    rating = Rating(
+        order_id=order.id,
+        customer_id=user.id,
+        merchant_id=order.merchant_id,
+        stars=payload.stars,
+        comment=payload.comment,
+    )
+    db.add(rating)
+    await db.flush()
+
+    # نُحدّث متوسّط تقييم التاجر فوراً (سريع: SQL AVG على عمود مُفهرس)
+    from sqlalchemy import func
+
+    avg = (
+        await db.execute(
+            select(func.avg(Rating.stars)).where(Rating.merchant_id == order.merchant_id)
+        )
+    ).scalar()
+    merchant = await db.get(Merchant, order.merchant_id)
+    if merchant and avg is not None:
+        merchant.rating = round(float(avg), 1)
+        await db.flush()
+
+    return RatingOut(
+        id=rating.id,
+        order_id=rating.order_id,
+        merchant_id=rating.merchant_id,
+        stars=rating.stars,
+        comment=rating.comment,
+        created_at=rating.created_at,
+    )
+
+
+@router.get("/{order_id}/rating", response_model=RatingOut | None)
+async def get_order_rating(
+    order_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """يُعيد تقييم الطلب إن وُجد — يستخدمه الموبايل ليُخفي زرّ التقييم بعد إرساله."""
+    order = await db.get(Order, order_id)
+    if order is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "الطلب غير موجود")
+    await _assert_can_view(order, user, db)
+
+    rating = (
+        await db.execute(select(Rating).where(Rating.order_id == order_id))
+    ).scalar_one_or_none()
+    if rating is None:
+        return None
+    return RatingOut(
+        id=rating.id,
+        order_id=rating.order_id,
+        merchant_id=rating.merchant_id,
+        stars=rating.stars,
+        comment=rating.comment,
+        created_at=rating.created_at,
+    )

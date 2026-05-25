@@ -92,6 +92,15 @@ function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProp
 
   return (
     <Screen padded={false}>
+      {!driver.is_verified ? (
+        <View style={styles.pendingBanner}>
+          <Text style={styles.pendingTitle}>⏳ بانتظار توثيق الإدارة</Text>
+          <Text style={styles.pendingText}>
+            حسابك مُسجّل وستتمكّن من قبول الطلبات فور موافقة الإدارة على مستنداتك.
+          </Text>
+        </View>
+      ) : null}
+
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
           <Text style={styles.greeting}>مرحباً</Text>
@@ -102,6 +111,7 @@ function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProp
         <Switch
           value={driver.is_online}
           onValueChange={(v) => toggleOnline.mutate(v)}
+          disabled={!driver.is_verified}
           trackColor={{ true: colors.primary, false: colors.border }}
           thumbColor="#fff"
         />
@@ -222,4 +232,15 @@ const styles = StyleSheet.create({
   rowMeta: { fontSize: 13, color: colors.textMuted, textAlign: "right", marginTop: 2 },
   arrow: { color: colors.textMuted, fontSize: 24, fontWeight: "300" },
   empty: { textAlign: "center", color: colors.textMuted, paddingHorizontal: 16, marginTop: 24 },
+  pendingBanner: {
+    backgroundColor: "#FEF3C7",
+    padding: 14,
+    marginHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 12,
+    borderStartWidth: 4,
+    borderStartColor: colors.warning,
+  },
+  pendingTitle: { fontSize: 14, fontWeight: "700", color: colors.text, textAlign: "right" },
+  pendingText: { fontSize: 13, color: colors.text, textAlign: "right", marginTop: 4, lineHeight: 18 },
 });

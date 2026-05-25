@@ -5,6 +5,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 import { ordersApi } from "../api/orders";
 import type { Order, OrderStatus } from "../api/types";
+import { RatingCard } from "../components/RatingCard";
 import { Screen } from "../components/Screen";
 import { StatusBadge, statusLabel } from "../components/StatusBadge";
 import { useOrderTracking } from "../hooks/useOrderTracking";
@@ -133,6 +134,8 @@ export function OrderTrackingScreen({ route }: Props) {
             الدفع: {order.payment_method === "cash" ? "نقداً عند الاستلام" : "بطاقة"}
           </Text>
         </View>
+
+        {status === "delivered" ? <RatingCard orderId={order.id} /> : null}
       </ScrollView>
     </Screen>
   );
