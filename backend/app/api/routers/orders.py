@@ -201,8 +201,16 @@ async def list_orders(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
     status_filter: OrderStatus | None = Query(default=None, alias="status"),
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
 ):
-    stmt = select(Order).options(selectinload(Order.items)).order_by(Order.created_at.desc())
+    stmt = (
+        select(Order)
+        .options(selectinload(Order.items))
+        .order_by(Order.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
 
     if user.role == UserRole.CUSTOMER:
         stmt = stmt.where(Order.customer_id == user.id)

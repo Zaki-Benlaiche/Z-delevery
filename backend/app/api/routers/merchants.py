@@ -68,6 +68,8 @@ async def list_merchants(
     lat: float | None = Query(default=None, ge=-90, le=90),
     lng: float | None = Query(default=None, ge=-180, le=180),
     open_only: bool = False,
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
 ):
     """قائمة التجّار، مع فرز اختياري حسب القرب إذا مُرّرت الإحداثيات."""
     stmt = select(Merchant)
@@ -77,6 +79,11 @@ async def list_merchants(
         stmt = stmt.where(Merchant.name.ilike(f"%{q}%"))
     if open_only:
         stmt = stmt.where(Merchant.is_open.is_(True))
+
+    # الفرز بالقرب يحتاج لتحميل كل النتائج لاحتساب المسافة في Python؛
+    # بدونه نقصّ مبكراً في SQL لتقليل الحمل.
+    if lat is None or lng is None:
+        stmt = stmt.limit(limit).offset(offset)
 
     merchants = (await db.execute(stmt)).scalars().all()
 
@@ -91,6 +98,8 @@ async def list_merchants(
 
     if lat is not None and lng is not None:
         out.sort(key=lambda x: (x.distance_km is None, x.distance_km or 0))
+        # تطبيق الـ pagination بعد الفرز بالقرب
+        out = out[offset : offset + limit]
     return out
 
 

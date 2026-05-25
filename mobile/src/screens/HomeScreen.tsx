@@ -19,6 +19,7 @@ import { merchantsApi } from "../api/merchants";
 import type { Merchant } from "../api/types";
 import { Screen } from "../components/Screen";
 import { useCurrentLocation } from "../hooks/useLocation";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { colors } from "../theme/colors";
 import type { AppStackParamList, AppTabParamList } from "../navigation/types";
 
@@ -29,18 +30,22 @@ type Props = CompositeScreenProps<
 
 export function HomeScreen({ navigation }: Props) {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 350);
   const loc = useCurrentLocation();
 
   const query = useQuery({
-    queryKey: ["merchants", { lat: loc.location?.lat, lng: loc.location?.lng, q: search }],
+    queryKey: ["merchants", { lat: loc.location?.lat, lng: loc.location?.lng, q: debouncedSearch }],
     queryFn: () =>
       merchantsApi.list({
         lat: loc.location?.lat,
         lng: loc.location?.lng,
-        q: search || undefined,
+        q: debouncedSearch || undefined,
       }),
     // ننتظر الموقع قبل الاستعلام (إلا إذا فشل، فنُحضرها بدون فرز بالقرب)
     enabled: !loc.loading,
+    // نُبقي النتائج السابقة على الشاشة أثناء جلب التحديث — يمنع وميض التحميل
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
   });
 
   return (

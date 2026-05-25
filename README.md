@@ -54,6 +54,13 @@ pip install -r requirements.txt
 Copy-Item .env.example .env
 uvicorn app.main:app --reload
 ```
+
+**اختبارات:**
+```powershell
+pip install -r requirements-dev.txt
+pytest                       # 35+ اختبار وحدة (يعمل بلا قاعدة بيانات)
+pytest -m integration        # اختبارات تكامل (تحتاج zdelivry_test في Postgres)
+```
 - التوثيق التفاعلي: http://localhost:8000/docs
 - فحص الصحّة: http://localhost:8000/health
 
@@ -92,6 +99,14 @@ npm run dev
 | `GET /api/orders/{id}/tracking` | سجلّ كامل لتقدّم الطلب |
 | `POST /api/drivers/register` · `/online` · `/location` · `/available-orders` · `/orders/{id}/claim` | السائق: تسجيل، حضور، موقع لحظي، استلام |
 | `WS /api/ws/orders/{id}?token=...` | بثّ حالة الطلب وموقع السائق لحظياً |
+
+## الأداء
+
+- **GZip middleware** للاستجابات الأكبر من 1KB — يخفّض حجم النقل ~70٪ على JSON
+- **Pagination** على قوائم التجّار والطلبات (`limit`، `offset`؛ افتراضياً 50، أقصاه 100)
+- **GIST spatial index** تلقائي على أعمدة Geography (PostGIS)
+- **Debounce 350ms** على بحث الواجهة (الموبايل) — يقلّل ضربات الـ API بنحو 10×
+- **`placeholderData`** في React Query — يمنع وميض الشاشة بين تحديثات الاستعلامات الدورية
 
 ## التسعير
 

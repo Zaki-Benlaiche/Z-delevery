@@ -22,6 +22,7 @@ export function OrdersScreen({ navigation }: Props) {
     queryFn: () => ordersApi.list(),
     // تحديث دوري كل 30 ثانية لمواكبة تغيّر حالة الطلبات
     refetchInterval: 30_000,
+    placeholderData: (prev) => prev,
   });
 
   return (

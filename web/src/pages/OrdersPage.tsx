@@ -31,6 +31,8 @@ export function OrdersPage() {
     queryFn: () => ordersApi.list(),
     // التاجر يحتاج معرفة وصول الطلبات الجديدة سريعاً
     refetchInterval: 5_000,
+    // إبقاء النتائج الحالية أثناء كل refetch — يمنع الوميض بين التحديثات
+    placeholderData: (prev) => prev,
   });
 
   const setStatus = useMutation({
