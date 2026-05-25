@@ -51,6 +51,8 @@ uvicorn app.main:app --reload
 - التوثيق التفاعلي: http://localhost:8000/docs
 - فحص الصحّة: http://localhost:8000/health
 
+> **بيانات تجريبية:** بعد أوّل إقلاع للخادم (لإنشاء الجداول)، شغّل `python seed.py` من داخل `backend/` لإضافة 4 متاجر + 16 منتجاً في الجزائر العاصمة.
+
 ### 3) تطبيق الزبون
 ```powershell
 cd mobile
