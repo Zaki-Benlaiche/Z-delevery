@@ -98,6 +98,7 @@ npm run dev
 | `POST /api/orders/{id}/status` · `POST /api/orders/{id}/cancel` | تغيير الحالة (مع جدول انتقالات صارم) |
 | `GET /api/orders/{id}/tracking` | سجلّ كامل لتقدّم الطلب |
 | `POST /api/drivers/register` · `/online` · `/location` · `/available-orders` · `/orders/{id}/claim` | السائق: تسجيل، حضور، موقع لحظي، استلام |
+| `POST/DELETE /api/me/push-token` | تسجيل/إلغاء توكن Expo Push للمستخدم |
 | `WS /api/ws/orders/{id}?token=...` | بثّ حالة الطلب وموقع السائق لحظياً |
 
 ## الأداء
@@ -107,6 +108,16 @@ npm run dev
 - **GIST spatial index** تلقائي على أعمدة Geography (PostGIS)
 - **Debounce 350ms** على بحث الواجهة (الموبايل) — يقلّل ضربات الـ API بنحو 10×
 - **`placeholderData`** في React Query — يمنع وميض الشاشة بين تحديثات الاستعلامات الدورية
+
+## الإشعارات
+
+**التاجر (ويب):** عند وصول طلب جديد يُصدر المتصفّح نغمة قصيرة + إشعار نظام (يطلب الإذن مرّة واحدة).
+
+**الزبون والسائق (موبايل):** عبر Expo Push.
+- التطبيق يطلب الإذن تلقائياً بعد تسجيل الدخول ويسجّل التوكن في `/me/push-token`
+- الـ Backend يُرسل إشعاراً للزبون عند كل تغيير حالة، وللتاجر عند كل طلب جديد
+- يعمل على الأجهزة الحقيقية فقط (المحاكي لا يدعم Expo Push)
+- في الـ build الإنتاجي يجب تمرير `projectId` من EAS لـ `getExpoPushTokenAsync`
 
 ## التسعير
 

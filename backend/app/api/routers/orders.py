@@ -17,6 +17,7 @@ from app.models.order import Order, OrderItem, OrderTracking
 from app.models.user import Address, User
 from app.schemas.common import LocationOut
 from app.schemas.order import OrderCreate, OrderItemOut, OrderOut, OrderStatusUpdate, TrackingOut
+from app.services.notifications import fire_and_forget, send_push
 from app.services.orders import can_transition, compute_pricing
 from app.services.realtime import manager
 
@@ -102,6 +103,51 @@ async def _record_tracking(
             "location": (lambda c: {"lat": c[0], "lng": c[1]} if c else None)(read_point(location)),
         },
     )
+
+
+# رسائل الـ push المرتبطة بكل حالة (لـ الزبون)
+_STATUS_MSG: dict[OrderStatus, tuple[str, str]] = {
+    OrderStatus.ACCEPTED: ("تم قبول طلبك", "بدأ التاجر بتجهيز طلبك"),
+    OrderStatus.PREPARING: ("طلبك قيد التحضير", "نحضّر طلبك الآن"),
+    OrderStatus.READY: ("طلبك جاهز", "بانتظار وصول السائق"),
+    OrderStatus.PICKED_UP: ("سائقك استلم طلبك", "في طريقه إليك"),
+    OrderStatus.ON_THE_WAY: ("سائقك قريب", "تابع موقعه على الخريطة"),
+    OrderStatus.DELIVERED: ("وصل طلبك ✓", "نتمنّى لك تجربة سعيدة"),
+    OrderStatus.CANCELLED: ("أُلغي طلبك", "تواصل معنا إن احتجت توضيحاً"),
+}
+
+
+async def _push_status_to_customer(order: Order, db: AsyncSession) -> None:
+    """يُرسل push للزبون عند تغيّر حالة طلبه (إن كان مسجّلاً للإشعارات)."""
+    msg = _STATUS_MSG.get(order.status)
+    if msg is None:
+        return
+    customer = await db.get(User, order.customer_id)
+    if customer and customer.expo_push_token:
+        title, body = msg
+        fire_and_forget(
+            send_push(
+                customer.expo_push_token,
+                title,
+                body,
+                data={"order_id": str(order.id), "screen": "OrderTracking"},
+            )
+        )
+
+
+async def _push_new_order_to_merchant(order: Order, db: AsyncSession) -> None:
+    """يُخطر التاجر بوصول طلب جديد."""
+    stmt = select(User).join(Merchant, Merchant.user_id == User.id).where(Merchant.id == order.merchant_id)
+    owner = (await db.execute(stmt)).scalar_one_or_none()
+    if owner and owner.expo_push_token:
+        fire_and_forget(
+            send_push(
+                owner.expo_push_token,
+                "طلب جديد",
+                f"وصلك طلب بقيمة {float(order.total):.0f} دج",
+                data={"order_id": str(order.id), "screen": "OrderDetail"},
+            )
+        )
 
 
 # ---------- الزبون: إنشاء الطلب ----------
@@ -192,6 +238,7 @@ async def create_order(
     await db.flush()
     db.add(OrderTracking(order_id=order.id, status=OrderStatus.PENDING))
     await db.refresh(order, attribute_names=["items"])
+    await _push_new_order_to_merchant(order, db)
     return _order_out(order)
 
 
@@ -299,6 +346,7 @@ async def update_status(
         order.payment_status = PaymentStatus.PAID
 
     await _record_tracking(order, db)
+    await _push_status_to_customer(order, db)
     await db.flush()
     return _order_out(order)
 
@@ -319,5 +367,6 @@ async def cancel_order(
         )
     order.status = OrderStatus.CANCELLED
     await _record_tracking(order, db)
+    await _push_status_to_customer(order, db)
     await db.flush()
     return _order_out(order)

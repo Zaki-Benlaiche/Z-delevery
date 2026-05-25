@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ordersApi } from "../api/orders";
 import type { Order, OrderStatus } from "../api/types";
 import { StatusBadge } from "../components/StatusBadge";
+import { useNewOrderAlert } from "../hooks/useNewOrderAlert";
 import { colors, statusLabel } from "../theme";
 
 // انتقالات حالة الطلب المتاحة للتاجر
@@ -34,6 +35,9 @@ export function OrdersPage() {
     // إبقاء النتائج الحالية أثناء كل refetch — يمنع الوميض بين التحديثات
     placeholderData: (prev) => prev,
   });
+
+  // صوت + إشعار متصفّح عند وصول طلب جديد
+  useNewOrderAlert(orders.data);
 
   const setStatus = useMutation({
     mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>

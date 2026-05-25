@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { authApi } from "../api/auth";
+import { pushApi } from "../api/push";
 import type { UserRole } from "../api/types";
 import { tokenStorage, type StoredUser } from "./storage";
 
@@ -37,6 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(u);
       },
       async signOut() {
+        // نمسح توكن الـ push من الخادم قبل إفراغ التوكنات (الـ DELETE يحتاج auth)
+        try {
+          await pushApi.clear();
+        } catch {
+          // إن فشل الاتصال نتابع — لا نمنع المستخدم من الخروج
+        }
         await tokenStorage.clear();
         setUser(null);
       },

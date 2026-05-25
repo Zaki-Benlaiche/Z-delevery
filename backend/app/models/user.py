@@ -20,6 +20,8 @@ class User(Base, UUIDMixin, TimestampMixin):
     password_hash: Mapped[str | None] = mapped_column(String(255))
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.CUSTOMER)
     status: Mapped[UserStatus] = mapped_column(Enum(UserStatus), default=UserStatus.ACTIVE)
+    # توكن Expo Push — يُسجَّل من الموبايل لاستلام الإشعارات
+    expo_push_token: Mapped[str | None] = mapped_column(String(255))
 
     addresses: Mapped[list["Address"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
