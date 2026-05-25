@@ -16,6 +16,11 @@ from app import models  # noqa: F401
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # تحذير صارم لو ما زال السرّ الافتراضي مستخدماً في إنتاج
+    if not settings.debug and settings.secret_key in ("change-me", "change-this-secret-key-in-production-please"):
+        raise RuntimeError(
+            "SECRET_KEY ما زال على القيمة الافتراضية! ولّد مفتاحاً قوياً وضعه في .env قبل الإقلاع في الإنتاج."
+        )
     # عند الإقلاع: تفعيل PostGIS وإنشاء الجداول (للتطوير؛ في الإنتاج نستخدم Alembic)
     async with engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
@@ -36,7 +41,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # في الإنتاج: حدّد النطاقات المسموح بها
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

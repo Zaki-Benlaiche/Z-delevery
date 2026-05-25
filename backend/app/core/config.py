@@ -31,5 +31,13 @@ class Settings(BaseSettings):
     def admin_phone_set(self) -> set[str]:
         return {p.strip() for p in self.admin_phones.split(",") if p.strip()}
 
+    # CORS: نطاقات الواجهات المسموح لها (مفصولة بفاصلة). "*" يعني الكل (للتطوير فقط)
+    allow_origins: str = "*"
+
+    @property
+    def cors_origins(self) -> list[str]:
+        items = [o.strip() for o in self.allow_origins.split(",") if o.strip()]
+        return items if items else ["*"]
+
 
 settings = Settings()

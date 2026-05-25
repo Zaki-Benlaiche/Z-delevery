@@ -6,7 +6,17 @@ from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config import settings
 
-engine = create_async_engine(settings.database_url, echo=settings.debug, future=True)
+
+def _async_url(url: str) -> str:
+    """يضمن أن DATABASE_URL يستخدم driver asyncpg (Railway/Heroku يعطيان postgresql:// عادياً)."""
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+    if url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url
+
+
+engine = create_async_engine(_async_url(settings.database_url), echo=settings.debug, future=True)
 AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
