@@ -13,3 +13,4 @@ bcrypt==4.0.1  # passlib 1.7.4 يتعطّل مع bcrypt 4.1+ (انظر https://g
 python-multipart==0.0.20
 redis==5.2.1
 email-validator==2.2.0
+httpx==0.28.1
