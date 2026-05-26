@@ -37,6 +37,7 @@ services:
 databases:
   - name: zdelivry-db
     plan: free
+    region: frankfurt   # يجب أن تكون في نفس منطقة zdelivry-api للوصول الداخلي
     databaseName: zdelivry
     user: zdelivry
     postgresMajorVersion: 16
