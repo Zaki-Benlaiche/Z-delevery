@@ -1,8 +1,6 @@
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Switch,
@@ -18,9 +16,13 @@ import { driversApi, type Driver } from "../../api/drivers";
 import { ordersApi } from "../../api/orders";
 import type { Order } from "../../api/types";
 import { Screen } from "../../components/Screen";
+import { Card } from "../../components/Card";
+import { EmptyState } from "../../components/EmptyState";
+import { PriceTag } from "../../components/PriceTag";
+import { Skeleton } from "../../components/Skeleton";
 import { useCurrentLocation } from "../../hooks/useLocation";
 import { useDriverLocationSender } from "../../hooks/useDriverLocationSender";
-import { colors } from "../../theme/colors";
+import { colors, fontSize, fontWeight, radii, spacing } from "../../theme/colors";
 import type { DriverStackParamList, DriverTabParamList } from "../../navigation/types";
 import { DriverRegisterScreen } from "./DriverRegisterScreen";
 
@@ -42,7 +44,11 @@ export function DriverHomeScreen({ navigation }: Props) {
   if (me.isLoading) {
     return (
       <Screen>
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+        <View style={{ gap: spacing.md, marginTop: spacing.lg }}>
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} width="100%" height={72} radius={radii.lg} />
+          ))}
+        </View>
       </Screen>
     );
   }
@@ -124,17 +130,18 @@ function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProp
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>طلباتك النشِطة</Text>
                 {activeOrders.map((o) => (
-                  <OrderRow
-                    key={o.id}
-                    order={o}
-                    accent
-                    onPress={() => navigation.navigate("DriverOrder", { orderId: o.id })}
-                  />
+                  <View key={o.id} style={{ marginBottom: spacing.sm + 2 }}>
+                    <OrderRow
+                      order={o}
+                      accent
+                      onPress={() => navigation.navigate("DriverOrder", { orderId: o.id })}
+                    />
+                  </View>
                 ))}
               </View>
             ) : null}
 
-            <View style={[styles.section, { marginTop: activeOrders.length ? 24 : 0 }]}>
+            <View style={[styles.section, { marginTop: activeOrders.length ? spacing.xxl : 0 }]}>
               <Text style={styles.sectionTitle}>
                 {driver.is_online ? "طلبات متاحة قربك" : "فعّل الاتّصال لرؤية الطلبات"}
               </Text>
@@ -144,7 +151,7 @@ function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProp
         data={driver.is_online ? available.data ?? [] : []}
         keyExtractor={(o) => o.id}
         contentContainerStyle={styles.list}
-        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+        ItemSeparatorComponent={() => <View style={{ height: spacing.sm + 2 }} />}
         refreshControl={
           <RefreshControl
             refreshing={available.isFetching && !available.isLoading}
@@ -154,7 +161,7 @@ function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProp
         }
         ListEmptyComponent={
           driver.is_online && !available.isLoading ? (
-            <Text style={styles.empty}>لا توجد طلبات متاحة حالياً — تابع الانتظار</Text>
+            <EmptyState icon="🛵" title="لا توجد طلبات متاحة" hint="تابع الانتظار — ستصلك الطلبات القريبة هنا" />
           ) : null
         }
         renderItem={({ item }) => (
@@ -179,21 +186,24 @@ function OrderRow({
 }) {
   const itemsCount = order.items.reduce((sum, i) => sum + i.qty, 0);
   return (
-    <Pressable
-      style={[styles.row, accent && styles.rowAccent]}
+    <Card
+      variant="outlined"
+      padding="sm"
       onPress={onPress}
+      style={accent ? { ...styles.row, ...styles.rowAccent } : styles.row}
     >
       <View style={{ flex: 1 }}>
         <Text style={styles.rowTitle}>طلب #{order.id.slice(0, 8)}</Text>
-        <Text style={styles.rowMeta}>
-          {itemsCount} عنصراً · {Number(order.total).toFixed(0)} دج
-        </Text>
+        <View style={styles.metaLine}>
+          <Text style={styles.rowMeta}>{itemsCount} عنصراً ·</Text>
+          <PriceTag amount={Number(order.total)} size="sm" muted />
+        </View>
         {order.delivery_details ? (
           <Text style={styles.rowMeta} numberOfLines={1}>📍 {order.delivery_details}</Text>
         ) : null}
       </View>
       <Text style={styles.arrow}>‹</Text>
-    </Pressable>
+    </Card>
   );
 }
 
@@ -201,46 +211,41 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    paddingTop: 12,
+    padding: spacing.lg,
+    paddingTop: spacing.md,
     backgroundColor: colors.surface,
   },
-  greeting: { fontSize: 14, color: colors.textMuted, textAlign: "right" },
-  statusTxt: { fontSize: 18, fontWeight: "700", color: colors.text, textAlign: "right" },
-  section: { paddingHorizontal: 16, paddingTop: 12 },
+  greeting: { fontSize: fontSize.small + 1, color: colors.textMuted, textAlign: "right" },
+  statusTxt: { fontSize: fontSize.h4, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  section: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: "700",
+    fontSize: fontSize.body,
+    fontWeight: fontWeight.bold,
     color: colors.text,
     textAlign: "right",
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
-  list: { paddingBottom: 24 },
+  list: { paddingBottom: spacing.xxl },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
-    marginHorizontal: 16,
-    gap: 10,
+    marginHorizontal: spacing.lg,
+    gap: spacing.sm + 2,
   },
-  rowAccent: { borderColor: colors.primary, backgroundColor: "#FFF7F0" },
-  rowTitle: { fontSize: 14, fontWeight: "700", color: colors.text, textAlign: "right" },
-  rowMeta: { fontSize: 13, color: colors.textMuted, textAlign: "right", marginTop: 2 },
+  rowAccent: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+  rowTitle: { fontSize: fontSize.small + 1, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  metaLine: { flexDirection: "row", alignItems: "baseline", gap: spacing.xs, marginTop: 2, justifyContent: "flex-end" },
+  rowMeta: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2 },
   arrow: { color: colors.textMuted, fontSize: 24, fontWeight: "300" },
-  empty: { textAlign: "center", color: colors.textMuted, paddingHorizontal: 16, marginTop: 24 },
   pendingBanner: {
-    backgroundColor: "#FEF3C7",
-    padding: 14,
-    marginHorizontal: 16,
-    marginTop: 12,
-    borderRadius: 12,
+    backgroundColor: colors.warningSoft,
+    padding: spacing.lg,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    borderRadius: radii.lg,
     borderStartWidth: 4,
     borderStartColor: colors.warning,
   },
-  pendingTitle: { fontSize: 14, fontWeight: "700", color: colors.text, textAlign: "right" },
-  pendingText: { fontSize: 13, color: colors.text, textAlign: "right", marginTop: 4, lineHeight: 18 },
+  pendingTitle: { fontSize: fontSize.small + 1, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  pendingText: { fontSize: fontSize.small, color: colors.text, textAlign: "right", marginTop: spacing.xs, lineHeight: 18 },
 });

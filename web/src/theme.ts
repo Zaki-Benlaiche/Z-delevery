@@ -1,18 +1,35 @@
-/** ألوان موحّدة مع تطبيق الموبايل */
+/** نظام التصميم الكامل للويب — موحّد مع تطبيق الموبايل */
 export const colors = {
-  primary: "#E85D04",
-  primaryDark: "#B84A00",
+  primary: "#FF6B1A",
+  primaryDark: "#E5530A",
+  primarySoft: "#FFF1E6",
   accent: "#0A9396",
+
+  // أسطح
   bg: "#FFFFFF",
-  surface: "#F7F7F9",
-  text: "#1A1A1A",
-  textMuted: "#6B7280",
-  border: "#E5E7EB",
+  canvas: "#FAFAFA",
+  surface: "#F4F4F5",
+  surfaceAlt: "#F8F9FB",
+
+  // نص
+  text: "#0F172A",
+  textMuted: "#64748B",
+  textFaint: "#94A3B8",
+
+  border: "#E2E8F0",
+  borderSoft: "#EEF2F7",
+
   success: "#10B981",
+  successSoft: "#ECFDF5",
   warning: "#F59E0B",
+  warningSoft: "#FEF3C7",
   danger: "#EF4444",
+  dangerSoft: "#FEF2F2",
+  info: "#3B82F6",
+  infoSoft: "#EFF6FF",
+
   status: {
-    pending: "#9CA3AF",
+    pending: "#94A3B8",
     accepted: "#3B82F6",
     preparing: "#F59E0B",
     ready: "#8B5CF6",
@@ -21,6 +38,18 @@ export const colors = {
     delivered: "#10B981",
     cancelled: "#EF4444",
   } as const,
+};
+
+/** خلفيات pill ناعمة لكل حالة (مع color الأمامي من colors.status) */
+export const statusSoft: Record<string, string> = {
+  pending: "#F1F5F9",
+  accepted: "#EFF6FF",
+  preparing: "#FEF3C7",
+  ready: "#F5F3FF",
+  picked_up: "#E0F2FE",
+  on_the_way: "#ECFEFF",
+  delivered: "#ECFDF5",
+  cancelled: "#FEF2F2",
 };
 
 export const statusLabel: Record<string, string> = {

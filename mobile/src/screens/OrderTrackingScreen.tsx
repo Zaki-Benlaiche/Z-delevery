@@ -1,4 +1,4 @@
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { useQuery } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -7,9 +7,12 @@ import { ordersApi } from "../api/orders";
 import type { Order, OrderStatus } from "../api/types";
 import { RatingCard } from "../components/RatingCard";
 import { Screen } from "../components/Screen";
+import { Card } from "../components/Card";
+import { PriceTag } from "../components/PriceTag";
+import { Skeleton } from "../components/Skeleton";
 import { StatusBadge, statusLabel } from "../components/StatusBadge";
 import { useOrderTracking } from "../hooks/useOrderTracking";
-import { colors } from "../theme/colors";
+import { colors, fontSize, fontWeight, radii, spacing } from "../theme/colors";
 import type { AppStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<AppStackParamList, "OrderTracking">;
@@ -38,7 +41,14 @@ export function OrderTrackingScreen({ route }: Props) {
   if (query.isLoading || !query.data) {
     return (
       <Screen>
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+        <View style={{ gap: spacing.md, marginTop: spacing.lg }}>
+          <Skeleton width="100%" height={56} radius={radii.lg} />
+          <Skeleton width="100%" height={220} radius={radii.lg} />
+          <Skeleton width="50%" height={18} />
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} width="80%" height={14} />
+          ))}
+        </View>
       </Screen>
     );
   }
@@ -52,13 +62,13 @@ export function OrderTrackingScreen({ route }: Props) {
   return (
     <Screen padded={false}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.headerCard}>
+        <Card variant="soft" padding="md" style={styles.headerCard}>
           <Text style={styles.orderId}>#{order.id.slice(0, 8)}</Text>
           <StatusBadge status={status} />
           <Text style={styles.liveDot}>
             {live.connected ? "● بثّ مباشر" : "○ غير متّصل"}
           </Text>
-        </View>
+        </Card>
 
         {hasMap ? (
           <View style={styles.mapWrap}>
@@ -112,27 +122,23 @@ export function OrderTrackingScreen({ route }: Props) {
           })}
         </View>
 
-        <View style={styles.summary}>
+        <View style={styles.summaryWrap}>
           <Text style={styles.section}>تفاصيل الطلب</Text>
-          {order.items.map((i) => (
-            <View key={i.id} style={styles.sumRow}>
-              <Text style={styles.sumLabel}>{i.qty}× {i.product_name}</Text>
-              <Text style={styles.sumValue}>
-                {(Number(i.unit_price) * i.qty).toFixed(0)} دج
-              </Text>
-            </View>
-          ))}
-          <View style={styles.divider} />
-          <SumRow label="المجموع الفرعي" value={`${Number(order.subtotal).toFixed(0)} دج`} />
-          <SumRow label="رسوم التوصيل" value={`${Number(order.delivery_fee).toFixed(0)} دج`} />
-          <SumRow
-            label="الإجمالي"
-            value={`${Number(order.total).toFixed(0)} دج`}
-            bold
-          />
-          <Text style={styles.payNote}>
-            الدفع: {order.payment_method === "cash" ? "نقداً عند الاستلام" : "بطاقة"}
-          </Text>
+          <Card variant="outlined" padding="md" style={{ gap: spacing.xs }}>
+            {order.items.map((i) => (
+              <View key={i.id} style={styles.sumRow}>
+                <Text style={styles.sumLabel}>{i.qty}× {i.product_name}</Text>
+                <PriceTag amount={Number(i.unit_price) * i.qty} size="sm" muted />
+              </View>
+            ))}
+            <View style={styles.divider} />
+            <SumRow label="المجموع الفرعي" amount={Number(order.subtotal)} />
+            <SumRow label="رسوم التوصيل" amount={Number(order.delivery_fee)} />
+            <SumRow label="الإجمالي" amount={Number(order.total)} bold />
+            <Text style={styles.payNote}>
+              الدفع: {order.payment_method === "cash" ? "نقداً عند الاستلام" : "بطاقة"}
+            </Text>
+          </Card>
         </View>
 
         {status === "delivered" ? <RatingCard orderId={order.id} /> : null}
@@ -141,39 +147,38 @@ export function OrderTrackingScreen({ route }: Props) {
   );
 }
 
-function SumRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+function SumRow({ label, amount, bold }: { label: string; amount: number; bold?: boolean }) {
   return (
     <View style={styles.sumRow}>
       <Text style={[styles.sumLabel, bold && styles.bold]}>{label}</Text>
-      <Text style={[styles.sumValue, bold && styles.bold]}>{value}</Text>
+      <PriceTag amount={amount} size={bold ? "md" : "sm"} muted={!bold} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { paddingBottom: 24 },
+  scroll: { paddingBottom: spacing.xxl },
   headerCard: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
-    backgroundColor: colors.surface,
-    gap: 8,
+    margin: spacing.lg,
+    marginBottom: 0,
+    gap: spacing.sm,
   },
-  orderId: { fontSize: 14, fontWeight: "700", color: colors.text },
-  liveDot: { fontSize: 11, color: colors.textMuted },
-  mapWrap: { height: 260, margin: 16, borderRadius: 12, overflow: "hidden" },
+  orderId: { fontSize: fontSize.small + 1, fontWeight: fontWeight.bold, color: colors.text },
+  liveDot: { fontSize: fontSize.caption, color: colors.textMuted },
+  mapWrap: { height: 260, margin: spacing.lg, borderRadius: radii.lg, overflow: "hidden" },
   map: { flex: 1 },
-  timeline: { padding: 16 },
-  section: { fontSize: 16, fontWeight: "700", color: colors.text, marginBottom: 10, textAlign: "right" },
-  tlRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 6 },
+  timeline: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
+  section: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.bold, color: colors.text, marginBottom: spacing.sm, textAlign: "right" },
+  tlRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingVertical: spacing.xs + 2 },
   tlDot: { width: 12, height: 12, borderRadius: 6 },
-  tlLabel: { fontSize: 14 },
-  summary: { padding: 16, gap: 4 },
-  sumRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 },
-  sumLabel: { color: colors.textMuted, fontSize: 14 },
-  sumValue: { color: colors.text, fontSize: 14 },
-  bold: { fontWeight: "800", color: colors.text },
-  divider: { height: 1, backgroundColor: colors.border, marginVertical: 8 },
-  payNote: { fontSize: 12, color: colors.textMuted, marginTop: 6, textAlign: "right" },
+  tlLabel: { fontSize: fontSize.small + 1 },
+  summaryWrap: { padding: spacing.lg },
+  sumRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: spacing.xs },
+  sumLabel: { color: colors.textMuted, fontSize: fontSize.small + 1 },
+  bold: { fontWeight: fontWeight.extrabold, color: colors.text },
+  divider: { height: 1, backgroundColor: colors.divider, marginVertical: spacing.sm },
+  payNote: { fontSize: fontSize.caption + 1, color: colors.textMuted, marginTop: spacing.xs + 2, textAlign: "right" },
 });

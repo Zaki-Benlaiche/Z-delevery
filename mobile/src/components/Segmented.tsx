@@ -1,10 +1,11 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { colors } from "../theme/colors";
+import { colors, fontWeight, radii, shadows, spacing } from "../theme/colors";
 
 interface Option<T extends string> {
   value: T;
   label: string;
+  icon?: string;
 }
 
 interface Props<T extends string> {
@@ -24,6 +25,7 @@ export function Segmented<T extends string>({ options, value, onChange }: Props<
             onPress={() => onChange(opt.value)}
             style={[styles.tab, active && styles.tabActive]}
           >
+            {opt.icon ? <Text style={[styles.icon, active && styles.iconActive]}>{opt.icon}</Text> : null}
             <Text style={[styles.label, active && styles.labelActive]}>{opt.label}</Text>
           </Pressable>
         );
@@ -36,16 +38,25 @@ const styles = StyleSheet.create({
   wrap: {
     flexDirection: "row",
     backgroundColor: colors.surface,
-    borderRadius: 12,
+    borderRadius: radii.lg,
     padding: 4,
+    gap: 2,
   },
   tab: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 11,
     alignItems: "center",
-    borderRadius: 8,
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 6,
+    borderRadius: radii.md,
   },
-  tabActive: { backgroundColor: colors.background, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4 },
-  label: { fontSize: 14, color: colors.textMuted, fontWeight: "500" },
-  labelActive: { color: colors.primary, fontWeight: "700" },
+  tabActive: {
+    backgroundColor: colors.background,
+    ...shadows.sm,
+  },
+  icon: { fontSize: 15, color: colors.textMuted },
+  iconActive: { color: colors.primary },
+  label: { fontSize: 13, color: colors.textMuted, fontWeight: fontWeight.semibold },
+  labelActive: { color: colors.text, fontWeight: fontWeight.bold },
 });

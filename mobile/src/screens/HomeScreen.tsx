@@ -1,9 +1,6 @@
 import { useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
-  Image,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
@@ -18,9 +15,13 @@ import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { merchantsApi } from "../api/merchants";
 import type { Merchant } from "../api/types";
 import { Screen } from "../components/Screen";
+import { Card } from "../components/Card";
+import { Avatar } from "../components/Avatar";
+import { EmptyState } from "../components/EmptyState";
+import { MerchantCardSkeleton } from "../components/Skeleton";
 import { useCurrentLocation } from "../hooks/useLocation";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
-import { colors } from "../theme/colors";
+import { colors, fontSize, fontWeight, radii, spacing } from "../theme/colors";
 import type { AppStackParamList, AppTabParamList } from "../navigation/types";
 
 type Props = CompositeScreenProps<
@@ -52,30 +53,49 @@ export function HomeScreen({ navigation }: Props) {
     <Screen padded={false}>
       <View style={styles.header}>
         <Text style={styles.greeting}>ماذا تشتهي اليوم؟</Text>
-        <TextInput
-          style={styles.search}
-          placeholder="ابحث عن مطعم أو محل..."
-          placeholderTextColor={colors.textMuted}
-          value={search}
-          onChangeText={setSearch}
-        />
+        <View style={styles.searchShell}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.search}
+            placeholder="ابحث عن مطعم أو محل..."
+            placeholderTextColor={colors.textFaint}
+            value={search}
+            onChangeText={setSearch}
+          />
+        </View>
         {loc.error ? (
           <Text style={styles.locError}>الموقع غير مفعّل — لن نُظهر القرب</Text>
         ) : null}
       </View>
 
       {query.isLoading ? (
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+        <View style={styles.list}>
+          {[0, 1, 2, 3].map((i) => (
+            <View key={i} style={{ marginBottom: spacing.md }}>
+              <MerchantCardSkeleton />
+            </View>
+          ))}
+        </View>
       ) : query.error ? (
-        <Text style={styles.error}>تعذّر تحميل التجّار: {(query.error as Error).message}</Text>
+        <EmptyState
+          icon="⚠️"
+          title="تعذّر تحميل التجّار"
+          hint={(query.error as Error).message}
+          ctaLabel="إعادة المحاولة"
+          onCta={() => query.refetch()}
+        />
       ) : (
         <FlatList
           data={query.data ?? []}
           keyExtractor={(m) => m.id}
           contentContainerStyle={styles.list}
-          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+          ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
           ListEmptyComponent={
-            <Text style={styles.empty}>لا توجد متاجر متاحة بعد في منطقتك</Text>
+            <EmptyState
+              icon="🛍️"
+              title="لا توجد متاجر بعد"
+              hint="لا توجد متاجر متاحة في منطقتك حالياً — جرّب لاحقاً"
+            />
           }
           refreshControl={
             <RefreshControl
@@ -98,14 +118,8 @@ export function HomeScreen({ navigation }: Props) {
 
 function MerchantCard({ merchant, onPress }: { merchant: Merchant; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}>
-      <View style={styles.logoWrap}>
-        {merchant.logo_url ? (
-          <Image source={{ uri: merchant.logo_url }} style={styles.logo} />
-        ) : (
-          <Text style={styles.logoFallback}>{merchant.name.charAt(0)}</Text>
-        )}
-      </View>
+    <Card onPress={onPress} variant="elevated" padding="sm" style={styles.card}>
+      <Avatar uri={merchant.logo_url} fallback={merchant.name} size={60} shape="rounded" />
       <View style={{ flex: 1 }}>
         <Text style={styles.name} numberOfLines={1}>{merchant.name}</Text>
         <View style={styles.metaRow}>
@@ -119,56 +133,45 @@ function MerchantCard({ merchant, onPress }: { merchant: Merchant; onPress: () =
           <Text style={styles.desc} numberOfLines={1}>{merchant.description}</Text>
         ) : null}
       </View>
-    </Pressable>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 12,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
     backgroundColor: colors.background,
-    gap: 12,
+    gap: spacing.md,
   },
-  greeting: { fontSize: 22, fontWeight: "700", color: colors.text, textAlign: "right" },
-  search: {
-    height: 44,
-    borderRadius: 22,
+  greeting: { fontSize: fontSize.h2, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  searchShell: {
+    height: 46,
+    borderRadius: radii.pill,
     backgroundColor: colors.surface,
-    paddingHorizontal: 16,
-    fontSize: 15,
+    paddingHorizontal: spacing.lg,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  searchIcon: { fontSize: 15 },
+  search: {
+    flex: 1,
+    fontSize: fontSize.body,
     color: colors.text,
     textAlign: "right",
   },
-  locError: { color: colors.warning, fontSize: 12, textAlign: "right" },
-  list: { padding: 16, paddingTop: 4 },
+  locError: { color: colors.warning, fontSize: fontSize.small, textAlign: "right" },
+  list: { padding: spacing.lg, paddingTop: spacing.xs },
   card: {
     flexDirection: "row",
-    backgroundColor: colors.background,
-    borderRadius: 14,
-    padding: 12,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    gap: spacing.md,
     alignItems: "center",
   },
-  logoWrap: {
-    width: 60,
-    height: 60,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  logo: { width: "100%", height: "100%" },
-  logoFallback: { fontSize: 24, fontWeight: "700", color: colors.primary },
-  name: { fontSize: 16, fontWeight: "700", color: colors.text, textAlign: "right" },
-  metaRow: { flexDirection: "row", gap: 12, marginTop: 4 },
-  meta: { fontSize: 13, color: colors.textMuted },
-  closed: { fontSize: 12, color: colors.danger, fontWeight: "600" },
-  desc: { fontSize: 13, color: colors.textMuted, marginTop: 2, textAlign: "right" },
-  empty: { textAlign: "center", color: colors.textMuted, marginTop: 40 },
-  error: { textAlign: "center", color: colors.danger, marginTop: 40, padding: 16 },
+  name: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  metaRow: { flexDirection: "row", gap: spacing.md, marginTop: spacing.xs },
+  meta: { fontSize: fontSize.small, color: colors.textMuted },
+  closed: { fontSize: fontSize.small, color: colors.danger, fontWeight: fontWeight.semibold },
+  desc: { fontSize: fontSize.small, color: colors.textMuted, marginTop: 2, textAlign: "right" },
 });

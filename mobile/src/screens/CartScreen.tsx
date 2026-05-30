@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   Alert,
   FlatList,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,8 +15,12 @@ import { ordersApi } from "../api/orders";
 import type { Address, OrderCreatePayload } from "../api/types";
 import { Button } from "../components/Button";
 import { Screen } from "../components/Screen";
+import { Card } from "../components/Card";
+import { EmptyState } from "../components/EmptyState";
+import { PriceTag } from "../components/PriceTag";
+import { QuantityStepper } from "../components/QuantityStepper";
 import { useCart, type CartLine } from "../store/cart";
-import { colors } from "../theme/colors";
+import { colors, fontSize, fontWeight, spacing } from "../theme/colors";
 import type { AppStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Cart">;
@@ -45,10 +48,13 @@ export function CartScreen({ navigation }: Props) {
   if (cart.lines.length === 0) {
     return (
       <Screen>
-        <View style={styles.emptyWrap}>
-          <Text style={styles.emptyTitle}>سلّتك فارغة</Text>
-          <Text style={styles.emptyHint}>اختر متجراً وأضف منتجات لإكمال الطلب</Text>
-        </View>
+        <EmptyState
+          icon="🛒"
+          title="سلّتك فارغة"
+          hint="اختر متجراً وأضف منتجات لإكمال الطلب"
+          ctaLabel="تصفّح المتاجر"
+          onCta={() => navigation.goBack()}
+        />
       </Screen>
     );
   }
@@ -96,24 +102,29 @@ export function CartScreen({ navigation }: Props) {
             data={addresses.data ?? []}
             keyExtractor={(a) => a.id}
             scrollEnabled={false}
-            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-            renderItem={({ item }) => (
-              <Pressable
-                style={[
-                  styles.addrCard,
-                  selectedAddress?.id === item.id && styles.addrCardActive,
-                ]}
-                onPress={() => setSelectedAddress(item)}
-              >
-                <Text style={styles.addrLabel}>{item.label}</Text>
-                {item.details ? <Text style={styles.addrDetails}>{item.details}</Text> : null}
-              </Pressable>
-            )}
+            ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
+            renderItem={({ item }) => {
+              const active = selectedAddress?.id === item.id;
+              return (
+                <Card
+                  variant="outlined"
+                  padding="sm"
+                  onPress={() => setSelectedAddress(item)}
+                  style={active ? styles.addrCardActive : undefined}
+                >
+                  <Text style={styles.addrLabel}>{item.label}</Text>
+                  {item.details ? <Text style={styles.addrDetails}>{item.details}</Text> : null}
+                </Card>
+              );
+            }}
           />
         )}
 
         <View style={styles.summary}>
-          <SummaryRow label="المجموع الفرعي" value={`${cart.subtotal().toFixed(0)} دج`} />
+          <View style={styles.sumRow}>
+            <Text style={styles.sumLabel}>المجموع الفرعي</Text>
+            <PriceTag amount={cart.subtotal()} size="md" />
+          </View>
           <Text style={styles.note}>* رسوم التوصيل تُحسب بعد تأكيد العنوان</Text>
         </View>
       </ScrollView>
@@ -132,86 +143,52 @@ export function CartScreen({ navigation }: Props) {
 function CartRow({ line }: { line: CartLine }) {
   const cart = useCart();
   return (
-    <View style={styles.row}>
-      <View style={{ flex: 1 }}>
+    <Card variant="outlined" padding="sm" style={styles.row}>
+      <View style={{ flex: 1, gap: spacing.xs }}>
         <Text style={styles.rowName}>{line.product.name}</Text>
-        <Text style={styles.rowPrice}>{Number(line.product.price).toFixed(0)} دج × {line.qty}</Text>
+        <View style={styles.unitRow}>
+          <PriceTag amount={Number(line.product.price)} size="sm" muted />
+          <Text style={styles.times}>× {line.qty}</Text>
+        </View>
       </View>
-      <View style={styles.qtyRow}>
-        <Pressable style={styles.qtyBtn} onPress={() => cart.setQty(line.product.id, line.qty - 1)}>
-          <Text style={styles.qtyBtnText}>−</Text>
-        </Pressable>
-        <Text style={styles.qtyNum}>{line.qty}</Text>
-        <Pressable style={styles.qtyBtn} onPress={() => cart.setQty(line.product.id, line.qty + 1)}>
-          <Text style={styles.qtyBtnText}>+</Text>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
-function SummaryRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.sumRow}>
-      <Text style={styles.sumLabel}>{label}</Text>
-      <Text style={styles.sumValue}>{value}</Text>
-    </View>
+      <QuantityStepper
+        value={line.qty}
+        variant="compact"
+        min={1}
+        onMinus={() => cart.setQty(line.product.id, line.qty - 1)}
+        onPlus={() => cart.setQty(line.product.id, line.qty + 1)}
+      />
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { padding: 16, paddingBottom: 100 },
+  scroll: { padding: spacing.lg, paddingBottom: 100 },
   section: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: fontSize.bodyLg,
+    fontWeight: fontWeight.bold,
     color: colors.text,
     textAlign: "right",
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
   row: {
     flexDirection: "row",
-    padding: 12,
-    backgroundColor: colors.background,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
     alignItems: "center",
-    gap: 10,
-    marginBottom: 8,
+    gap: spacing.sm + 2,
+    marginBottom: spacing.sm,
   },
-  rowName: { fontSize: 14, fontWeight: "600", color: colors.text, textAlign: "right" },
-  rowPrice: { fontSize: 13, color: colors.textMuted, textAlign: "right", marginTop: 2 },
-  qtyRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  qtyBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  qtyBtnText: { color: "#fff", fontSize: 16, fontWeight: "700", lineHeight: 18 },
-  qtyNum: { fontSize: 14, fontWeight: "700", minWidth: 16, textAlign: "center", color: colors.text },
-  addrCard: {
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
-  },
-  addrCardActive: { borderColor: colors.primary, backgroundColor: "#FFF7F0" },
-  addrLabel: { fontSize: 15, fontWeight: "700", color: colors.text, textAlign: "right" },
-  addrDetails: { fontSize: 13, color: colors.textMuted, textAlign: "right", marginTop: 2 },
-  emptyAddr: { gap: 8 },
+  rowName: { fontSize: fontSize.small + 1, fontWeight: fontWeight.semibold, color: colors.text, textAlign: "right" },
+  unitRow: { flexDirection: "row", alignItems: "baseline", gap: spacing.xs, justifyContent: "flex-end" },
+  times: { fontSize: fontSize.small, color: colors.textMuted },
+  addrCardActive: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+  addrLabel: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  addrDetails: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2 },
+  emptyAddr: { gap: spacing.sm },
   muted: { color: colors.textMuted, textAlign: "right" },
-  summary: { marginTop: 20, gap: 8 },
-  sumRow: { flexDirection: "row", justifyContent: "space-between" },
-  sumLabel: { color: colors.textMuted, fontSize: 14 },
-  sumValue: { color: colors.text, fontSize: 14, fontWeight: "700" },
-  note: { fontSize: 11, color: colors.textMuted, textAlign: "right" },
-  footer: { position: "absolute", left: 16, right: 16, bottom: 16 },
-  emptyWrap: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
-  emptyTitle: { fontSize: 20, fontWeight: "700", color: colors.text },
-  emptyHint: { fontSize: 14, color: colors.textMuted },
+  summary: { marginTop: spacing.xl, gap: spacing.sm },
+  sumRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  sumLabel: { color: colors.textMuted, fontSize: fontSize.small + 1 },
+  note: { fontSize: fontSize.caption, color: colors.textMuted, textAlign: "right" },
+  footer: { position: "absolute", left: spacing.lg, right: spacing.lg, bottom: spacing.lg },
 });

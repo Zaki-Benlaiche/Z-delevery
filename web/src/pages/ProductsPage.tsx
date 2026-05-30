@@ -4,18 +4,26 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { merchantsApi } from "../api/merchants";
 import type { Product } from "../api/types";
 import { useMyMerchant } from "../hooks/useMyMerchant";
+import { Modal } from "../components/Modal";
+import { useToast } from "../components/Toast";
 import { colors } from "../theme";
 
 export function ProductsPage() {
   const merchant = useMyMerchant();
   const queryClient = useQueryClient();
+  const toast = useToast();
   const [editing, setEditing] = useState<Product | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<Product | null>(null);
 
   const remove = useMutation({
     mutationFn: (id: string) => merchantsApi.deleteProduct(merchant.data!.id, id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-merchant"] }),
-    onError: (e) => alert((e as Error).message),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-merchant"] });
+      toast.success("تم حذف المنتج");
+      setConfirmDelete(null);
+    },
+    onError: (e) => toast.error((e as Error).message),
   });
 
   const toggleAvail = useMutation({
@@ -71,9 +79,7 @@ export function ProductsPage() {
                 <button
                   className="btn btn-ghost"
                   style={{ color: colors.danger }}
-                  onClick={() => {
-                    if (confirm(`حذف "${p.name}"؟`)) remove.mutate(p.id);
-                  }}
+                  onClick={() => setConfirmDelete(p)}
                 >
                   حذف
                 </button>
@@ -93,6 +99,32 @@ export function ProductsPage() {
           }}
         />
       )}
+
+      <Modal
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        title="حذف المنتج"
+        width={420}
+        footer={
+          <>
+            <button
+              className="btn btn-primary"
+              style={{ flex: 1, background: colors.danger }}
+              onClick={() => confirmDelete && remove.mutate(confirmDelete.id)}
+              disabled={remove.isPending}
+            >
+              {remove.isPending ? "..." : "حذف"}
+            </button>
+            <button className="btn btn-secondary" onClick={() => setConfirmDelete(null)}>
+              إلغاء
+            </button>
+          </>
+        }
+      >
+        <p style={{ color: "var(--text-muted)" }}>
+          هل أنت متأكّد من حذف <b style={{ color: "var(--text)" }}>{confirmDelete?.name}</b>؟ لا يمكن التراجع.
+        </p>
+      </Modal>
     </div>
   );
 }
@@ -105,6 +137,7 @@ interface DialogProps {
 
 function ProductDialog({ merchantId, product, onClose }: DialogProps) {
   const queryClient = useQueryClient();
+  const toast = useToast();
   const [name, setName] = useState(product?.name ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
   const [price, setPrice] = useState(String(product?.price ?? ""));
@@ -125,6 +158,7 @@ function ProductDialog({ merchantId, product, onClose }: DialogProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-merchant"] });
+      toast.success(product ? "تم تحديث المنتج" : "تمّت إضافة المنتج");
       onClose();
     },
     onError: (e) => setError((e as Error).message),
@@ -139,52 +173,13 @@ function ProductDialog({ merchantId, product, onClose }: DialogProps) {
   };
 
   return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div className="card" style={styles.dialog} onClick={(e) => e.stopPropagation()}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>
-          {product ? "تعديل المنتج" : "إضافة منتج"}
-        </h2>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <div className="field">
-            <label>الاسم *</label>
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div className="field">
-            <label>الوصف</label>
-            <input
-              className="input"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div className="field">
-              <label>السعر (دج) *</label>
-              <input
-                className="input"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                type="number"
-                min={0}
-                step="50"
-              />
-            </div>
-            <div className="field">
-              <label>الفئة</label>
-              <input
-                className="input"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                placeholder="مثال: بيتزا"
-              />
-            </div>
-          </div>
-        </div>
-
-        {error && <div className="error" style={{ marginTop: 10 }}>{error}</div>}
-
-        <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+    <Modal
+      open={true}
+      onClose={onClose}
+      title={product ? "تعديل المنتج" : "إضافة منتج"}
+      width={480}
+      footer={
+        <>
           <button
             className="btn btn-primary"
             onClick={submit}
@@ -196,9 +191,48 @@ function ProductDialog({ merchantId, product, onClose }: DialogProps) {
           <button className="btn btn-secondary" onClick={onClose}>
             إلغاء
           </button>
+        </>
+      }
+    >
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div className="field">
+          <label>الاسم *</label>
+          <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
+        </div>
+        <div className="field">
+          <label>الوصف</label>
+          <input
+            className="input"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div className="field">
+            <label>السعر (دج) *</label>
+            <input
+              className="input"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              type="number"
+              min={0}
+              step="50"
+            />
+          </div>
+          <div className="field">
+            <label>الفئة</label>
+            <input
+              className="input"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="مثال: بيتزا"
+            />
+          </div>
         </div>
       </div>
-    </div>
+
+      {error && <div className="error" style={{ marginTop: 10 }}>{error}</div>}
+    </Modal>
   );
 }
 
@@ -212,14 +246,4 @@ const styles: Record<string, React.CSSProperties> = {
   price: { color: colors.primary, fontWeight: 700, fontSize: 15 },
   productActions: { display: "flex", flexDirection: "column", gap: 6, alignItems: "stretch" },
   availToggle: { display: "flex", gap: 6, alignItems: "center", cursor: "pointer" },
-  overlay: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(0,0,0,0.4)",
-    display: "grid",
-    placeItems: "center",
-    padding: 16,
-    zIndex: 100,
-  },
-  dialog: { width: "100%", maxWidth: 480, background: colors.bg },
 };

@@ -5,7 +5,9 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { addressesApi } from "../api/addresses";
 import { Button } from "../components/Button";
 import { Screen } from "../components/Screen";
-import { colors } from "../theme/colors";
+import { Card } from "../components/Card";
+import { EmptyState } from "../components/EmptyState";
+import { colors, fontSize, fontWeight, spacing } from "../theme/colors";
 import type { AppStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Addresses">;
@@ -32,17 +34,20 @@ export function AddressesScreen({ navigation }: Props) {
       <FlatList
         data={query.data ?? []}
         keyExtractor={(a) => a.id}
-        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+        ItemSeparatorComponent={() => <View style={{ height: spacing.sm + 2 }} />}
         ListEmptyComponent={
           !query.isLoading ? (
-            <Text style={styles.empty}>لا توجد عناوين بعد — أضف عنوانك الأوّل</Text>
+            <EmptyState
+              icon="📍"
+              title="لا توجد عناوين بعد"
+              hint="أضف عنوانك الأوّل لتسهيل الطلبات القادمة"
+              ctaLabel="إضافة عنوان"
+              onCta={() => navigation.navigate("AddAddress")}
+            />
           ) : null
         }
         renderItem={({ item }) => (
-          <Pressable
-            style={styles.card}
-            onLongPress={() => confirmRemove(item.id)}
-          >
+          <Card variant="outlined" padding="sm" onPress={() => confirmRemove(item.id)} style={styles.card}>
             <View style={{ flex: 1 }}>
               <Text style={styles.label}>{item.label}</Text>
               {item.details ? <Text style={styles.details}>{item.details}</Text> : null}
@@ -50,7 +55,7 @@ export function AddressesScreen({ navigation }: Props) {
             <Pressable hitSlop={10} onPress={() => confirmRemove(item.id)}>
               <Text style={styles.removeBtn}>حذف</Text>
             </Pressable>
-          </Pressable>
+          </Card>
         )}
       />
       <Button label="إضافة عنوان جديد" onPress={() => navigation.navigate("AddAddress")} />
@@ -62,15 +67,9 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    backgroundColor: colors.background,
-    gap: 10,
+    gap: spacing.sm + 2,
   },
-  label: { fontSize: 15, fontWeight: "700", color: colors.text, textAlign: "right" },
-  details: { fontSize: 13, color: colors.textMuted, textAlign: "right", marginTop: 2 },
-  removeBtn: { color: colors.danger, fontWeight: "700" },
-  empty: { textAlign: "center", color: colors.textMuted, marginTop: 40 },
+  label: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  details: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2 },
+  removeBtn: { color: colors.danger, fontWeight: fontWeight.bold },
 });

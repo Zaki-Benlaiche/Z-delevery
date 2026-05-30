@@ -1,12 +1,4 @@
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
@@ -14,8 +6,14 @@ import { merchantsApi } from "../api/merchants";
 import type { Product } from "../api/types";
 import { Button } from "../components/Button";
 import { Screen } from "../components/Screen";
+import { Card } from "../components/Card";
+import { Avatar } from "../components/Avatar";
+import { EmptyState } from "../components/EmptyState";
+import { PriceTag } from "../components/PriceTag";
+import { QuantityStepper } from "../components/QuantityStepper";
+import { Skeleton } from "../components/Skeleton";
 import { useCart } from "../store/cart";
-import { colors } from "../theme/colors";
+import { colors, fontSize, fontWeight, radii, spacing } from "../theme/colors";
 import type { AppStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Merchant">;
@@ -32,14 +30,25 @@ export function MerchantScreen({ route, navigation }: Props) {
   if (query.isLoading) {
     return (
       <Screen>
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+        <View style={{ gap: spacing.md, marginTop: spacing.lg }}>
+          <Skeleton width="60%" height={26} />
+          <Skeleton width="40%" height={14} />
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} width="100%" height={88} radius={radii.lg} />
+          ))}
+        </View>
       </Screen>
     );
   }
   if (query.error || !query.data) {
     return (
       <Screen>
-        <Text style={styles.error}>تعذّر تحميل التاجر</Text>
+        <EmptyState
+          icon="⚠️"
+          title="تعذّر تحميل التاجر"
+          ctaLabel="إعادة المحاولة"
+          onCta={() => query.refetch()}
+        />
       </Screen>
     );
   }
@@ -52,6 +61,7 @@ export function MerchantScreen({ route, navigation }: Props) {
         data={m.products.filter((p) => p.available)}
         keyExtractor={(p) => p.id}
         contentContainerStyle={styles.list}
+        ItemSeparatorComponent={() => <View style={{ height: spacing.sm + 2 }} />}
         ListHeaderComponent={
           <View style={styles.header}>
             <Text style={styles.name}>{m.name}</Text>
@@ -64,7 +74,9 @@ export function MerchantScreen({ route, navigation }: Props) {
             <Text style={styles.sectionTitle}>القائمة</Text>
           </View>
         }
-        ListEmptyComponent={<Text style={styles.empty}>لا توجد منتجات متاحة حالياً</Text>}
+        ListEmptyComponent={
+          <EmptyState icon="🍽️" title="لا توجد منتجات" hint="لا توجد منتجات متاحة حالياً" />
+        }
         renderItem={({ item }) => <ProductRow product={item} />}
       />
 
@@ -86,101 +98,69 @@ function ProductRow({ product }: { product: Product }) {
   const otherMerchant = cart.merchantId && cart.merchantId !== product.merchant_id;
 
   return (
-    <View style={styles.row}>
-      {product.image_url ? (
-        <Image source={{ uri: product.image_url }} style={styles.thumb} />
-      ) : (
-        <View style={[styles.thumb, styles.thumbPlaceholder]} />
-      )}
-      <View style={{ flex: 1, gap: 4 }}>
+    <Card variant="outlined" padding="sm" style={styles.row}>
+      <Avatar uri={product.image_url} fallback={product.name} size={64} shape="rounded" />
+      <View style={{ flex: 1, gap: spacing.xs }}>
         <Text style={styles.productName} numberOfLines={1}>{product.name}</Text>
         {product.description ? (
           <Text style={styles.productDesc} numberOfLines={2}>{product.description}</Text>
         ) : null}
-        <Text style={styles.price}>{Number(product.price).toFixed(0)} دج</Text>
+        <PriceTag amount={Number(product.price)} size="sm" />
       </View>
       <View style={styles.qtyCol}>
         {lineQty > 0 ? (
-          <View style={styles.qtyRow}>
-            <Pressable
-              style={styles.qtyBtn}
-              onPress={() => cart.setQty(product.id, lineQty - 1)}
-            >
-              <Text style={styles.qtyBtnText}>−</Text>
-            </Pressable>
-            <Text style={styles.qtyNum}>{lineQty}</Text>
-            <Pressable
-              style={styles.qtyBtn}
-              onPress={() => cart.setQty(product.id, lineQty + 1)}
-            >
-              <Text style={styles.qtyBtnText}>+</Text>
-            </Pressable>
-          </View>
+          <QuantityStepper
+            value={lineQty}
+            variant="compact"
+            onMinus={() => cart.setQty(product.id, lineQty - 1)}
+            onPlus={() => cart.setQty(product.id, lineQty + 1)}
+          />
         ) : (
-          <Pressable style={styles.addBtn} onPress={() => cart.add(product)}>
+          <Pressable
+            style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.85 }]}
+            onPress={() => cart.add(product)}
+          >
             <Text style={styles.addBtnText}>{otherMerchant ? "استبدل +" : "إضافة"}</Text>
           </Pressable>
         )}
       </View>
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  list: { padding: 16, paddingBottom: 100 },
-  header: { gap: 6, marginBottom: 16 },
-  name: { fontSize: 24, fontWeight: "800", color: colors.text, textAlign: "right" },
-  metaRow: { flexDirection: "row", gap: 14 },
-  meta: { fontSize: 14, color: colors.textMuted },
-  desc: { fontSize: 14, color: colors.textMuted, textAlign: "right", marginTop: 4 },
+  list: { padding: spacing.lg, paddingBottom: 100 },
+  header: { gap: spacing.xs + 2, marginBottom: spacing.lg },
+  name: { fontSize: fontSize.h1, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
+  metaRow: { flexDirection: "row", gap: spacing.md + 2 },
+  meta: { fontSize: fontSize.small, color: colors.textMuted },
+  desc: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: spacing.xs },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: fontSize.h3,
+    fontWeight: fontWeight.bold,
     color: colors.text,
-    marginTop: 20,
+    marginTop: spacing.xl,
     textAlign: "right",
   },
   row: {
     flexDirection: "row",
-    padding: 12,
-    gap: 12,
-    backgroundColor: colors.background,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: 10,
+    gap: spacing.md,
     alignItems: "center",
   },
-  thumb: { width: 64, height: 64, borderRadius: 10, backgroundColor: colors.surface },
-  thumbPlaceholder: {},
-  productName: { fontSize: 15, fontWeight: "700", color: colors.text, textAlign: "right" },
-  productDesc: { fontSize: 12, color: colors.textMuted, textAlign: "right" },
-  price: { fontSize: 14, color: colors.primary, fontWeight: "700", textAlign: "right" },
+  productName: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  productDesc: { fontSize: fontSize.caption + 1, color: colors.textMuted, textAlign: "right" },
   qtyCol: { alignItems: "center" },
-  qtyRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  qtyBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  qtyBtnText: { color: "#fff", fontSize: 18, fontWeight: "700", lineHeight: 20 },
-  qtyNum: { fontSize: 15, fontWeight: "700", minWidth: 18, textAlign: "center", color: colors.text },
   addBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
     backgroundColor: colors.primary,
-    borderRadius: 10,
+    borderRadius: radii.md,
   },
-  addBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
+  addBtnText: { color: "#fff", fontWeight: fontWeight.bold, fontSize: fontSize.small },
   cartBar: {
     position: "absolute",
-    left: 16,
-    right: 16,
-    bottom: 16,
+    left: spacing.lg,
+    right: spacing.lg,
+    bottom: spacing.lg,
   },
-  empty: { textAlign: "center", color: colors.textMuted, marginTop: 20 },
-  error: { textAlign: "center", color: colors.danger, marginTop: 40 },
 });

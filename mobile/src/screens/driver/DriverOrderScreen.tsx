@@ -1,5 +1,4 @@
 import {
-  ActivityIndicator,
   Alert,
   ScrollView,
   StyleSheet,
@@ -15,8 +14,11 @@ import { ordersApi } from "../../api/orders";
 import type { Order, OrderStatus } from "../../api/types";
 import { Button } from "../../components/Button";
 import { Screen } from "../../components/Screen";
+import { Card } from "../../components/Card";
+import { PriceTag } from "../../components/PriceTag";
+import { Skeleton } from "../../components/Skeleton";
 import { StatusBadge, statusLabel } from "../../components/StatusBadge";
-import { colors } from "../../theme/colors";
+import { colors, fontSize, fontWeight, radii, spacing } from "../../theme/colors";
 import type { DriverStackParamList } from "../../navigation/types";
 
 type Props = NativeStackScreenProps<DriverStackParamList, "DriverOrder">;
@@ -67,7 +69,12 @@ export function DriverOrderScreen({ route, navigation }: Props) {
   if (query.isLoading || !query.data) {
     return (
       <Screen>
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+        <View style={{ gap: spacing.md, marginTop: spacing.lg }}>
+          <Skeleton width="100%" height={48} radius={radii.lg} />
+          <Skeleton width="100%" height={200} radius={radii.lg} />
+          <Skeleton width="60%" height={16} />
+          <Skeleton width="80%" height={14} />
+        </View>
       </Screen>
     );
   }
@@ -80,10 +87,10 @@ export function DriverOrderScreen({ route, navigation }: Props) {
   return (
     <Screen padded={false}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.headerCard}>
+        <Card variant="soft" padding="md" style={styles.headerCard}>
           <Text style={styles.orderId}>#{order.id.slice(0, 8)}</Text>
           <StatusBadge status={order.status} />
-        </View>
+        </Card>
 
         {dest ? (
           <View style={styles.mapWrap}>
@@ -121,21 +128,24 @@ export function DriverOrderScreen({ route, navigation }: Props) {
         </View>
 
         <View style={styles.section}>
-          <View style={styles.sumRow}>
-            <Text style={styles.sumLabel}>قيمة الطلب</Text>
-            <Text style={styles.sumValue}>{Number(order.subtotal).toFixed(0)} دج</Text>
-          </View>
-          <View style={styles.sumRow}>
-            <Text style={styles.sumLabel}>التوصيل</Text>
-            <Text style={styles.sumValue}>{Number(order.delivery_fee).toFixed(0)} دج</Text>
-          </View>
-          <View style={[styles.sumRow, { borderTopWidth: 1, borderColor: colors.border, paddingTop: 8, marginTop: 4 }]}>
-            <Text style={[styles.sumLabel, styles.bold]}>الإجمالي يُحصَّل</Text>
-            <Text style={[styles.sumValue, styles.bold]}>{Number(order.total).toFixed(0)} دج</Text>
-          </View>
-          <Text style={styles.payNote}>
-            {order.payment_method === "cash" ? "دفع نقداً عند الاستلام" : "دفع بطاقة"}
-          </Text>
+          <Card variant="outlined" padding="md" style={{ gap: spacing.xs }}>
+            <View style={styles.sumRow}>
+              <Text style={styles.sumLabel}>قيمة الطلب</Text>
+              <PriceTag amount={Number(order.subtotal)} size="sm" muted />
+            </View>
+            <View style={styles.sumRow}>
+              <Text style={styles.sumLabel}>التوصيل</Text>
+              <PriceTag amount={Number(order.delivery_fee)} size="sm" muted />
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.sumRow}>
+              <Text style={[styles.sumLabel, styles.bold]}>الإجمالي يُحصَّل</Text>
+              <PriceTag amount={Number(order.total)} size="md" />
+            </View>
+            <Text style={styles.payNote}>
+              {order.payment_method === "cash" ? "دفع نقداً عند الاستلام" : "دفع بطاقة"}
+            </Text>
+          </Card>
         </View>
       </ScrollView>
 
@@ -168,24 +178,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
-    backgroundColor: colors.surface,
+    margin: spacing.lg,
+    marginBottom: 0,
   },
-  orderId: { fontSize: 14, fontWeight: "700", color: colors.text },
-  mapWrap: { height: 220, margin: 16, borderRadius: 12, overflow: "hidden" },
+  orderId: { fontSize: fontSize.small + 1, fontWeight: fontWeight.bold, color: colors.text },
+  mapWrap: { height: 220, margin: spacing.lg, borderRadius: radii.lg, overflow: "hidden" },
   map: { flex: 1 },
-  section: { padding: 16, gap: 6 },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: colors.text, marginBottom: 6, textAlign: "right" },
-  address: { fontSize: 14, color: colors.text, textAlign: "right" },
-  itemRow: { flexDirection: "row", gap: 10, paddingVertical: 4, alignItems: "center" },
-  itemQty: { fontSize: 14, fontWeight: "700", color: colors.primary, minWidth: 32 },
-  itemName: { fontSize: 14, color: colors.text, flex: 1, textAlign: "right" },
-  sumRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 },
-  sumLabel: { color: colors.textMuted, fontSize: 14 },
-  sumValue: { color: colors.text, fontSize: 14 },
-  bold: { fontWeight: "800" },
-  payNote: { fontSize: 12, color: colors.textMuted, marginTop: 6, textAlign: "right" },
-  footer: { position: "absolute", left: 16, right: 16, bottom: 16 },
-  doneTxt: { textAlign: "center", color: colors.success, fontWeight: "700", fontSize: 16 },
-  takenTxt: { textAlign: "center", color: colors.textMuted, fontSize: 14 },
+  section: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, gap: spacing.xs + 2 },
+  sectionTitle: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.bold, color: colors.text, marginBottom: spacing.xs + 2, textAlign: "right" },
+  address: { fontSize: fontSize.small + 1, color: colors.text, textAlign: "right" },
+  itemRow: { flexDirection: "row", gap: spacing.sm + 2, paddingVertical: spacing.xs, alignItems: "center" },
+  itemQty: { fontSize: fontSize.small + 1, fontWeight: fontWeight.bold, color: colors.primary, minWidth: 32 },
+  itemName: { fontSize: fontSize.small + 1, color: colors.text, flex: 1, textAlign: "right" },
+  sumRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: spacing.xs },
+  sumLabel: { color: colors.textMuted, fontSize: fontSize.small + 1 },
+  bold: { fontWeight: fontWeight.extrabold, color: colors.text },
+  divider: { height: 1, backgroundColor: colors.divider, marginVertical: spacing.xs + 2 },
+  payNote: { fontSize: fontSize.caption + 1, color: colors.textMuted, marginTop: spacing.xs + 2, textAlign: "right" },
+  footer: { position: "absolute", left: spacing.lg, right: spacing.lg, bottom: spacing.lg },
+  doneTxt: { textAlign: "center", color: colors.success, fontWeight: fontWeight.bold, fontSize: fontSize.bodyLg },
+  takenTxt: { textAlign: "center", color: colors.textMuted, fontSize: fontSize.small + 1 },
 });

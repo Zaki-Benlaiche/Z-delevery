@@ -3,17 +3,22 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { merchantsApi } from "../api/merchants";
 import { useMyMerchant } from "../hooks/useMyMerchant";
+import { useToast } from "../components/Toast";
 import { colors } from "../theme";
 
 export function SettingsPage() {
   const merchant = useMyMerchant();
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   const update = useMutation({
     mutationFn: (payload: { is_open?: boolean; open_hours?: string; description?: string }) =>
       merchantsApi.update(merchant.data!.id, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-merchant"] }),
-    onError: (e) => alert((e as Error).message),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-merchant"] });
+      toast.success("تم حفظ التغييرات");
+    },
+    onError: (e) => toast.error((e as Error).message),
   });
 
   const [openHours, setOpenHours] = useState("");

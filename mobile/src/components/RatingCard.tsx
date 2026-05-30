@@ -5,7 +5,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { ratingsApi } from "../api/ratings";
 import { Button } from "./Button";
-import { colors } from "../theme/colors";
+import { Card } from "./Card";
+import { colors, fontWeight, radii, spacing } from "../theme/colors";
 
 interface Props {
   orderId: string;
@@ -35,8 +36,8 @@ export function RatingCard({ orderId }: Props) {
   // تقييم سابق موجود — نعرضه بدل النموذج
   if (existing.data) {
     return (
-      <View style={styles.card}>
-        <Text style={styles.thanks}>شكراً لتقييمك ✓</Text>
+      <Card variant="soft" padding="lg" style={styles.card}>
+        <Text style={styles.thanks}>✓ شكراً لتقييمك</Text>
         <View style={styles.starsRow}>
           {[1, 2, 3, 4, 5].map((n) => (
             <Text key={n} style={[styles.star, { color: n <= existing.data!.stars ? colors.primary : colors.border }]}>
@@ -45,15 +46,16 @@ export function RatingCard({ orderId }: Props) {
           ))}
         </View>
         {existing.data.comment ? (
-          <Text style={styles.savedComment}>{existing.data.comment}</Text>
+          <Text style={styles.savedComment}>"{existing.data.comment}"</Text>
         ) : null}
-      </View>
+      </Card>
     );
   }
 
   return (
-    <View style={styles.card}>
+    <Card variant="soft" padding="lg" style={styles.card}>
       <Text style={styles.title}>كيف كانت تجربتك؟</Text>
+      <Text style={styles.sub}>قيّم الطلب لتساعد المتجر على التحسّن</Text>
       <View style={styles.starsRow}>
         {[1, 2, 3, 4, 5].map((n) => (
           <Pressable key={n} onPress={() => setStars(n)} hitSlop={8}>
@@ -68,7 +70,7 @@ export function RatingCard({ orderId }: Props) {
         value={comment}
         onChangeText={setComment}
         placeholder="تعليق (اختياري)"
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={colors.textFaint}
         multiline
         maxLength={500}
       />
@@ -78,34 +80,26 @@ export function RatingCard({ orderId }: Props) {
         loading={submit.isPending}
         disabled={stars === 0}
       />
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    margin: 16,
-    padding: 16,
-    backgroundColor: "#FFF7F0",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#FFE2C8",
-    gap: 12,
-  },
-  title: { fontSize: 16, fontWeight: "700", color: colors.text, textAlign: "right" },
-  thanks: { fontSize: 16, fontWeight: "700", color: colors.success, textAlign: "right" },
-  starsRow: { flexDirection: "row", gap: 8, justifyContent: "center" },
-  star: { fontSize: 36, fontWeight: "700" },
+  card: { margin: spacing.lg, gap: spacing.md },
+  title: { fontSize: 17, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  sub: { fontSize: 13, color: colors.textMuted, textAlign: "right" },
+  thanks: { fontSize: 16, fontWeight: fontWeight.bold, color: colors.success, textAlign: "right" },
+  starsRow: { flexDirection: "row", gap: spacing.sm, justifyContent: "center", marginVertical: spacing.sm },
+  star: { fontSize: 40, fontWeight: fontWeight.bold },
   input: {
-    minHeight: 60,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
+    minHeight: 64,
+    padding: spacing.md,
+    borderRadius: radii.md,
     backgroundColor: colors.background,
     color: colors.text,
     textAlign: "right",
     textAlignVertical: "top",
+    fontSize: 14,
   },
-  savedComment: { textAlign: "right", color: colors.textMuted, fontSize: 14 },
+  savedComment: { textAlign: "right", color: colors.textMuted, fontSize: 14, fontStyle: "italic" },
 });

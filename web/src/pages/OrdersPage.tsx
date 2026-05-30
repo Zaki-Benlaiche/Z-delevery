@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ordersApi } from "../api/orders";
 import type { Order, OrderStatus } from "../api/types";
 import { StatusBadge } from "../components/StatusBadge";
+import { useToast } from "../components/Toast";
 import { useNewOrderAlert } from "../hooks/useNewOrderAlert";
 import { colors, statusLabel } from "../theme";
 
@@ -25,6 +26,7 @@ const ACTIVE_STATUSES: OrderStatus[] = [
 
 export function OrdersPage() {
   const queryClient = useQueryClient();
+  const toast = useToast();
   const [tab, setTab] = useState<"active" | "history">("active");
 
   const orders = useQuery({
@@ -46,8 +48,9 @@ export function OrdersPage() {
       queryClient.setQueryData<Order[]>(["orders"], (prev) =>
         prev?.map((o) => (o.id === updated.id ? updated : o)) ?? prev,
       );
+      toast.success(`تم تحديث الطلب → ${statusLabel[updated.status]}`);
     },
-    onError: (e) => alert(`تعذّر التحديث: ${(e as Error).message}`),
+    onError: (e) => toast.error(`تعذّر التحديث: ${(e as Error).message}`),
   });
 
   const filtered = useMemo(() => {
