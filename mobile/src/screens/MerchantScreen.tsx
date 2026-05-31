@@ -1,4 +1,5 @@
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
@@ -12,20 +13,41 @@ import { EmptyState } from "../components/EmptyState";
 import { PriceTag } from "../components/PriceTag";
 import { QuantityStepper } from "../components/QuantityStepper";
 import { Skeleton } from "../components/Skeleton";
+import { FavoriteButton } from "../components/FavoriteButton";
 import { useCart } from "../store/cart";
 import { colors, fontSize, fontWeight, radii, spacing } from "../theme/colors";
 import type { AppStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Merchant">;
 
+const ALL = "__all__";
+
 export function MerchantScreen({ route, navigation }: Props) {
   const { merchantId } = route.params;
   const cart = useCart();
+  const [activeCat, setActiveCat] = useState<string>(ALL);
 
   const query = useQuery({
     queryKey: ["merchant", merchantId],
     queryFn: () => merchantsApi.detail(merchantId),
   });
+
+  const products = useMemo(
+    () => (query.data?.products ?? []).filter((p) => p.available),
+    [query.data],
+  );
+
+  // الأقسام المستخرجة من تصنيفات المنتجات
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => p.category && set.add(p.category));
+    return Array.from(set);
+  }, [products]);
+
+  const visibleProducts = useMemo(
+    () => (activeCat === ALL ? products : products.filter((p) => p.category === activeCat)),
+    [products, activeCat],
+  );
 
   if (query.isLoading) {
     return (
@@ -58,20 +80,52 @@ export function MerchantScreen({ route, navigation }: Props) {
   return (
     <Screen padded={false}>
       <FlatList
-        data={m.products.filter((p) => p.available)}
+        data={visibleProducts}
         keyExtractor={(p) => p.id}
         contentContainerStyle={styles.list}
         ItemSeparatorComponent={() => <View style={{ height: spacing.sm + 2 }} />}
         ListHeaderComponent={
-          <View style={styles.header}>
-            <Text style={styles.name}>{m.name}</Text>
-            <View style={styles.metaRow}>
-              <Text style={styles.meta}>⭐ {Number(m.rating || 0).toFixed(1)}</Text>
-              {m.distance_km != null ? <Text style={styles.meta}>📍 {m.distance_km} كم</Text> : null}
-              {m.open_hours ? <Text style={styles.meta}>🕐 {m.open_hours}</Text> : null}
+          <View>
+            <View style={styles.hero}>
+              <Avatar uri={m.logo_url} fallback={m.name} size={72} shape="rounded" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.name}>{m.name}</Text>
+                <View style={styles.metaRow}>
+                  <View style={styles.ratingPill}>
+                    <Text style={styles.ratingText}>⭐ {Number(m.rating || 0).toFixed(1)}</Text>
+                  </View>
+                  {m.distance_km != null ? <Text style={styles.meta}>📍 {m.distance_km} كم</Text> : null}
+                  {m.open_hours ? <Text style={styles.meta}>🕐 {m.open_hours}</Text> : null}
+                </View>
+              </View>
+              <FavoriteButton merchantId={m.id} size={22} floating />
             </View>
             {m.description ? <Text style={styles.desc}>{m.description}</Text> : null}
-            <Text style={styles.sectionTitle}>القائمة</Text>
+
+            {categories.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.chipRow}
+              >
+                {[ALL, ...categories].map((c) => {
+                  const active = activeCat === c;
+                  return (
+                    <Pressable
+                      key={c}
+                      onPress={() => setActiveCat(c)}
+                      style={[styles.chip, active && styles.chipActive]}
+                    >
+                      <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                        {c === ALL ? "الكل" : c}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            ) : (
+              <Text style={styles.sectionTitle}>القائمة</Text>
+            )}
           </View>
         }
         ListEmptyComponent={
@@ -99,7 +153,7 @@ function ProductRow({ product }: { product: Product }) {
 
   return (
     <Card variant="outlined" padding="sm" style={styles.row}>
-      <Avatar uri={product.image_url} fallback={product.name} size={64} shape="rounded" />
+      <Avatar uri={product.image_url} fallback={product.name} size={72} shape="rounded" />
       <View style={{ flex: 1, gap: spacing.xs }}>
         <Text style={styles.productName} numberOfLines={1}>{product.name}</Text>
         {product.description ? (
@@ -120,7 +174,7 @@ function ProductRow({ product }: { product: Product }) {
             style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.85 }]}
             onPress={() => cart.add(product)}
           >
-            <Text style={styles.addBtnText}>{otherMerchant ? "استبدل +" : "إضافة"}</Text>
+            <Text style={styles.addBtnText}>{otherMerchant ? "استبدل" : "＋"}</Text>
           </Pressable>
         )}
       </View>
@@ -130,37 +184,50 @@ function ProductRow({ product }: { product: Product }) {
 
 const styles = StyleSheet.create({
   list: { padding: spacing.lg, paddingBottom: 100 },
-  header: { gap: spacing.xs + 2, marginBottom: spacing.lg },
-  name: { fontSize: fontSize.h1, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
-  metaRow: { flexDirection: "row", gap: spacing.md + 2 },
+  hero: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  name: { fontSize: fontSize.h2, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
+  metaRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.xs, alignItems: "center" },
+  ratingPill: {
+    backgroundColor: colors.warningSoft,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radii.pill,
+  },
+  ratingText: { fontSize: fontSize.caption + 1, color: colors.text, fontWeight: fontWeight.semibold },
   meta: { fontSize: fontSize.small, color: colors.textMuted },
-  desc: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: spacing.xs },
+  desc: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: spacing.sm },
+
+  chipRow: { gap: spacing.sm, paddingVertical: spacing.lg },
+  chip: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surface,
+  },
+  chipActive: { backgroundColor: colors.primary },
+  chipText: { fontSize: fontSize.small, color: colors.textMuted, fontWeight: fontWeight.medium },
+  chipTextActive: { color: "#fff", fontWeight: fontWeight.bold },
+
   sectionTitle: {
     fontSize: fontSize.h3,
     fontWeight: fontWeight.bold,
     color: colors.text,
     marginTop: spacing.xl,
+    marginBottom: spacing.sm,
     textAlign: "right",
   },
-  row: {
-    flexDirection: "row",
-    gap: spacing.md,
-    alignItems: "center",
-  },
+  row: { flexDirection: "row", gap: spacing.md, alignItems: "center" },
   productName: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
   productDesc: { fontSize: fontSize.caption + 1, color: colors.textMuted, textAlign: "right" },
   qtyCol: { alignItems: "center" },
   addBtn: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.primary,
     borderRadius: radii.md,
   },
-  addBtnText: { color: "#fff", fontWeight: fontWeight.bold, fontSize: fontSize.small },
-  cartBar: {
-    position: "absolute",
-    left: spacing.lg,
-    right: spacing.lg,
-    bottom: spacing.lg,
-  },
+  addBtnText: { color: "#fff", fontWeight: fontWeight.bold, fontSize: fontSize.h4 },
+  cartBar: { position: "absolute", left: spacing.lg, right: spacing.lg, bottom: spacing.lg },
 });

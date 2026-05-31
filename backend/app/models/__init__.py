@@ -1,6 +1,7 @@
 """تجميع كل النماذج ليكتشفها SQLAlchemy و Alembic"""
 from app.models.driver import Driver
 from app.models.merchant import Merchant, Product
+from app.models.offer import Offer
 from app.models.order import Order, OrderItem, OrderTracking
 from app.models.rating import Rating
 from app.models.user import Address, User
@@ -10,6 +11,7 @@ __all__ = [
     "Address",
     "Merchant",
     "Product",
+    "Offer",
     "Driver",
     "Order",
     "OrderItem",

@@ -56,6 +56,18 @@ export interface MerchantDetail extends Merchant {
   products: Product[];
 }
 
+export interface Offer {
+  id: string;
+  merchant_id: string;
+  title: string;
+  subtitle: string | null;
+  image_url: string | null;
+  discount_pct: number | null;
+  badge_text: string | null;
+  is_active: boolean;
+  merchant_name: string | null;
+}
+
 export interface Address {
   id: string;
   label: string;
