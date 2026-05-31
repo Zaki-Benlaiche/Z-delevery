@@ -4,6 +4,7 @@ import { Layout } from "./components/Layout";
 import { useAuth } from "./auth/context";
 import { useMyMerchant } from "./hooks/useMyMerchant";
 import { LoginPage } from "./pages/LoginPage";
+import { OffersPage } from "./pages/OffersPage";
 import { OrdersPage } from "./pages/OrdersPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { SettingsPage } from "./pages/SettingsPage";
@@ -37,6 +38,7 @@ export default function App() {
       />
       <Route path="/orders" element={<Guarded><OrdersPage /></Guarded>} />
       <Route path="/products" element={<Guarded><ProductsPage /></Guarded>} />
+      <Route path="/offers" element={<Guarded><OffersPage /></Guarded>} />
       <Route path="/settings" element={<Guarded><SettingsPage /></Guarded>} />
       <Route path="*" element={<Navigate to="/orders" replace />} />
     </Routes>

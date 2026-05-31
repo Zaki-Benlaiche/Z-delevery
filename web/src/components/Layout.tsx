@@ -14,6 +14,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: "/orders", label: "الطلبات", icon: "📦" },
   { to: "/products", label: "المنتجات", icon: "🍕" },
+  { to: "/offers", label: "العروض", icon: "🎟️" },
   { to: "/settings", label: "الإعدادات", icon: "⚙️" },
 ];
 
