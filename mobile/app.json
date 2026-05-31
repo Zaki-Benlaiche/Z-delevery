@@ -25,7 +25,9 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "config": {
         "googleMaps": {
@@ -46,7 +48,11 @@
       ]
     ],
     "extra": {
-      "apiUrl": "https://zdelivry-api.onrender.com"
-    }
+      "apiUrl": "https://zdelivry-api.onrender.com",
+      "eas": {
+        "projectId": "ebe4d59a-88dc-48ba-9a8d-91b110159f6b"
+      }
+    },
+    "owner": "benlaiche_zakaria"
   }
 }
