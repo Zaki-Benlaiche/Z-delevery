@@ -53,6 +53,12 @@
         "projectId": "ebe4d59a-88dc-48ba-9a8d-91b110159f6b"
       }
     },
-    "owner": "benlaiche_zakaria"
+    "owner": "benlaiche_zakaria",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/ebe4d59a-88dc-48ba-9a8d-91b110159f6b"
+    }
   }
 }
