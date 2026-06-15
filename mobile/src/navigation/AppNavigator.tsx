@@ -13,6 +13,7 @@ import { HomeScreen } from "../screens/HomeScreen";
 import { MerchantScreen } from "../screens/MerchantScreen";
 import { OrdersScreen } from "../screens/OrdersScreen";
 import { OrderTrackingScreen } from "../screens/OrderTrackingScreen";
+import { PartnerScreen } from "../screens/PartnerScreen";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/colors";
 import type { AppStackParamList, AppTabParamList } from "./types";
 
@@ -81,6 +82,7 @@ export function AppNavigator() {
         component={OrderTrackingScreen}
         options={{ title: "تتبّع الطلب" }}
       />
+      <Stack.Screen name="Partner" component={PartnerScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

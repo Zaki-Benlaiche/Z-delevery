@@ -19,6 +19,7 @@ export type AppStackParamList = {
   Addresses: { picking?: boolean } | undefined;
   AddAddress: undefined;
   OrderTracking: { orderId: string };
+  Partner: { mode?: "store" | "driver" } | undefined;
 };
 
 export type DriverTabParamList = {

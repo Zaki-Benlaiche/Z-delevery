@@ -41,7 +41,10 @@ export type IconName =
   | "lock"
   | "globe"
   | "leaf"
-  | "basket";
+  | "basket"
+  | "info"
+  | "logout"
+  | "feedback";
 
 const MAP: Record<IconName, { family: Family; glyph: string }> = {
   search: { family: "ion", glyph: "search" },
@@ -80,6 +83,9 @@ const MAP: Record<IconName, { family: Family; glyph: string }> = {
   globe: { family: "ion", glyph: "globe-outline" },
   leaf: { family: "ion", glyph: "leaf-outline" },
   basket: { family: "ion", glyph: "basket-outline" },
+  info: { family: "ion", glyph: "information-circle-outline" },
+  logout: { family: "ion", glyph: "log-out-outline" },
+  feedback: { family: "ion", glyph: "chatbubble-ellipses-outline" },
 };
 
 interface Props {

@@ -148,7 +148,7 @@ async def get_merchant(merchant_id: uuid.UUID, db: AsyncSession = Depends(get_db
 async def create_merchant(
     payload: MerchantCreate,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(require_role(UserRole.MERCHANT, UserRole.ADMIN)),
+    user: User = Depends(get_current_user),
 ):
     existing = (
         await db.execute(select(Merchant).where(Merchant.user_id == user.id))
@@ -166,6 +166,9 @@ async def create_merchant(
         location=make_point(payload.lat, payload.lng),
     )
     db.add(merchant)
+    # أي مستخدم يفتح متجراً يصبح تاجراً تلقائياً (ترقية الدور)
+    if user.role == UserRole.CUSTOMER:
+        user.role = UserRole.MERCHANT
     await db.flush()
     await db.refresh(merchant)
     return _merchant_out(merchant)

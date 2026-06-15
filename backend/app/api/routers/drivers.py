@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import require_role
+from app.api.deps import get_current_user, require_role
 from app.core.database import get_db
 from app.core.geo import haversine_km, make_point, read_point
 from app.models.driver import Driver
@@ -73,7 +73,7 @@ async def _my_driver(user: User, db: AsyncSession) -> Driver:
 async def register_driver(
     payload: DriverRegister,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(require_role(UserRole.DRIVER, UserRole.ADMIN)),
+    user: User = Depends(get_current_user),
 ):
     existing = (
         await db.execute(select(Driver).where(Driver.user_id == user.id))
@@ -86,6 +86,9 @@ async def register_driver(
         license_url=payload.license_url,
     )
     db.add(driver)
+    # أي مستخدم ينضمّ للتوصيل يصبح سائقاً تلقائياً (ترقية الدور)
+    if user.role == UserRole.CUSTOMER:
+        user.role = UserRole.DRIVER
     await db.flush()
     await db.refresh(driver)
     return _driver_out(driver)

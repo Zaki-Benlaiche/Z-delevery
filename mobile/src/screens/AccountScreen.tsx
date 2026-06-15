@@ -1,83 +1,154 @@
 import { useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import type { CompositeScreenProps } from "@react-navigation/native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 import { Button } from "../components/Button";
 import { Screen } from "../components/Screen";
-import { Card } from "../components/Card";
-import { Avatar } from "../components/Avatar";
 import { Input } from "../components/Input";
 import { Segmented } from "../components/Segmented";
-import { Icon } from "../components/Icon";
+import { Icon, type IconName } from "../components/Icon";
 import { useAuth } from "../auth/context";
 import { useT } from "../i18n";
 import type { UserRole } from "../api/types";
-import { colors, fontSize, fontWeight, spacing } from "../theme/colors";
+import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/colors";
 import type { AppStackParamList, AppTabParamList } from "../navigation/types";
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<AppTabParamList, "AccountTab">,
   NativeStackScreenProps<AppStackParamList>
 >;
-
-function LanguageSelector() {
-  const { t, lang, setLang } = useT();
-  return (
-    <View style={styles.langBlock}>
-      <View style={styles.langHeader}>
-        <Icon name="globe" size={18} color={colors.textMuted} />
-        <Text style={styles.langLabel}>{t("account.language")}</Text>
-      </View>
-      <Segmented
-        value={lang}
-        onChange={(v) => setLang(v as "ar" | "fr")}
-        options={[
-          { value: "ar", label: "🇩🇿 العربية" },
-          { value: "fr", label: "🇫🇷 Français" },
-        ]}
-      />
-    </View>
-  );
-}
+type Nav = Props["navigation"];
 
 export function AccountScreen({ navigation }: Props) {
   const { user, signOut } = useAuth();
-  const { t } = useT();
+  const { t, lang, setLang } = useT();
+  const [notif, setNotif] = useState(true);
+  const [showLogin, setShowLogin] = useState(false);
 
-  if (!user) return <GuestAccount />;
-
-  const roleLabel =
-    user.role === "driver" ? t("account.driver") : user.role === "customer" ? t("account.customer") : user.role;
+  const roleLabel = !user
+    ? t("account.guest")
+    : user.role === "driver"
+      ? t("account.driver")
+      : user.role === "merchant"
+        ? "تاجر"
+        : t("account.customer");
+  const isCustomerOrGuest = !user || user.role === "customer";
 
   return (
-    <Screen>
-      <Card variant="soft" padding="md" style={styles.profile}>
-        <Avatar fallback={roleLabel} size={56} shape="circle" />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.name}>{roleLabel}</Text>
-          <Text style={styles.muted}>{user.user_id.slice(0, 8)}</Text>
+    <Screen padded={false}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {/* رأس الملف الشخصي */}
+        <View style={styles.profile}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{roleLabel.charAt(0)}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.profileName}>{roleLabel}</Text>
+            <Text style={styles.profileSub}>
+              {user ? `#${user.user_id.slice(0, 8)}` : t("account.loginPrompt")}
+            </Text>
+          </View>
         </View>
-      </Card>
 
-      <View style={styles.section}>
-        <Button label={t("account.myAddresses")} variant="secondary" onPress={() => navigation.navigate("Addresses")} />
-      </View>
+        {/* ===== الإعدادات ===== */}
+        <Text style={styles.groupTitle}>{t("account.settings")}</Text>
+        <View style={styles.group}>
+          <Row icon="location" tint={colors.infoSoft} color={colors.info} label={t("account.myAddresses")} onPress={() => navigation.navigate("Addresses")} />
+          <Divider />
+          <Row
+            icon="bell"
+            tint={colors.warningSoft}
+            color={colors.warning}
+            label={t("account.notifications")}
+            right={<Switch value={notif} onValueChange={setNotif} trackColor={{ true: colors.primary, false: colors.border }} thumbColor="#fff" />}
+          />
+          <Divider />
+          <Row
+            icon="globe"
+            tint={colors.successSoft}
+            color={colors.success}
+            label={t("account.language")}
+            value={lang === "ar" ? "🇩🇿 العربية" : "🇫🇷 Français"}
+            onPress={() => setLang(lang === "ar" ? "fr" : "ar")}
+          />
+        </View>
 
-      <LanguageSelector />
+        {/* ===== حول الخدمة ===== */}
+        <Text style={styles.groupTitle}>{t("account.more")}</Text>
+        <View style={styles.group}>
+          <Row icon="info" tint={colors.surface} color={colors.textMuted} label={t("account.about")} onPress={() => Alert.alert(t("app.name"), t("account.aboutText"))} />
+          {isCustomerOrGuest ? (
+            <>
+              <Divider />
+              <Row icon="store" tint={colors.primarySoft} color={colors.primary} label={t("partner.addStore")} onPress={() => navigation.navigate("Partner", { mode: "store" })} />
+              <Divider />
+              <Row icon="scooter" tint="#EFF6FF" color={colors.info} label={t("partner.becomeDriver")} onPress={() => navigation.navigate("Partner", { mode: "driver" })} />
+            </>
+          ) : null}
+          <Divider />
+          <Row icon="feedback" tint={colors.surface} color={colors.textMuted} label={t("account.feedback")} onPress={() => Alert.alert(t("account.feedback"), t("account.feedbackText"))} />
+        </View>
 
-      <View style={{ marginTop: "auto" }}>
-        <Button label={t("account.signOut")} onPress={signOut} variant="ghost" />
-      </View>
+        {/* ===== الدخول/الخروج ===== */}
+        {user ? (
+          <Pressable style={styles.logout} onPress={signOut}>
+            <Icon name="logout" size={18} color={colors.danger} />
+            <Text style={styles.logoutText}>{t("account.signOut")}</Text>
+          </Pressable>
+        ) : showLogin ? (
+          <GuestLogin />
+        ) : (
+          <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.lg }}>
+            <Button label={t("account.haveAccount")} variant="secondary" onPress={() => setShowLogin(true)} />
+          </View>
+        )}
+      </ScrollView>
     </Screen>
   );
 }
 
-function GuestAccount() {
+function Row({
+  icon,
+  tint,
+  color,
+  label,
+  value,
+  onPress,
+  right,
+}: {
+  icon: IconName;
+  tint: string;
+  color: string;
+  label: string;
+  value?: string;
+  onPress?: () => void;
+  right?: React.ReactNode;
+}) {
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.row, pressed && onPress && { backgroundColor: colors.surfaceAlt }]}
+      onPress={onPress}
+      disabled={!onPress && !right}
+    >
+      <View style={[styles.rowIcon, { backgroundColor: tint }]}>
+        <Icon name={icon} size={19} color={color} />
+      </View>
+      <Text style={styles.rowLabel}>{label}</Text>
+      {value ? <Text style={styles.rowValue}>{value}</Text> : null}
+      {right ?? (onPress ? <Icon name="chevronLeft" size={18} color={colors.textFaint} /> : null)}
+    </Pressable>
+  );
+}
+
+function Divider() {
+  return <View style={styles.divider} />;
+}
+
+function GuestLogin() {
   const { quickSignIn } = useAuth();
   const { t } = useT();
-  const [showLogin, setShowLogin] = useState(false);
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState<UserRole>("customer");
@@ -85,7 +156,7 @@ function GuestAccount() {
 
   const login = async () => {
     if (phone.replace(/[^\d]/g, "").length < 9) {
-      Alert.alert("✋", t("cart.phone"));
+      Alert.alert("✋", t("partner.needPhone"));
       return;
     }
     try {
@@ -99,64 +170,76 @@ function GuestAccount() {
   };
 
   return (
-    <Screen>
-      <Card variant="soft" padding="lg" style={styles.welcome}>
-        <Text style={styles.welcomeEmoji}>👋</Text>
-        <Text style={styles.welcomeTitle}>{t("account.welcome")}</Text>
-        <Text style={styles.welcomeHint}>{t("account.guestHint")}</Text>
-      </Card>
-
-      {showLogin ? (
-        <View style={styles.loginBox}>
-          <Segmented
-            value={role}
-            onChange={setRole}
-            options={[
-              { value: "customer", label: t("account.customer") },
-              { value: "driver", label: t("account.driver") },
-            ]}
-          />
-          <Input
-            label={t("cart.phone")}
-            value={phone}
-            onChangeText={(t2) => setPhone(t2.replace(/[^\d]/g, ""))}
-            keyboardType="phone-pad"
-            placeholder="0555 12 34 56"
-            maxLength={15}
-          />
-          <Input
-            label={t("cart.nameOptional")}
-            value={name}
-            onChangeText={setName}
-            placeholder={t("account.nameExample")}
-          />
-          <Button label={t("account.login")} onPress={login} loading={loading} />
-        </View>
-      ) : (
-        <View style={styles.section}>
-          <Button label={t("account.haveAccount")} variant="secondary" onPress={() => setShowLogin(true)} />
-        </View>
-      )}
-
-      <LanguageSelector />
-    </Screen>
+    <View style={styles.loginBox}>
+      <Segmented
+        value={role}
+        onChange={setRole}
+        options={[
+          { value: "customer", label: t("account.customer") },
+          { value: "driver", label: t("account.driver") },
+        ]}
+      />
+      <Input label={t("cart.phone")} value={phone} onChangeText={(v) => setPhone(v.replace(/[^\d]/g, ""))} keyboardType="phone-pad" placeholder="0555 12 34 56" maxLength={15} />
+      <Input label={t("cart.nameOptional")} value={name} onChangeText={setName} placeholder={t("account.nameExample")} />
+      <Button label={t("account.login")} onPress={login} loading={loading} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  profile: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.md, marginBottom: spacing.xl },
-  name: { fontSize: fontSize.h3, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
-  muted: { color: colors.textMuted, fontSize: fontSize.small, textAlign: "right", marginTop: 2 },
-  section: { gap: spacing.sm + 2, marginTop: spacing.lg },
+  scroll: { padding: spacing.lg, paddingBottom: spacing.xxxl },
 
-  welcome: { alignItems: "center", gap: spacing.sm, marginTop: spacing.xl },
-  welcomeEmoji: { fontSize: 44 },
-  welcomeTitle: { fontSize: fontSize.h3, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "center" },
-  welcomeHint: { fontSize: fontSize.body, color: colors.textMuted, textAlign: "center", lineHeight: 22 },
+  profile: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.md, marginBottom: spacing.xl },
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: radii.pill,
+    backgroundColor: colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: { fontSize: 26, fontWeight: fontWeight.extrabold, color: colors.primary },
+  profileName: { fontSize: fontSize.h2, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
+  profileSub: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2 },
+
+  groupTitle: {
+    fontSize: fontSize.small,
+    fontWeight: fontWeight.bold,
+    color: colors.textMuted,
+    textAlign: "right",
+    marginBottom: spacing.sm,
+    marginTop: spacing.lg,
+  },
+  group: {
+    backgroundColor: colors.background,
+    borderRadius: radii.xl,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    ...shadows.sm,
+  },
+  row: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: spacing.md,
+    padding: spacing.md,
+  },
+  rowIcon: { width: 40, height: 40, borderRadius: radii.md, alignItems: "center", justifyContent: "center" },
+  rowLabel: { flex: 1, fontSize: fontSize.bodyLg, fontWeight: fontWeight.semibold, color: colors.text, textAlign: "right" },
+  rowValue: { fontSize: fontSize.small, color: colors.textMuted, marginInlineEnd: spacing.xs },
+  divider: { height: 1, backgroundColor: colors.divider, marginInlineStart: 68 },
+
+  logout: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    marginTop: spacing.xl,
+    padding: spacing.md,
+    borderRadius: radii.lg,
+    backgroundColor: colors.dangerSoft,
+  },
+  logoutText: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.bold, color: colors.danger },
 
   loginBox: { gap: spacing.md, marginTop: spacing.xl },
-
-  langBlock: { marginTop: spacing.xl, gap: spacing.sm },
-  langHeader: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.xs },
-  langLabel: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
 });
