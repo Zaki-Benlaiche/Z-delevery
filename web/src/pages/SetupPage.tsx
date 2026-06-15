@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { merchantsApi } from "../api/merchants";
 import type { MerchantType } from "../api/types";
 import { useAuth } from "../auth/context";
+import { useMyMerchant } from "../hooks/useMyMerchant";
 import { colors } from "../theme";
 
 const CATEGORIES: { value: MerchantType; emoji: string; title: string; sub: string }[] = [
@@ -14,7 +16,14 @@ const CATEGORIES: { value: MerchantType; emoji: string; title: string; sub: stri
 
 export function SetupPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { signOut } = useAuth();
+
+  // لو كان لديك متجر مسبقاً → توجّه للوحة الإدارة مباشرة
+  const mine = useMyMerchant();
+  useEffect(() => {
+    if (mine.data) navigate("/orders", { replace: true });
+  }, [mine.data, navigate]);
   const [name, setName] = useState("");
   const [type, setType] = useState<MerchantType>("food");
   const [description, setDescription] = useState("");
@@ -36,7 +45,10 @@ export function SetupPage() {
         lat: loc.lat,
         lng: loc.lng,
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-merchant"] }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["my-merchant"] });
+      navigate("/orders", { replace: true }); // الانتقال للوحة الإدارة بعد الإنشاء
+    },
     onError: (e) => setError((e as Error).message),
   });
 
