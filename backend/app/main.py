@@ -36,8 +36,10 @@ async def lifespan(app: FastAPI):
             pass
 
     await _safe_exec('ALTER TABLE merchants ALTER COLUMN "type" TYPE VARCHAR(20) USING "type"::text')
-    await _safe_exec("UPDATE merchants SET \"type\"='food' WHERE \"type\"='restaurant'")
-    await _safe_exec("UPDATE merchants SET \"type\"='market' WHERE \"type\" IN ('other','clothing')")
+    # القيم القديمة قد تكون بأحرف كبيرة (أسماء enum) أو صغيرة (قيمه) — نطابق الحالتين
+    await _safe_exec("UPDATE merchants SET \"type\"='food' WHERE lower(\"type\")='restaurant'")
+    await _safe_exec("UPDATE merchants SET \"type\"='market' WHERE lower(\"type\") IN ('other','clothing')")
+    await _safe_exec("UPDATE merchants SET \"type\"='food' WHERE \"type\" NOT IN ('food','fresh','market')")
     yield
     await engine.dispose()
 
