@@ -36,6 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut() {
         tokenStorage.clear();
         setUser(null);
+        // إعادة تحميل كاملة → تمسح ذاكرة React Query (وإلا يبقى متجر الحساب السابق ظاهراً)
+        if (typeof window !== "undefined") window.location.href = "/login";
       },
     }),
     [loading, user],
