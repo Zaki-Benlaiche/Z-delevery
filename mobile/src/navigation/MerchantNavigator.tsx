@@ -4,6 +4,7 @@ import { Icon, type IconName } from "../components/Icon";
 import { AccountScreen } from "../screens/AccountScreen";
 import { MerchantOrdersScreen } from "../screens/merchant/MerchantOrdersScreen";
 import { MerchantProductsScreen } from "../screens/merchant/MerchantProductsScreen";
+import { MerchantOffersScreen } from "../screens/merchant/MerchantOffersScreen";
 import { useT } from "../i18n";
 import { colors, fontSize, fontWeight, spacing } from "../theme/colors";
 import type { MerchantTabParamList } from "./types";
@@ -39,6 +40,11 @@ export function MerchantNavigator() {
         name="MerchantProductsTab"
         component={MerchantProductsScreen}
         options={{ tabBarLabel: "منتجاتي", tabBarIcon: tabIcon("bag", "bag") }}
+      />
+      <Tab.Screen
+        name="MerchantOffersTab"
+        component={MerchantOffersScreen}
+        options={{ tabBarLabel: "العروض", tabBarIcon: tabIcon("tag", "tag") }}
       />
       <Tab.Screen
         name="MerchantAccountTab"

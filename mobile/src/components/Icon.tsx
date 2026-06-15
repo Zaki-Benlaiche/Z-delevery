@@ -45,7 +45,9 @@ export type IconName =
   | "info"
   | "logout"
   | "feedback"
-  | "trash";
+  | "trash"
+  | "tag"
+  | "edit";
 
 const MAP: Record<IconName, { family: Family; glyph: string }> = {
   search: { family: "ion", glyph: "search" },
@@ -88,6 +90,8 @@ const MAP: Record<IconName, { family: Family; glyph: string }> = {
   logout: { family: "ion", glyph: "log-out-outline" },
   feedback: { family: "ion", glyph: "chatbubble-ellipses-outline" },
   trash: { family: "ion", glyph: "trash-outline" },
+  tag: { family: "ion", glyph: "pricetag-outline" },
+  edit: { family: "ion", glyph: "create-outline" },
 };
 
 interface Props {

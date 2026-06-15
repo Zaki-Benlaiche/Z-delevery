@@ -25,6 +25,7 @@ export type AppStackParamList = {
 export type MerchantTabParamList = {
   MerchantOrdersTab: undefined;
   MerchantProductsTab: undefined;
+  MerchantOffersTab: undefined;
   MerchantAccountTab: undefined;
 };
 
