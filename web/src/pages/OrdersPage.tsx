@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ordersApi } from "../api/orders";
 import type { Order, OrderStatus } from "../api/types";
 import { StatusBadge } from "../components/StatusBadge";
+import { Icon, type IconName } from "../components/Icon";
 import { useToast } from "../components/Toast";
 import { useNewOrderAlert } from "../hooks/useNewOrderAlert";
 import { colors, statusLabel } from "../theme";
@@ -60,8 +61,26 @@ export function OrdersPage() {
       : list.filter((o) => !ACTIVE_STATUSES.includes(o.status));
   }, [orders.data, tab]);
 
+  const stats = useMemo(() => {
+    const list = orders.data ?? [];
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const todays = list.filter((o) => new Date(o.created_at) >= start);
+    const pending = list.filter((o) => o.status === "pending").length;
+    const revenue = todays
+      .filter((o) => o.status === "delivered")
+      .reduce((s, o) => s + Number(o.total), 0);
+    return { today: todays.length, pending, revenue };
+  }, [orders.data]);
+
   return (
     <div>
+      <div style={styles.statsRow}>
+        <StatCard icon="orders" label="طلبات اليوم" value={String(stats.today)} tint={colors.infoSoft} color={colors.info} />
+        <StatCard icon="clock" label="بانتظار القبول" value={String(stats.pending)} tint={colors.warningSoft} color={colors.warning} />
+        <StatCard icon="check" label="إيرادات اليوم" value={`${stats.revenue.toLocaleString("ar-DZ")} دج`} tint={colors.successSoft} color={colors.success} />
+      </div>
+
       <div style={styles.header}>
         <div>
           <h1 style={styles.title}>الطلبات</h1>
@@ -103,6 +122,20 @@ export function OrdersPage() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value, tint, color }: { icon: IconName; label: string; value: string; tint: string; color: string }) {
+  return (
+    <div className="card" style={styles.statCard}>
+      <div style={{ ...styles.statIcon, background: tint, color }}>
+        <Icon name={icon} size={22} />
+      </div>
+      <div>
+        <div style={styles.statValue}>{value}</div>
+        <div style={styles.statLabel}>{label}</div>
+      </div>
     </div>
   );
 }
@@ -172,6 +205,17 @@ function OrderCard({
 }
 
 const styles: Record<string, React.CSSProperties> = {
+  statsRow: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: 14,
+    marginBottom: 24,
+  },
+  statCard: { display: "flex", alignItems: "center", gap: 14, padding: 18 },
+  statIcon: { width: 46, height: 46, borderRadius: 12, display: "grid", placeItems: "center", flexShrink: 0 },
+  statValue: { fontSize: 22, fontWeight: 800, color: colors.text },
+  statLabel: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
+
   header: {
     display: "flex",
     justifyContent: "space-between",
