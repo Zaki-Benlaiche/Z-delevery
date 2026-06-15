@@ -63,7 +63,7 @@ class MerchantUpdate(BaseModel):
 class MerchantOut(BaseModel):
     id: uuid.UUID
     name: str
-    type: MerchantType
+    type: str  # نصّ حرّ (food/fresh/market) — متسامح مع أي قيمة لتجنّب أخطاء العرض
     description: str | None
     logo_url: str | None
     open_hours: str | None

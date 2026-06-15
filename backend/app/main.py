@@ -27,21 +27,17 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
 
     # ترحيل تصنيف المتجر: enum قديم (restaurant/clothing/other) → نصّ (food/fresh/market)
-    # آمن ومتكرّر التشغيل (idempotent): يُتجاهل بصمت على قاعدة جديدة أو مُرحّلة سابقاً
-    try:
-        async with engine.begin() as conn:
-            await conn.execute(text(
-                "ALTER TABLE merchants ALTER COLUMN type TYPE VARCHAR(20) USING type::text"
-            ))
-    except Exception:
-        pass
-    try:
-        async with engine.begin() as conn:
-            await conn.execute(text("UPDATE merchants SET type='food' WHERE type='restaurant'"))
-            await conn.execute(text("UPDATE merchants SET type='market' WHERE type IN ('other','clothing')"))
-            await conn.execute(text("DROP TYPE IF EXISTS merchanttype"))
-    except Exception:
-        pass
+    # كل عبارة في معاملة مستقلّة (idempotent) — وتُقتبس "type" لأنّها كلمة محجوزة في Postgres
+    async def _safe_exec(sql: str) -> None:
+        try:
+            async with engine.begin() as conn:
+                await conn.execute(text(sql))
+        except Exception:
+            pass
+
+    await _safe_exec('ALTER TABLE merchants ALTER COLUMN "type" TYPE VARCHAR(20) USING "type"::text')
+    await _safe_exec("UPDATE merchants SET \"type\"='food' WHERE \"type\"='restaurant'")
+    await _safe_exec("UPDATE merchants SET \"type\"='market' WHERE \"type\" IN ('other','clothing')")
     yield
     await engine.dispose()
 
