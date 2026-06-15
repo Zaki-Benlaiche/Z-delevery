@@ -38,6 +38,13 @@ async function request<T>(
   const data = text ? safeJson(text) : null;
 
   if (!res.ok) {
+    // جلسة منتهية/توكن غير صالح → تنظيف وإعادة توجيه سلسة لتسجيل الدخول
+    if (res.status === 401 && options.auth !== false) {
+      tokenStorage.clear();
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login";
+      }
+    }
     const message =
       (data as { detail?: string } | null)?.detail ?? `HTTP ${res.status}`;
     throw new ApiError(res.status, message, data);
