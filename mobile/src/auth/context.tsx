@@ -12,6 +12,8 @@ interface AuthState {
   signIn: (phone: string, code: string, name?: string, role?: UserRole) => Promise<void>;
   /** تسجيل سريع: يطلب الرمز ويؤكّده تلقائياً (للتسجيل عند الطلب — بلا شاشة رمز) */
   quickSignIn: (phone: string, name?: string, role?: UserRole) => Promise<void>;
+  /** تحديث الدور محليّاً (بعد ترقية المستخدم لتاجر/سائق على الخادم) */
+  setRole: (role: UserRole) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -45,6 +47,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { dev_otp } = await authApi.sendOtp(phone);
         if (!dev_otp) throw new Error("التسجيل التلقائي غير متاح حالياً — حاول لاحقاً");
         await applyTokens(await authApi.verifyOtp(phone, dev_otp, name, role));
+      },
+      async setRole(role) {
+        if (!user) return;
+        const u: StoredUser = { ...user, role };
+        await tokenStorage.setUser(u);
+        setUser(u);
       },
       async signOut() {
         // نمسح توكن الـ push من الخادم قبل إفراغ التوكنات (الـ DELETE يحتاج auth)

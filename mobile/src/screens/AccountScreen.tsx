@@ -55,8 +55,12 @@ export function AccountScreen({ navigation }: Props) {
         {/* ===== الإعدادات ===== */}
         <Text style={styles.groupTitle}>{t("account.settings")}</Text>
         <View style={styles.group}>
-          <Row icon="location" tint={colors.infoSoft} color={colors.info} label={t("account.myAddresses")} onPress={() => navigation.navigate("Addresses")} />
-          <Divider />
+          {isCustomerOrGuest ? (
+            <>
+              <Row icon="location" tint={colors.infoSoft} color={colors.info} label={t("account.myAddresses")} onPress={() => navigation.navigate("Addresses")} />
+              <Divider />
+            </>
+          ) : null}
           <Row
             icon="bell"
             tint={colors.warningSoft}

@@ -22,6 +22,12 @@ export type AppStackParamList = {
   Partner: { mode?: "store" | "driver" } | undefined;
 };
 
+export type MerchantTabParamList = {
+  MerchantOrdersTab: undefined;
+  MerchantProductsTab: undefined;
+  MerchantAccountTab: undefined;
+};
+
 export type DriverTabParamList = {
   DriverHomeTab: undefined;
   DriverHistoryTab: undefined;

@@ -26,7 +26,7 @@ const CATS: { value: MerchantType; icon: IconName; key: string }[] = [
 
 export function PartnerScreen({ route, navigation }: Props) {
   const { t } = useT();
-  const { quickSignIn } = useAuth();
+  const { quickSignIn, setRole } = useAuth();
   const loc = useCurrentLocation();
   const insets = useSafeAreaInsets();
 
@@ -67,14 +67,12 @@ export function PartnerScreen({ route, navigation }: Props) {
           lat: loc.location!.lat,
           lng: loc.location!.lng,
         });
-        setBusy(false);
-        Alert.alert("🎉", t("partner.storeSuccess"), [
-          { text: "حسناً", onPress: () => navigation.goBack() },
-        ]);
+        Alert.alert("🎉", t("partner.storeSuccess"));
+        await setRole("merchant"); // التطبيق يتحوّل لواجهة إدارة المتجر
         return;
       }
-      // وضع السائق: quickSignIn(driver) بدّل التطبيق لواجهة السائق تلقائياً،
-      // وهناك تُكمل اختيار المركبة. لا حاجة لإجراء آخر هنا.
+      // وضع السائق: التحوّل لواجهة السائق (تُكمل اختيار المركبة في DriverHomeScreen)
+      await setRole("driver");
     } catch (e) {
       Alert.alert("⚠️", (e as Error).message);
       setBusy(false);

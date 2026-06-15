@@ -23,6 +23,9 @@ export const tokenStorage = {
     const raw = await SecureStore.getItemAsync(KEY_USER);
     return raw ? (JSON.parse(raw) as StoredUser) : null;
   },
+  async setUser(user: StoredUser) {
+    await SecureStore.setItemAsync(KEY_USER, JSON.stringify(user));
+  },
   async clear() {
     await SecureStore.deleteItemAsync(KEY_ACCESS);
     await SecureStore.deleteItemAsync(KEY_REFRESH);

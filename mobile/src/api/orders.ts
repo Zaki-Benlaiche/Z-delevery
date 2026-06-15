@@ -12,4 +12,7 @@ export const ordersApi = {
   tracking: (id: string) => api.get<TrackingEntry[]>(`/orders/${id}/tracking`),
 
   cancel: (id: string) => api.post<Order>(`/orders/${id}/cancel`),
+
+  setStatus: (id: string, status: OrderStatus) =>
+    api.post<Order>(`/orders/${id}/status`, { status }),
 };
