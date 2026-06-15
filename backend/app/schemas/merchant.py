@@ -42,7 +42,7 @@ class ProductOut(BaseModel):
 # ---------- التاجر ----------
 class MerchantCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=160)
-    type: MerchantType = MerchantType.RESTAURANT
+    type: MerchantType = MerchantType.FOOD
     description: str | None = None
     logo_url: str | None = None
     open_hours: str | None = None

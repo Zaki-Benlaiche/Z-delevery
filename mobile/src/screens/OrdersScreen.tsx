@@ -11,6 +11,7 @@ import { Card } from "../components/Card";
 import { EmptyState } from "../components/EmptyState";
 import { PriceTag } from "../components/PriceTag";
 import { StatusBadge } from "../components/StatusBadge";
+import { useAuth } from "../auth/context";
 import { colors, fontSize, fontWeight, spacing } from "../theme/colors";
 import type { AppStackParamList, AppTabParamList } from "../navigation/types";
 
@@ -20,13 +21,30 @@ type Props = CompositeScreenProps<
 >;
 
 export function OrdersScreen({ navigation }: Props) {
+  const { user } = useAuth();
   const query = useQuery({
     queryKey: ["orders"],
     queryFn: () => ordersApi.list(),
     // تحديث دوري كل 30 ثانية لمواكبة تغيّر حالة الطلبات
     refetchInterval: 30_000,
     placeholderData: (prev) => prev,
+    enabled: !!user,
   });
+
+  if (!user) {
+    return (
+      <Screen>
+        <View style={styles.header}>
+          <Text style={styles.title}>طلباتي</Text>
+        </View>
+        <EmptyState
+          icon="🧾"
+          title="لا توجد طلبات بعد"
+          hint="اطلب من أي متجر وستظهر طلباتك هنا تلقائياً — سنحفظ رقمك عند أوّل طلب"
+        />
+      </Screen>
+    );
+  }
 
   return (
     <Screen padded={false}>

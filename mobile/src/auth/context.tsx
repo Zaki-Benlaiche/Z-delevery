@@ -10,6 +10,8 @@ interface AuthState {
   loading: boolean;
   user: StoredUser | null;
   signIn: (phone: string, code: string, name?: string, role?: UserRole) => Promise<void>;
+  /** تسجيل سريع: يطلب الرمز ويؤكّده تلقائياً (للتسجيل عند الطلب — بلا شاشة رمز) */
+  quickSignIn: (phone: string, name?: string, role?: UserRole) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -27,15 +29,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const value = useMemo<AuthState>(
-    () => ({
+  const value = useMemo<AuthState>(() => {
+    const applyTokens = async (tokens: Awaited<ReturnType<typeof authApi.verifyOtp>>) => {
+      const u: StoredUser = { user_id: tokens.user_id, role: tokens.role };
+      await tokenStorage.save(tokens.access_token, tokens.refresh_token, u);
+      setUser(u);
+    };
+    return {
       loading,
       user,
       async signIn(phone, code, name, role = "customer") {
-        const tokens = await authApi.verifyOtp(phone, code, name, role);
-        const u: StoredUser = { user_id: tokens.user_id, role: tokens.role };
-        await tokenStorage.save(tokens.access_token, tokens.refresh_token, u);
-        setUser(u);
+        await applyTokens(await authApi.verifyOtp(phone, code, name, role));
+      },
+      async quickSignIn(phone, name, role = "customer") {
+        const { dev_otp } = await authApi.sendOtp(phone);
+        if (!dev_otp) throw new Error("التسجيل التلقائي غير متاح حالياً — حاول لاحقاً");
+        await applyTokens(await authApi.verifyOtp(phone, dev_otp, name, role));
       },
       async signOut() {
         // نمسح توكن الـ push من الخادم قبل إفراغ التوكنات (الـ DELETE يحتاج auth)
@@ -47,9 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await tokenStorage.clear();
         setUser(null);
       },
-    }),
-    [loading, user],
-  );
+    };
+  }, [loading, user]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -16,9 +16,9 @@ class UserStatus(str, enum.Enum):
 
 
 class MerchantType(str, enum.Enum):
-    RESTAURANT = "restaurant"   # مطعم
-    CLOTHING = "clothing"       # محل ملابس
-    OTHER = "other"
+    FOOD = "food"       # مطاعم
+    FRESH = "fresh"     # لحوم/دجاج/سمك/خضر/فواكه
+    MARKET = "market"   # مواد غذائية وبقالة
 
 
 class OrderStatus(str, enum.Enum):

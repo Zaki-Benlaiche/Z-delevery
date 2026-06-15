@@ -7,6 +7,7 @@ import { AuthProvider } from "./src/auth/context";
 import { RootNavigator } from "./src/navigation/RootNavigator";
 import { enableRTL } from "./src/theme/rtl";
 import { useFavorites } from "./src/store/favorites";
+import { useLanguage } from "./src/i18n";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,8 +23,9 @@ export default function App() {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     enableRTL();
-    // تحميل المفضّلة المحفوظة محليّاً قبل عرض الواجهة
+    // تحميل المفضّلة واللغة المحفوظتين محليّاً قبل عرض الواجهة
     void useFavorites.getState().hydrate();
+    void useLanguage.getState().hydrate();
     setReady(true);
   }, []);
 

@@ -1,7 +1,9 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 
+import { Icon, type IconName } from "../components/Icon";
+import { useT } from "../i18n";
 import { AccountScreen } from "../screens/AccountScreen";
 import { AddAddressScreen } from "../screens/AddAddressScreen";
 import { AddressesScreen } from "../screens/AddressesScreen";
@@ -17,15 +19,16 @@ import type { AppStackParamList, AppTabParamList } from "./types";
 const Tab = createBottomTabNavigator<AppTabParamList>();
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
-function tabIcon(emoji: string) {
+function tabIcon(name: IconName, nameFocused: IconName) {
   return ({ focused, color }: { focused: boolean; color: string }) => (
     <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-      <Text style={{ fontSize: 19, color }}>{emoji}</Text>
+      <Icon name={focused ? nameFocused : name} size={22} color={color} />
     </View>
   );
 }
 
 function Tabs() {
+  const { t } = useT();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -40,22 +43,22 @@ function Tabs() {
       <Tab.Screen
         name="HomeTab"
         component={HomeScreen}
-        options={{ tabBarLabel: "الرئيسية", tabBarIcon: tabIcon("🏠") }}
+        options={{ tabBarLabel: t("tab.home"), tabBarIcon: tabIcon("home", "homeFill") }}
       />
       <Tab.Screen
         name="FavoritesTab"
         component={FavoritesScreen}
-        options={{ tabBarLabel: "المفضلة", tabBarIcon: tabIcon("❤️") }}
+        options={{ tabBarLabel: t("tab.favorites"), tabBarIcon: tabIcon("heartOutline", "heartFill") }}
       />
       <Tab.Screen
         name="OrdersTab"
         component={OrdersScreen}
-        options={{ tabBarLabel: "طلباتي", tabBarIcon: tabIcon("📦") }}
+        options={{ tabBarLabel: t("tab.orders"), tabBarIcon: tabIcon("receipt", "receiptFill") }}
       />
       <Tab.Screen
         name="AccountTab"
         component={AccountScreen}
-        options={{ tabBarLabel: "حسابي", tabBarIcon: tabIcon("👤") }}
+        options={{ tabBarLabel: t("tab.account"), tabBarIcon: tabIcon("person", "personFill") }}
       />
     </Tab.Navigator>
   );
@@ -65,7 +68,7 @@ export function AppNavigator() {
   return (
     <Stack.Navigator>
       <Stack.Screen name="Tabs" component={Tabs} options={{ headerShown: false }} />
-      <Stack.Screen name="Merchant" component={MerchantScreen} options={{ title: "" }} />
+      <Stack.Screen name="Merchant" component={MerchantScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Cart" component={CartScreen} options={{ title: "السلّة" }} />
       <Stack.Screen name="Addresses" component={AddressesScreen} options={{ title: "عناويني" }} />
       <Stack.Screen

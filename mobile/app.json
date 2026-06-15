@@ -45,7 +45,8 @@
         {
           "locationAlwaysAndWhenInUsePermission": "نحتاج موقعك لإظهار أقرب المتاجر."
         }
-      ]
+      ],
+      "expo-font"
     ],
     "extra": {
       "apiUrl": "https://zdelivry-api.onrender.com",

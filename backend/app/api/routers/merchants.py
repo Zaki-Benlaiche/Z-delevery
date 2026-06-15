@@ -74,7 +74,7 @@ async def list_merchants(
     """قائمة التجّار، مع فرز اختياري حسب القرب إذا مُرّرت الإحداثيات."""
     stmt = select(Merchant)
     if type is not None:
-        stmt = stmt.where(Merchant.type == type)
+        stmt = stmt.where(Merchant.type == type.value)
     if q:
         stmt = stmt.where(Merchant.name.ilike(f"%{q}%"))
     if open_only:

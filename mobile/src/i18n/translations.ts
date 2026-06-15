@@ -1,0 +1,198 @@
+/** قواميس الترجمة — عربي / فرنسي */
+
+export type Lang = "ar" | "fr";
+
+export const LANGS: { code: Lang; label: string; flag: string }[] = [
+  { code: "ar", label: "العربية", flag: "🇩🇿" },
+  { code: "fr", label: "Français", flag: "🇫🇷" },
+];
+
+type Dict = Record<string, string>;
+
+const ar: Dict = {
+  // عام
+  "app.name": "Z-delivry",
+  "app.tagline": "توصيلك أسرع وأقرب",
+  "common.currency": "دج",
+  "common.retry": "إعادة المحاولة",
+  "common.min": "د",
+  "common.km": "كم",
+  "common.all": "الكل",
+
+  // التبويبات
+  "tab.home": "الرئيسية",
+  "tab.favorites": "المفضّلة",
+  "tab.orders": "طلباتي",
+  "tab.account": "حسابي",
+
+  // الرئيسية
+  "home.greeting": "ماذا تشتهي اليوم؟",
+  "home.search": "ابحث عن مطعم أو محل…",
+  "home.deliverTo": "التوصيل إلى",
+  "home.currentLocation": "موقعك الحالي",
+  "home.locating": "جارٍ تحديد موقعك…",
+  "home.enableLocation": "فعّل الموقع لإظهار الأقرب إليك",
+  "home.offers": "عروض حصرية 🔥",
+  "home.catFood": "Food",
+  "home.catFresh": "Fresh",
+  "home.catMarket": "Market",
+  "home.catFoodSub": "مطاعم",
+  "home.catFreshSub": "لحوم وخضر",
+  "home.catMarketSub": "مواد غذائية",
+  "home.topNearby": "الأكثر طلباً قربك ⭐",
+  "home.allStores": "كل المتاجر",
+  "home.searchResults": "نتائج البحث",
+  "home.stores": "المتاجر",
+  "home.loadError": "تعذّر تحميل المتاجر",
+  "home.noStores": "لا توجد متاجر بعد",
+  "home.noStoresHint": "لا توجد متاجر متاحة في منطقتك حالياً — جرّب لاحقاً",
+
+  // أنواع المتاجر
+  "type.food": "مطعم",
+  "type.fresh": "متجر طازج",
+  "type.market": "بقالة",
+
+  // المتجر
+  "merchant.closedNow": "مغلق الآن",
+  "merchant.rating": "التقييم",
+  "merchant.workHours": "ساعات العمل",
+  "merchant.menu": "القائمة",
+  "merchant.noProducts": "لا توجد منتجات",
+  "merchant.noProductsHint": "لا توجد منتجات متاحة حالياً",
+  "merchant.viewCart": "عرض السلّة",
+  "merchant.replace": "استبدل",
+  "merchant.loadError": "تعذّر تحميل المتجر",
+
+  // السلّة
+  "cart.empty": "سلّتك فارغة",
+  "cart.emptyHint": "اختر متجراً وأضف منتجات لإكمال الطلب",
+  "cart.browse": "تصفّح المتاجر",
+  "cart.yourItems": "منتجاتك",
+  "cart.deliveryAddress": "عنوان التسليم",
+  "cart.yourInfo": "بياناتك",
+  "cart.phone": "رقم الهاتف",
+  "cart.nameOptional": "الاسم (اختياري)",
+  "cart.addressExample": "مثال: حي النصر، عمارة 5، الطابق 2",
+  "cart.addressHint": "نستخدم موقعك الحالي لتحديد مكان التسليم بدقّة",
+  "cart.noAddresses": "ليست لديك عناوين محفوظة بعد",
+  "cart.addAddress": "إضافة عنوان",
+  "cart.addAddressNew": "＋ إضافة عنوان جديد",
+  "cart.payment": "طريقة الدفع",
+  "cart.cash": "نقداً",
+  "cart.card": "بطاقة",
+  "cart.summary": "ملخّص الطلب",
+  "cart.subtotal": "المجموع الفرعي",
+  "cart.deliveryFee": "رسوم التوصيل",
+  "cart.computedLater": "تُحسب عند التأكيد",
+  "cart.estimatedTotal": "الإجمالي التقديري",
+  "cart.confirm": "أكّد الطلب",
+
+  // الطلبات
+  "orders.title": "طلباتي",
+  "orders.empty": "لا توجد طلبات بعد",
+  "orders.emptyHintGuest": "اطلب من أي متجر وستظهر طلباتك هنا تلقائياً — سنحفظ رقمك عند أوّل طلب",
+  "orders.emptyHint": "طلباتك ستظهر هنا بعد أوّل طلب",
+
+  // الحساب
+  "account.welcome": "مرحباً بك في Z-delivry",
+  "account.guestHint": "أنت تتصفّح كضيف — تصفّح المتاجر بحرّية، وسنحفظ رقمك تلقائياً عند أوّل طلب.",
+  "account.haveAccount": "لديك حساب؟ سجّل الدخول",
+  "account.login": "دخول",
+  "account.signOut": "تسجيل الخروج",
+  "account.myAddresses": "عناويني",
+  "account.customer": "زبون",
+  "account.driver": "سائق",
+  "account.language": "اللغة",
+  "account.nameExample": "مثال: زكريا",
+};
+
+const fr: Dict = {
+  "app.name": "Z-delivry",
+  "app.tagline": "Votre livraison plus vite, plus proche",
+  "common.currency": "DA",
+  "common.retry": "Réessayer",
+  "common.min": "min",
+  "common.km": "km",
+  "common.all": "Tout",
+
+  "tab.home": "Accueil",
+  "tab.favorites": "Favoris",
+  "tab.orders": "Commandes",
+  "tab.account": "Compte",
+
+  "home.greeting": "Que désirez-vous aujourd'hui ?",
+  "home.search": "Rechercher un restaurant ou magasin…",
+  "home.deliverTo": "Livrer à",
+  "home.currentLocation": "Position actuelle",
+  "home.locating": "Localisation en cours…",
+  "home.enableLocation": "Activez la localisation pour voir les plus proches",
+  "home.offers": "Offres exclusives 🔥",
+  "home.catFood": "Food",
+  "home.catFresh": "Fresh",
+  "home.catMarket": "Market",
+  "home.catFoodSub": "Restaurants",
+  "home.catFreshSub": "Frais & primeurs",
+  "home.catMarketSub": "Épicerie",
+  "home.topNearby": "Les plus demandés près de vous ⭐",
+  "home.allStores": "Tous les magasins",
+  "home.searchResults": "Résultats",
+  "home.stores": "Magasins",
+  "home.loadError": "Échec du chargement des magasins",
+  "home.noStores": "Aucun magasin pour le moment",
+  "home.noStoresHint": "Aucun magasin disponible dans votre zone — réessayez plus tard",
+
+  "type.food": "Restaurant",
+  "type.fresh": "Frais",
+  "type.market": "Épicerie",
+
+  "merchant.closedNow": "Fermé",
+  "merchant.rating": "Note",
+  "merchant.workHours": "Horaires",
+  "merchant.menu": "Menu",
+  "merchant.noProducts": "Aucun produit",
+  "merchant.noProductsHint": "Aucun produit disponible pour le moment",
+  "merchant.viewCart": "Voir le panier",
+  "merchant.replace": "Remplacer",
+  "merchant.loadError": "Échec du chargement du magasin",
+
+  "cart.empty": "Votre panier est vide",
+  "cart.emptyHint": "Choisissez un magasin et ajoutez des produits",
+  "cart.browse": "Parcourir les magasins",
+  "cart.yourItems": "Vos articles",
+  "cart.deliveryAddress": "Adresse de livraison",
+  "cart.yourInfo": "Vos informations",
+  "cart.phone": "Numéro de téléphone",
+  "cart.nameOptional": "Nom (facultatif)",
+  "cart.addressExample": "Ex : Cité El Nasr, bât 5, étage 2",
+  "cart.addressHint": "Nous utilisons votre position actuelle pour préciser la livraison",
+  "cart.noAddresses": "Aucune adresse enregistrée",
+  "cart.addAddress": "Ajouter une adresse",
+  "cart.addAddressNew": "＋ Nouvelle adresse",
+  "cart.payment": "Mode de paiement",
+  "cart.cash": "Espèces",
+  "cart.card": "Carte",
+  "cart.summary": "Récapitulatif",
+  "cart.subtotal": "Sous-total",
+  "cart.deliveryFee": "Frais de livraison",
+  "cart.computedLater": "Calculés à la confirmation",
+  "cart.estimatedTotal": "Total estimé",
+  "cart.confirm": "Confirmer la commande",
+
+  "orders.title": "Mes commandes",
+  "orders.empty": "Aucune commande",
+  "orders.emptyHintGuest": "Commandez et vos commandes apparaîtront ici — nous enregistrerons votre numéro",
+  "orders.emptyHint": "Vos commandes apparaîtront ici après la première commande",
+
+  "account.welcome": "Bienvenue sur Z-delivry",
+  "account.guestHint": "Vous naviguez en invité — explorez librement, nous enregistrerons votre numéro à la première commande.",
+  "account.haveAccount": "Vous avez un compte ? Connectez-vous",
+  "account.login": "Connexion",
+  "account.signOut": "Déconnexion",
+  "account.myAddresses": "Mes adresses",
+  "account.customer": "Client",
+  "account.driver": "Livreur",
+  "account.language": "Langue",
+  "account.nameExample": "Ex : Zakaria",
+};
+
+export const dictionaries: Record<Lang, Dict> = { ar, fr };

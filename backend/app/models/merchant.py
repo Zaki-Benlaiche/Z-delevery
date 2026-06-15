@@ -2,13 +2,12 @@
 import uuid
 
 from geoalchemy2 import Geography
-from sqlalchemy import Boolean, Enum, ForeignKey, Numeric, String, Text
+from sqlalchemy import Boolean, ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 from app.models.base import TimestampMixin, UUIDMixin
-from app.models.enums import MerchantType
 
 
 class Merchant(Base, UUIDMixin, TimestampMixin):
@@ -18,7 +17,8 @@ class Merchant(Base, UUIDMixin, TimestampMixin):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
     name: Mapped[str] = mapped_column(String(160), index=True)
-    type: Mapped[MerchantType] = mapped_column(Enum(MerchantType), default=MerchantType.RESTAURANT)
+    # نصّ بدل Postgres ENUM لتسهيل التطوّر (القيم: food/fresh/market) — يُتحقّق منها في طبقة المخططات
+    type: Mapped[str] = mapped_column(String(20), default="food", index=True)
     description: Mapped[str | None] = mapped_column(Text)
     logo_url: Mapped[str | None] = mapped_column(String(500))
     open_hours: Mapped[str | None] = mapped_column(String(255))

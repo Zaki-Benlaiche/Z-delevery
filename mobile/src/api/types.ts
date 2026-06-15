@@ -1,7 +1,7 @@
 /** أنواع TypeScript تعكس مخططات الـ Backend (Pydantic) */
 
 export type UserRole = "customer" | "merchant" | "driver" | "admin";
-export type MerchantType = "restaurant" | "clothing" | "other";
+export type MerchantType = "food" | "fresh" | "market";
 export type OrderStatus =
   | "pending"
   | "accepted"

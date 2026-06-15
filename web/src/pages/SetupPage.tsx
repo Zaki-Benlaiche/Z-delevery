@@ -8,7 +8,7 @@ import { colors } from "../theme";
 export function SetupPage() {
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
-  const [type, setType] = useState<MerchantType>("restaurant");
+  const [type, setType] = useState<MerchantType>("food");
   const [description, setDescription] = useState("");
   const [openHours, setOpenHours] = useState("");
   const [lat, setLat] = useState("36.7538");
@@ -58,9 +58,9 @@ export function SetupPage() {
               value={type}
               onChange={(e) => setType(e.target.value as MerchantType)}
             >
-              <option value="restaurant">مطعم</option>
-              <option value="clothing">ملابس</option>
-              <option value="other">آخر</option>
+              <option value="food">🍔 مطاعم (Food)</option>
+              <option value="fresh">🥬 لحوم وخضر وفواكه (Fresh)</option>
+              <option value="market">🛒 مواد غذائية (Market)</option>
             </select>
           </div>
 

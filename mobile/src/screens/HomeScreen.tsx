@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FlatList,
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -9,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import * as Location from "expo-location";
 import { useQuery } from "@tanstack/react-query";
 import type { CompositeScreenProps } from "@react-navigation/native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -18,14 +20,15 @@ import { merchantsApi } from "../api/merchants";
 import { offersApi } from "../api/offers";
 import type { Merchant, MerchantType } from "../api/types";
 import { Screen } from "../components/Screen";
-import { Card } from "../components/Card";
 import { Avatar } from "../components/Avatar";
 import { EmptyState } from "../components/EmptyState";
 import { MerchantCardSkeleton } from "../components/Skeleton";
 import { FavoriteButton } from "../components/FavoriteButton";
 import { OffersCarousel } from "../components/OffersCarousel";
+import { Icon, type IconName } from "../components/Icon";
 import { useCurrentLocation } from "../hooks/useLocation";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
+import { useT } from "../i18n";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/colors";
 import type { AppStackParamList, AppTabParamList } from "../navigation/types";
 
@@ -35,24 +38,61 @@ type Props = CompositeScreenProps<
 >;
 
 interface Category {
-  key: MerchantType | "all";
-  label: string;
-  icon: string;
+  key: MerchantType;
+  labelKey: string;
+  subKey: string;
+  icon: IconName;
   color: string;
 }
 
 const CATEGORIES: Category[] = [
-  { key: "all", label: "الكل", icon: "✨", color: "#FFF1E6" },
-  { key: "restaurant", label: "مطاعم", icon: "🍔", color: "#FEF3C7" },
-  { key: "clothing", label: "ملابس", icon: "👕", color: "#EFF6FF" },
-  { key: "other", label: "متاجر", icon: "🛍️", color: "#ECFDF5" },
+  { key: "food", labelKey: "home.catFood", subKey: "home.catFoodSub", icon: "restaurant", color: "#FEF3C7" },
+  { key: "fresh", labelKey: "home.catFresh", subKey: "home.catFreshSub", icon: "leaf", color: "#ECFDF5" },
+  { key: "market", labelKey: "home.catMarket", subKey: "home.catMarketSub", icon: "basket", color: "#EFF6FF" },
 ];
 
+const TYPE_META: Record<MerchantType, { labelKey: string; emoji: string; tint: string }> = {
+  food: { labelKey: "type.food", emoji: "🍔", tint: "#FEF3C7" },
+  fresh: { labelKey: "type.fresh", emoji: "🥬", tint: "#ECFDF5" },
+  market: { labelKey: "type.market", emoji: "🛒", tint: "#EFF6FF" },
+};
+
+/** تقدير وقت التوصيل من المسافة (كما تفعل تطبيقات التوصيل) — يُعيد المدى فقط */
+function etaRange(km: number | null): string {
+  const mins = km == null ? 25 : Math.round(12 + km * 5);
+  const lo = Math.min(55, Math.max(10, Math.round(mins / 5) * 5));
+  return `${lo}–${lo + 10}`;
+}
+
 export function HomeScreen({ navigation }: Props) {
+  const { t } = useT();
   const [search, setSearch] = useState("");
-  const [activeCat, setActiveCat] = useState<MerchantType | "all">("all");
+  const [activeCat, setActiveCat] = useState<MerchantType>("food");
+  const [area, setArea] = useState<string | null>(null);
   const debouncedSearch = useDebouncedValue(search, 350);
   const loc = useCurrentLocation();
+
+  // اسم الحيّ/المدينة من الإحداثيات (مع تجاهل صامت عند الفشل)
+  useEffect(() => {
+    if (!loc.location) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await Location.reverseGeocodeAsync({
+          latitude: loc.location!.lat,
+          longitude: loc.location!.lng,
+        });
+        const p = r[0];
+        if (!cancelled && p)
+          setArea(p.district || p.subregion || p.city || p.region || null);
+      } catch {
+        /* تجاهل */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loc.location?.lat, loc.location?.lng]);
 
   const query = useQuery({
     queryKey: ["merchants", { lat: loc.location?.lat, lng: loc.location?.lng, q: debouncedSearch, type: activeCat }],
@@ -61,7 +101,7 @@ export function HomeScreen({ navigation }: Props) {
         lat: loc.location?.lat,
         lng: loc.location?.lng,
         q: debouncedSearch || undefined,
-        type: activeCat === "all" ? undefined : activeCat,
+        type: debouncedSearch ? undefined : activeCat,
       }),
     enabled: !loc.loading,
     placeholderData: (prev) => prev,
@@ -74,48 +114,61 @@ export function HomeScreen({ navigation }: Props) {
     staleTime: 120_000,
   });
 
+  const isBrowsing = !debouncedSearch;
+  const merchants = query.data ?? [];
+  const featured = isBrowsing
+    ? [...merchants].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0)).slice(0, 6)
+    : [];
+
   const header = (
     <View>
-      <View style={styles.header}>
-        <Text style={styles.greeting}>ماذا تشتهي اليوم؟ 😋</Text>
-        <View style={styles.searchShell}>
-          <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
-            style={styles.search}
-            placeholder="ابحث عن مطعم أو محل..."
-            placeholderTextColor={colors.textFaint}
-            value={search}
-            onChangeText={setSearch}
-          />
+      {/* شريط الموقع */}
+      <Pressable style={styles.locBar} onPress={() => navigation.navigate("Addresses")}>
+        <View style={styles.locPin}>
+          <Icon name="locationFill" size={18} color={colors.primary} />
         </View>
-        {loc.error ? (
-          <Text style={styles.locError}>الموقع غير مفعّل — لن نُظهر القرب</Text>
-        ) : null}
+        <View style={styles.locTextCol}>
+          <Text style={styles.locLabel}>{t("home.deliverTo")}</Text>
+          <View style={styles.locValueRow}>
+            <Text style={styles.locValue} numberOfLines={1}>
+              {area ?? (loc.loading ? t("home.locating") : t("home.currentLocation"))}
+            </Text>
+            <Icon name="chevronDown" size={16} color={colors.text} />
+          </View>
+        </View>
+        <View style={styles.bell}>
+          <Icon name="bell" size={18} color={colors.text} />
+        </View>
+      </Pressable>
+
+      {/* العنوان + البحث */}
+      <View style={styles.searchBlock}>
+        <Text style={styles.greeting}>{t("home.greeting")}</Text>
+        <View style={styles.searchRow}>
+          <View style={styles.searchShell}>
+            <Icon name="search" size={18} color={colors.textMuted} />
+            <TextInput
+              style={styles.search}
+              placeholder={t("home.search")}
+              placeholderTextColor={colors.textFaint}
+              value={search}
+              onChangeText={setSearch}
+              returnKeyType="search"
+            />
+            {search.length > 0 ? (
+              <Pressable hitSlop={8} onPress={() => setSearch("")}>
+                <Icon name="close" size={16} color={colors.textFaint} />
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+        {loc.error ? <Text style={styles.locError}>{t("home.enableLocation")}</Text> : null}
       </View>
 
-      {/* صفّ الأقسام */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.catRow}
-      >
-        {CATEGORIES.map((c) => {
-          const active = activeCat === c.key;
-          return (
-            <Pressable key={c.key} style={styles.catItem} onPress={() => setActiveCat(c.key)}>
-              <View style={[styles.catIcon, { backgroundColor: c.color }, active && styles.catIconActive]}>
-                <Text style={{ fontSize: 26 }}>{c.icon}</Text>
-              </View>
-              <Text style={[styles.catLabel, active && styles.catLabelActive]}>{c.label}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-
-      {/* أحدث العروض */}
-      {(offers.isLoading || (offers.data?.length ?? 0) > 0) && activeCat === "all" && !debouncedSearch ? (
+      {/* العروض */}
+      {(offers.isLoading || (offers.data?.length ?? 0) > 0) && isBrowsing ? (
         <>
-          <Text style={styles.sectionTitle}>أحدث العروض</Text>
+          <SectionTitle title={t("home.offers")} />
           <OffersCarousel
             offers={offers.data ?? []}
             loading={offers.isLoading}
@@ -124,17 +177,61 @@ export function HomeScreen({ navigation }: Props) {
         </>
       ) : null}
 
-      <Text style={styles.sectionTitle}>المتاجر القريبة</Text>
+      {/* الأقسام الرئيسية: Food / Fresh / Market */}
+      <View style={styles.catRow}>
+        {CATEGORIES.map((c) => {
+          const active = activeCat === c.key;
+          return (
+            <Pressable
+              key={c.key}
+              style={[styles.catCard, active && styles.catCardActive]}
+              onPress={() => setActiveCat(c.key)}
+            >
+              <View style={[styles.catIcon, { backgroundColor: active ? "#fff" : c.color }]}>
+                <Icon name={c.icon} size={24} color={colors.primary} />
+              </View>
+              <Text style={[styles.catLabel, active && styles.catLabelActive]} numberOfLines={1}>
+                {t(c.labelKey)}
+              </Text>
+              <Text style={[styles.catSub, active && styles.catSubActive]} numberOfLines={1}>
+                {t(c.subKey)}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {/* الأكثر طلباً (صفّ أفقي) */}
+      {featured.length >= 3 ? (
+        <>
+          <SectionTitle title={t("home.topNearby")} />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.railRow}
+          >
+            {featured.map((m) => (
+              <FeaturedCard
+                key={m.id}
+                merchant={m}
+                onPress={() => navigation.navigate("Merchant", { merchantId: m.id })}
+              />
+            ))}
+          </ScrollView>
+        </>
+      ) : null}
+
+      <SectionTitle title={debouncedSearch ? t("home.searchResults") : t("home.allStores")} />
     </View>
   );
 
   if (query.isLoading) {
     return (
-      <Screen padded={false}>
+      <Screen padded={false} background="white">
         {header}
         <View style={styles.list}>
-          {[0, 1, 2, 3].map((i) => (
-            <View key={i} style={{ marginBottom: spacing.md }}>
+          {[0, 1, 2].map((i) => (
+            <View key={i} style={{ marginBottom: spacing.lg }}>
               <MerchantCardSkeleton />
             </View>
           ))}
@@ -144,30 +241,31 @@ export function HomeScreen({ navigation }: Props) {
   }
 
   return (
-    <Screen padded={false}>
+    <Screen padded={false} background="white">
       {query.error ? (
         <>
           {header}
           <EmptyState
             icon="⚠️"
-            title="تعذّر تحميل التجّار"
+            title={t("home.loadError")}
             hint={(query.error as Error).message}
-            ctaLabel="إعادة المحاولة"
+            ctaLabel={t("common.retry")}
             onCta={() => query.refetch()}
           />
         </>
       ) : (
         <FlatList
-          data={query.data ?? []}
+          data={merchants}
           keyExtractor={(m) => m.id}
           contentContainerStyle={styles.list}
           ListHeaderComponent={header}
-          ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+          ItemSeparatorComponent={() => <View style={{ height: spacing.lg }} />}
+          showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <EmptyState
               icon="🛍️"
-              title="لا توجد متاجر بعد"
-              hint="لا توجد متاجر متاحة في منطقتك حالياً — جرّب لاحقاً"
+              title={t("home.noStores")}
+              hint={t("home.noStoresHint")}
             />
           }
           refreshControl={
@@ -192,92 +290,291 @@ export function HomeScreen({ navigation }: Props) {
   );
 }
 
-export function MerchantCard({ merchant, onPress }: { merchant: Merchant; onPress: () => void }) {
+function SectionTitle({ title }: { title: string }) {
+  return <Text style={styles.sectionTitle}>{title}</Text>;
+}
+
+/** بطاقة "الأكثر طلباً" — مدمجة للصفّ الأفقي */
+function FeaturedCard({ merchant, onPress }: { merchant: Merchant; onPress: () => void }) {
+  const { t } = useT();
+  const meta = TYPE_META[merchant.type];
   return (
-    <Card onPress={onPress} variant="elevated" padding="sm" style={styles.card}>
-      <View style={styles.favCorner}>
-        <FavoriteButton merchantId={merchant.id} size={20} floating />
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.railCard, pressed && styles.pressed]}
+    >
+      <View style={[styles.railCover, { backgroundColor: meta.tint }]}>
+        {merchant.logo_url ? (
+          <Image source={{ uri: merchant.logo_url }} style={styles.railCoverImg} resizeMode="cover" />
+        ) : (
+          <Text style={styles.railEmoji}>{meta.emoji}</Text>
+        )}
+        {!merchant.is_open ? (
+          <View style={styles.railDim}>
+            <Text style={styles.railClosed}>{t("merchant.closedNow")}</Text>
+          </View>
+        ) : null}
       </View>
-      <Avatar uri={merchant.logo_url} fallback={merchant.name} size={64} shape="rounded" />
-      <View style={{ flex: 1 }}>
+      <Text style={styles.railName} numberOfLines={1}>{merchant.name}</Text>
+      <View style={styles.railMeta}>
+        <Icon name="star" size={13} color={colors.warning} />
+        <Text style={styles.railRating}>{Number(merchant.rating || 0).toFixed(1)}</Text>
+        {merchant.distance_km != null ? (
+          <Text style={styles.railDistance}>· {merchant.distance_km} {t("common.km")}</Text>
+        ) : null}
+      </View>
+    </Pressable>
+  );
+}
+
+/** بطاقة المتجر الرئيسية — واجهة صورية */
+export function MerchantCard({ merchant, onPress }: { merchant: Merchant; onPress: () => void }) {
+  const { t } = useT();
+  const meta = TYPE_META[merchant.type];
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+    >
+      {/* الواجهة */}
+      <View style={[styles.cover, { backgroundColor: meta.tint }]}>
+        {merchant.logo_url ? (
+          <Image source={{ uri: merchant.logo_url }} style={styles.coverImg} resizeMode="cover" />
+        ) : (
+          <Text style={styles.coverEmoji}>{meta.emoji}</Text>
+        )}
+
+        {!merchant.is_open ? <View style={styles.coverDim} /> : null}
+
+        <View style={styles.favFloat}>
+          <FavoriteButton merchantId={merchant.id} size={18} floating />
+        </View>
+
+        {merchant.is_open ? (
+          <View style={styles.etaBadge}>
+            <Icon name="scooter" size={14} color={colors.text} />
+            <Text style={styles.etaText}>{etaRange(merchant.distance_km)} {t("common.min")}</Text>
+          </View>
+        ) : (
+          <View style={styles.closedBadge}>
+            <Text style={styles.closedBadgeText}>{t("merchant.closedNow")}</Text>
+          </View>
+        )}
+      </View>
+
+      {/* المحتوى */}
+      <View style={styles.body}>
         <Text style={styles.name} numberOfLines={1}>{merchant.name}</Text>
         <View style={styles.metaRow}>
           <View style={styles.ratingPill}>
-            <Text style={styles.ratingText}>⭐ {Number(merchant.rating || 0).toFixed(1)}</Text>
+            <Icon name="star" size={12} color={colors.success} />
+            <Text style={styles.ratingText}>{Number(merchant.rating || 0).toFixed(1)}</Text>
           </View>
+          <Text style={styles.dot}>·</Text>
+          <Text style={styles.typeText}>{t(meta.labelKey)}</Text>
           {merchant.distance_km != null ? (
-            <Text style={styles.meta}>📍 {merchant.distance_km} كم</Text>
+            <>
+              <Text style={styles.dot}>·</Text>
+              <Text style={styles.metaText}>{merchant.distance_km} {t("common.km")}</Text>
+            </>
           ) : null}
-          {!merchant.is_open ? <Text style={styles.closed}>مغلق</Text> : null}
         </View>
         {merchant.description ? (
           <Text style={styles.desc} numberOfLines={1}>{merchant.description}</Text>
         ) : null}
       </View>
-    </Card>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
+  // شريط الموقع
+  locBar: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
     paddingBottom: spacing.md,
-    backgroundColor: colors.background,
-    gap: spacing.md,
   },
-  greeting: { fontSize: fontSize.h2, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  locPin: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.pill,
+    backgroundColor: colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  locPinIcon: { fontSize: 18 },
+  locTextCol: { flex: 1 },
+  locLabel: { fontSize: fontSize.caption, color: colors.textMuted, textAlign: "right" },
+  locValueRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.xs },
+  locValue: {
+    fontSize: fontSize.bodyLg,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+    maxWidth: "85%",
+  },
+  locChevron: { fontSize: 16, color: colors.text, marginTop: -4 },
+  bell: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bellIcon: { fontSize: 16 },
+
+  // البحث
+  searchBlock: { paddingHorizontal: spacing.lg, gap: spacing.md, marginBottom: spacing.xs },
+  greeting: { fontSize: fontSize.h2, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
+  searchRow: { flexDirection: "row", gap: spacing.md },
   searchShell: {
-    height: 48,
+    flex: 1,
+    height: 50,
     borderRadius: radii.pill,
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.lg,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: spacing.sm,
   },
-  searchIcon: { fontSize: 15 },
+  searchIcon: { fontSize: 16 },
   search: { flex: 1, fontSize: fontSize.body, color: colors.text, textAlign: "right" },
+  clearIcon: { fontSize: 14, color: colors.textFaint },
   locError: { color: colors.warning, fontSize: fontSize.small, textAlign: "right" },
 
-  catRow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, gap: spacing.lg },
-  catItem: { alignItems: "center", gap: spacing.xs, width: 64 },
+  // الأقسام الرئيسية (Food/Fresh/Market)
+  catRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
+  },
+  catCard: {
+    flex: 1,
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
+    borderRadius: radii.xl,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+  },
+  catCardActive: { backgroundColor: colors.primary, borderColor: colors.primary, ...shadows.primary },
   catIcon: {
-    width: 60,
-    height: 60,
+    width: 48,
+    height: 48,
     borderRadius: radii.pill,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "transparent",
   },
-  catIconActive: { borderColor: colors.primary },
-  catLabel: { fontSize: fontSize.small, color: colors.textMuted, fontWeight: fontWeight.medium },
-  catLabelActive: { color: colors.primary, fontWeight: fontWeight.bold },
+  catLabel: { fontSize: fontSize.body, color: colors.text, fontWeight: fontWeight.bold },
+  catLabelActive: { color: "#fff" },
+  catSub: { fontSize: fontSize.caption, color: colors.textMuted },
+  catSubActive: { color: "rgba(255,255,255,0.9)" },
 
   sectionTitle: {
-    fontSize: fontSize.h4,
-    fontWeight: fontWeight.bold,
+    fontSize: fontSize.h3,
+    fontWeight: fontWeight.extrabold,
     color: colors.text,
     textAlign: "right",
     paddingHorizontal: spacing.lg,
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
   },
 
-  list: { paddingHorizontal: spacing.lg, paddingTop: spacing.xs, paddingBottom: spacing.xxl },
-  card: { flexDirection: "row", gap: spacing.md, alignItems: "center" },
-  favCorner: { position: "absolute", top: -spacing.xs, insetInlineEnd: -spacing.xs, zIndex: 2 },
-  name: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
-  metaRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.xs, alignItems: "center" },
-  ratingPill: {
-    backgroundColor: colors.warningSoft,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+  // الصفّ الأفقي
+  railRow: { paddingHorizontal: spacing.lg, gap: spacing.md, paddingBottom: spacing.xs },
+  railCard: { width: 158 },
+  railCover: {
+    width: 158,
+    height: 100,
+    borderRadius: radii.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    marginBottom: spacing.sm,
+  },
+  railCoverImg: { width: "100%", height: "100%" },
+  railEmoji: { fontSize: 40 },
+  railDim: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: "rgba(15,23,42,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  railClosed: { color: "#fff", fontWeight: fontWeight.bold, fontSize: fontSize.small },
+  railName: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  railMeta: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.xs, marginTop: 2 },
+  railRating: { fontSize: fontSize.small, color: colors.text, fontWeight: fontWeight.semibold },
+  railDistance: { fontSize: fontSize.small, color: colors.textMuted },
+
+  // القائمة + البطاقة الرئيسية
+  list: { paddingHorizontal: spacing.lg, paddingTop: spacing.xs, paddingBottom: spacing.xxxl },
+  pressed: { opacity: 0.95, transform: [{ scale: 0.99 }] },
+  card: {
+    backgroundColor: colors.background,
+    borderRadius: radii.xl,
+    overflow: "hidden",
+    ...shadows.md,
+  },
+  cover: {
+    height: 132,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  coverImg: { width: "100%", height: "100%" },
+  coverEmoji: { fontSize: 54 },
+  coverDim: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: "rgba(15,23,42,0.35)" },
+  favFloat: { position: "absolute", top: spacing.sm, left: spacing.sm },
+  etaBadge: {
+    position: "absolute",
+    bottom: spacing.sm,
+    right: spacing.sm,
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(255,255,255,0.95)",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.pill,
+    ...shadows.sm,
+  },
+  etaText: { fontSize: fontSize.small, fontWeight: fontWeight.bold, color: colors.text },
+  closedBadge: {
+    position: "absolute",
+    bottom: spacing.sm,
+    right: spacing.sm,
+    backgroundColor: colors.text,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
     borderRadius: radii.pill,
   },
-  ratingText: { fontSize: fontSize.caption + 1, color: colors.text, fontWeight: fontWeight.semibold },
-  meta: { fontSize: fontSize.small, color: colors.textMuted },
-  closed: { fontSize: fontSize.small, color: colors.danger, fontWeight: fontWeight.semibold },
-  desc: { fontSize: fontSize.small, color: colors.textMuted, marginTop: 2, textAlign: "right" },
+  closedBadgeText: { fontSize: fontSize.small, fontWeight: fontWeight.bold, color: "#fff" },
+
+  body: { padding: spacing.lg, gap: spacing.xs },
+  name: { fontSize: fontSize.h4, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  metaRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.sm },
+  ratingPill: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: colors.successSoft,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radii.pill,
+  },
+  ratingText: { fontSize: fontSize.caption + 1, color: colors.success, fontWeight: fontWeight.bold },
+  dot: { color: colors.textFaint, fontSize: fontSize.body },
+  typeText: { fontSize: fontSize.small, color: colors.textMuted, fontWeight: fontWeight.medium },
+  metaText: { fontSize: fontSize.small, color: colors.textMuted },
+  desc: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right" },
 });

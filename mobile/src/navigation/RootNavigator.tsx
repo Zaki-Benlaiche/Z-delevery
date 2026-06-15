@@ -5,7 +5,6 @@ import { useAuth } from "../auth/context";
 import { usePushRegistration } from "../hooks/usePushRegistration";
 import { colors } from "../theme/colors";
 import { AppNavigator } from "./AppNavigator";
-import { AuthNavigator } from "./AuthNavigator";
 import { DriverNavigator } from "./DriverNavigator";
 
 export function RootNavigator() {
@@ -21,12 +20,9 @@ export function RootNavigator() {
     );
   }
 
-  // اختيار البنية حسب دور المستخدم — كل دور يرى تجربته فقط
-  const content = !user
-    ? <AuthNavigator />
-    : user.role === "driver"
-      ? <DriverNavigator />
-      : <AppNavigator />;
+  // ضيف أو زبون → تطبيق الزبون مباشرة (التسجيل يتمّ عند الطلب).
+  // السائق المسجّل فقط يرى تطبيق السائق.
+  const content = user?.role === "driver" ? <DriverNavigator /> : <AppNavigator />;
 
   return <NavigationContainer>{content}</NavigationContainer>;
 }
