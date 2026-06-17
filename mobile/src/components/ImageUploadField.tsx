@@ -1,7 +1,6 @@
 /** حقل رفع صورة قابل لإعادة الاستخدام — يختار من المعرض، يضغط، يرفع إلى Cloudinary */
 import { useState } from "react";
 import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 
 import { uploadToCloudinary, cloudinaryThumb } from "../api/upload";
 import { Icon } from "./Icon";
@@ -32,6 +31,15 @@ export function ImageUploadField({
 
   const pick = async () => {
     if (uploading) return;
+    // استيراد ديناميكي: الوحدة الـ native تُحمّل عند الحاجة فقط (لا تتعطّل على بناء قديم بلا الوحدة)
+    let ImagePicker: typeof import("expo-image-picker");
+    try {
+      ImagePicker = await import("expo-image-picker");
+    } catch {
+      Alert.alert("غير متاح", "ميزة رفع الصور تتطلّب تحديث التطبيق إلى أحدث إصدار.");
+      return;
+    }
+
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
       Alert.alert("الإذن مطلوب", "اسمح بالوصول إلى الصور لرفع صورة.");
