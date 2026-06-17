@@ -520,9 +520,9 @@ const styles = StyleSheet.create({
   },
   catCardActive: { backgroundColor: colors.primary, borderColor: colors.primary, ...shadows.primary },
   catIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: radii.pill,
+    width: 80,
+    height: 80,
+    borderRadius: radii.lg,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
