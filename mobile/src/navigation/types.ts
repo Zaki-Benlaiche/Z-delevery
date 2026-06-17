@@ -20,6 +20,7 @@ export type AppStackParamList = {
   AddAddress: undefined;
   OrderTracking: { orderId: string };
   Partner: { mode?: "store" | "driver" } | undefined;
+  Connexion: undefined;
 };
 
 export type MerchantTabParamList = {

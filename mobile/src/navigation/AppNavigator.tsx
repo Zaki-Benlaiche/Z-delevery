@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Platform, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon, type IconName } from "../components/Icon";
 import { useT } from "../i18n";
@@ -8,6 +9,7 @@ import { AccountScreen } from "../screens/AccountScreen";
 import { AddAddressScreen } from "../screens/AddAddressScreen";
 import { AddressesScreen } from "../screens/AddressesScreen";
 import { CartScreen } from "../screens/CartScreen";
+import { ConnexionScreen } from "../screens/ConnexionScreen";
 import { FavoritesScreen } from "../screens/FavoritesScreen";
 import { HomeScreen } from "../screens/HomeScreen";
 import { MerchantScreen } from "../screens/MerchantScreen";
@@ -30,6 +32,8 @@ function tabIcon(name: IconName, nameFocused: IconName) {
 
 function Tabs() {
   const { t } = useT();
+  const insets = useSafeAreaInsets();
+  const bottomInset = insets.bottom;
   return (
     <Tab.Navigator
       screenOptions={{
@@ -37,7 +41,13 @@ function Tabs() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontSize: fontSize.caption, fontWeight: fontWeight.semibold, marginTop: 2 },
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            height: 62 + bottomInset + spacing.sm,
+            paddingBottom: (bottomInset > 0 ? bottomInset : spacing.sm) + spacing.sm,
+          },
+        ],
         tabBarItemStyle: { paddingTop: spacing.sm },
       }}
     >
@@ -83,14 +93,17 @@ export function AppNavigator() {
         options={{ title: "تتبّع الطلب" }}
       />
       <Stack.Screen name="Partner" component={PartnerScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="Connexion"
+        component={ConnexionScreen}
+        options={{ headerShown: false, presentation: "modal" }}
+      />
     </Stack.Navigator>
   );
 }
 
 const styles = StyleSheet.create({
   tabBar: {
-    height: Platform.OS === "ios" ? 84 : 66,
-    paddingBottom: Platform.OS === "ios" ? 24 : spacing.sm,
     paddingTop: spacing.xs,
     borderTopWidth: 0,
     backgroundColor: colors.background,

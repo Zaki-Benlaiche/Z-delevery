@@ -1,4 +1,4 @@
-import { FlatList, StyleSheet, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import type { CompositeScreenProps } from "@react-navigation/native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -6,13 +6,14 @@ import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 
 import { merchantsApi } from "../api/merchants";
 import { Screen } from "../components/Screen";
-import { Header } from "../components/Header";
 import { EmptyState } from "../components/EmptyState";
+import { Icon } from "../components/Icon";
 import { MerchantCardSkeleton } from "../components/Skeleton";
 import { MerchantCard } from "./HomeScreen";
 import { useFavorites } from "../store/favorites";
 import { useCurrentLocation } from "../hooks/useLocation";
-import { spacing } from "../theme/colors";
+import { useT } from "../i18n";
+import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/colors";
 import type { AppStackParamList, AppTabParamList } from "../navigation/types";
 
 type Props = CompositeScreenProps<
@@ -21,6 +22,7 @@ type Props = CompositeScreenProps<
 >;
 
 export function FavoritesScreen({ navigation }: Props) {
+  const { t } = useT();
   const favIds = useFavorites((s) => s.ids);
   const loc = useCurrentLocation();
 
@@ -35,13 +37,31 @@ export function FavoritesScreen({ navigation }: Props) {
 
   return (
     <Screen padded={false}>
-      <Header title="المفضّلة ❤️" />
+      {/* رأس أنيق */}
+      <View style={styles.hero}>
+        <View style={styles.heroIcon}>
+          <Icon name="heartFill" size={24} color={colors.danger} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.heroTitle}>{t("fav.title")}</Text>
+          {favIds.length > 0 ? (
+            <Text style={styles.heroSub}>
+              {favIds.length} {t("fav.savedWord")}
+            </Text>
+          ) : null}
+        </View>
+      </View>
+
       {favIds.length === 0 ? (
-        <EmptyState
-          icon="🤍"
-          title="لا مفضّلة بعد"
-          hint="اضغط على القلب في أي متجر لإضافته هنا"
-        />
+        <View style={styles.center}>
+          <EmptyState
+            icon="🤍"
+            title={t("fav.empty")}
+            hint={t("fav.emptyHint")}
+            ctaLabel={t("fav.browse")}
+            onCta={() => navigation.navigate("HomeTab")}
+          />
+        </View>
       ) : query.isLoading ? (
         <View style={styles.list}>
           {[0, 1, 2].map((i) => (
@@ -55,9 +75,14 @@ export function FavoritesScreen({ navigation }: Props) {
           data={favorites}
           keyExtractor={(m) => m.id}
           contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
           ListEmptyComponent={
-            <EmptyState icon="🔍" title="المتاجر المفضّلة غير متاحة" hint="ربما أُغلقت أو حُذفت" />
+            <EmptyState
+              icon="🔍"
+              title={t("fav.unavailable")}
+              hint={t("fav.unavailableHint")}
+            />
           }
           renderItem={({ item }) => (
             <MerchantCard
@@ -72,5 +97,35 @@ export function FavoritesScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  list: { padding: spacing.lg, paddingTop: spacing.md },
+  hero: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  heroIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: radii.pill,
+    backgroundColor: colors.dangerSoft,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadows.sm,
+  },
+  heroTitle: {
+    fontSize: fontSize.h1,
+    fontWeight: fontWeight.extrabold,
+    color: colors.text,
+    textAlign: "right",
+  },
+  heroSub: {
+    fontSize: fontSize.small,
+    color: colors.textMuted,
+    textAlign: "right",
+    marginTop: 1,
+  },
+  center: { flex: 1, justifyContent: "center" },
+  list: { padding: spacing.lg, paddingTop: spacing.sm },
 });

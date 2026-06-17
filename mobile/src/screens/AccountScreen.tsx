@@ -4,14 +4,10 @@ import type { CompositeScreenProps } from "@react-navigation/native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
-import { Button } from "../components/Button";
 import { Screen } from "../components/Screen";
-import { Input } from "../components/Input";
-import { Segmented } from "../components/Segmented";
 import { Icon, type IconName } from "../components/Icon";
 import { useAuth } from "../auth/context";
 import { useT } from "../i18n";
-import type { UserRole } from "../api/types";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/colors";
 import type { AppStackParamList, AppTabParamList } from "../navigation/types";
 
@@ -25,7 +21,6 @@ export function AccountScreen({ navigation }: Props) {
   const { user, signOut } = useAuth();
   const { t, lang, setLang } = useT();
   const [notif, setNotif] = useState(true);
-  const [showLogin, setShowLogin] = useState(false);
 
   const roleLabel = !user
     ? t("account.guest")
@@ -101,12 +96,20 @@ export function AccountScreen({ navigation }: Props) {
             <Icon name="logout" size={18} color={colors.danger} />
             <Text style={styles.logoutText}>{t("account.signOut")}</Text>
           </Pressable>
-        ) : showLogin ? (
-          <GuestLogin />
         ) : (
-          <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.lg }}>
-            <Button label={t("account.haveAccount")} variant="secondary" onPress={() => setShowLogin(true)} />
-          </View>
+          <Pressable
+            style={({ pressed }) => [styles.loginCta, pressed && styles.loginCtaPressed]}
+            onPress={() => navigation.navigate("Connexion")}
+          >
+            <View style={styles.loginCtaIcon}>
+              <Icon name="person" size={22} color="#fff" />
+            </View>
+            <View style={styles.loginCtaTextWrap}>
+              <Text style={styles.loginCtaTitle}>{t("account.loginCtaTitle")}</Text>
+              <Text style={styles.loginCtaSub}>{t("account.loginPrompt")}</Text>
+            </View>
+            <Icon name="chevronLeft" size={20} color="rgba(255,255,255,0.9)" />
+          </Pressable>
         )}
       </ScrollView>
     </Screen>
@@ -148,46 +151,6 @@ function Row({
 
 function Divider() {
   return <View style={styles.divider} />;
-}
-
-function GuestLogin() {
-  const { quickSignIn } = useAuth();
-  const { t } = useT();
-  const [phone, setPhone] = useState("");
-  const [name, setName] = useState("");
-  const [role, setRole] = useState<UserRole>("customer");
-  const [loading, setLoading] = useState(false);
-
-  const login = async () => {
-    if (phone.replace(/[^\d]/g, "").length < 9) {
-      Alert.alert("✋", t("partner.needPhone"));
-      return;
-    }
-    try {
-      setLoading(true);
-      await quickSignIn(phone.replace(/[^\d]/g, ""), name.trim() || undefined, role);
-    } catch (e) {
-      Alert.alert("⚠️", (e as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <View style={styles.loginBox}>
-      <Segmented
-        value={role}
-        onChange={setRole}
-        options={[
-          { value: "customer", label: t("account.customer") },
-          { value: "driver", label: t("account.driver") },
-        ]}
-      />
-      <Input label={t("cart.phone")} value={phone} onChangeText={(v) => setPhone(v.replace(/[^\d]/g, ""))} keyboardType="phone-pad" placeholder="0555 12 34 56" maxLength={15} />
-      <Input label={t("cart.nameOptional")} value={name} onChangeText={setName} placeholder={t("account.nameExample")} />
-      <Button label={t("account.login")} onPress={login} loading={loading} />
-    </View>
-  );
 }
 
 const styles = StyleSheet.create({
@@ -245,5 +208,36 @@ const styles = StyleSheet.create({
   },
   logoutText: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.bold, color: colors.danger },
 
-  loginBox: { gap: spacing.md, marginTop: spacing.xl },
+  loginCta: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: spacing.md,
+    marginTop: spacing.xl,
+    padding: spacing.lg,
+    borderRadius: radii.xl,
+    backgroundColor: colors.primary,
+    ...shadows.primary,
+  },
+  loginCtaPressed: { opacity: 0.9, transform: [{ scale: 0.985 }] },
+  loginCtaIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.pill,
+    backgroundColor: "rgba(255,255,255,0.22)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loginCtaTextWrap: { flex: 1 },
+  loginCtaTitle: {
+    fontSize: fontSize.bodyLg,
+    fontWeight: fontWeight.extrabold,
+    color: "#fff",
+    textAlign: "right",
+  },
+  loginCtaSub: {
+    fontSize: fontSize.small,
+    color: "rgba(255,255,255,0.85)",
+    textAlign: "right",
+    marginTop: 2,
+  },
 });

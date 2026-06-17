@@ -25,7 +25,7 @@ import { EmptyState } from "../components/EmptyState";
 import { MerchantCardSkeleton } from "../components/Skeleton";
 import { FavoriteButton } from "../components/FavoriteButton";
 import { OffersCarousel } from "../components/OffersCarousel";
-import { Icon, type IconName } from "../components/Icon";
+import { Icon } from "../components/Icon";
 import { useCurrentLocation } from "../hooks/useLocation";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { useT } from "../i18n";
@@ -41,14 +41,16 @@ interface Category {
   key: MerchantType;
   labelKey: string;
   subKey: string;
-  icon: IconName;
+  emoji: string;
+  dual?: boolean;
+  image?: number;
   color: string;
 }
 
 const CATEGORIES: Category[] = [
-  { key: "food", labelKey: "home.catFood", subKey: "home.catFoodSub", icon: "restaurant", color: "#FEF3C7" },
-  { key: "fresh", labelKey: "home.catFresh", subKey: "home.catFreshSub", icon: "leaf", color: "#ECFDF5" },
-  { key: "market", labelKey: "home.catMarket", subKey: "home.catMarketSub", icon: "basket", color: "#EFF6FF" },
+  { key: "food", labelKey: "home.catFood", subKey: "home.catFoodSub", emoji: "🍔", image: require("../../assets/categories/food.jpg"), color: "#FEF3C7" },
+  { key: "fresh", labelKey: "home.catFresh", subKey: "home.catFreshSub", emoji: "🥩🥦", image: require("../../assets/categories/fresh.jpg"), color: "#ECFDF5" },
+  { key: "market", labelKey: "home.catMarket", subKey: "home.catMarketSub", emoji: "🛒", image: require("../../assets/categories/market.jpg"), color: "#EFF6FF" },
 ];
 
 const TYPE_META: Record<MerchantType, { labelKey: string; emoji: string; tint: string }> = {
@@ -123,27 +125,36 @@ export function HomeScreen({ navigation }: Props) {
   const header = (
     <View>
       {/* شريط الموقع */}
-      <Pressable style={styles.locBar} onPress={() => navigation.navigate("Addresses")}>
-        <View style={styles.locPin}>
-          <Icon name="locationFill" size={18} color={colors.primary} />
-        </View>
-        <View style={styles.locTextCol}>
-          <Text style={styles.locLabel}>{t("home.deliverTo")}</Text>
-          <View style={styles.locValueRow}>
-            <Text style={styles.locValue} numberOfLines={1}>
-              {area ?? (loc.loading ? t("home.locating") : t("home.currentLocation"))}
-            </Text>
-            <Icon name="chevronDown" size={16} color={colors.text} />
+      <View style={styles.locBar}>
+        <Pressable
+          style={({ pressed }) => [styles.locSelector, pressed && { opacity: 0.6 }]}
+          onPress={() => navigation.navigate("Addresses")}
+          hitSlop={6}
+        >
+          <View style={styles.locPin}>
+            <Icon name="locationFill" size={18} color="#fff" />
           </View>
-        </View>
+          <View style={styles.locTextCol}>
+            <Text style={styles.locLabel}>{t("home.deliverTo")}</Text>
+            <View style={styles.locValueRow}>
+              <Text style={styles.locValue} numberOfLines={1}>
+                {area ?? (loc.loading ? t("home.locating") : t("home.currentLocation"))}
+              </Text>
+              <View style={styles.locChevronWrap}>
+                <Icon name="chevronDown" size={13} color={colors.primary} />
+              </View>
+            </View>
+          </View>
+        </Pressable>
+        <View style={styles.locDivider} />
         <View style={styles.bell}>
           <Icon name="bell" size={18} color={colors.text} />
+          <View style={styles.bellDot} />
         </View>
-      </Pressable>
+      </View>
 
       {/* العنوان + البحث */}
       <View style={styles.searchBlock}>
-        <Text style={styles.greeting}>{t("home.greeting")}</Text>
         <View style={styles.searchRow}>
           <View style={styles.searchShell}>
             <Icon name="search" size={18} color={colors.textMuted} />
@@ -188,7 +199,11 @@ export function HomeScreen({ navigation }: Props) {
               onPress={() => setActiveCat(c.key)}
             >
               <View style={[styles.catIcon, { backgroundColor: active ? "#fff" : c.color }]}>
-                <Icon name={c.icon} size={24} color={colors.primary} />
+                {c.image ? (
+                  <Image source={c.image} style={styles.catImg} resizeMode="cover" />
+                ) : (
+                  <Text style={[styles.catEmoji, c.dual && styles.catEmojiDual]}>{c.emoji}</Text>
+                )}
               </View>
               <Text style={[styles.catLabel, active && styles.catLabelActive]} numberOfLines={1}>
                 {t(c.labelKey)}
@@ -392,43 +407,83 @@ const styles = StyleSheet.create({
   locBar: {
     flexDirection: "row-reverse",
     alignItems: "center",
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
+    gap: spacing.sm,
+    marginHorizontal: spacing.sm,
+    marginTop: spacing.md,
+    marginBottom: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.sm + 2,
+    backgroundColor: colors.background,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    ...shadows.sm,
+  },
+  locSelector: {
+    flex: 1,
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: spacing.sm + 2,
   },
   locPin: {
     width: 40,
     height: 40,
     borderRadius: radii.pill,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadows.primary,
+  },
+  locDivider: {
+    width: 1,
+    height: 26,
+    backgroundColor: colors.divider,
+  },
+  locTextCol: { flex: 1 },
+  locLabel: {
+    fontSize: fontSize.caption,
+    color: colors.primary,
+    fontWeight: fontWeight.bold,
+    textAlign: "right",
+    letterSpacing: 0.3,
+  },
+  locValueRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.xs, marginTop: 1 },
+  locValue: {
+    fontSize: fontSize.h3,
+    fontWeight: fontWeight.extrabold,
+    color: colors.text,
+    maxWidth: "82%",
+  },
+  locChevronWrap: {
+    width: 20,
+    height: 20,
+    borderRadius: radii.pill,
     backgroundColor: colors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
   },
-  locPinIcon: { fontSize: 18 },
-  locTextCol: { flex: 1 },
-  locLabel: { fontSize: fontSize.caption, color: colors.textMuted, textAlign: "right" },
-  locValueRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.xs },
-  locValue: {
-    fontSize: fontSize.bodyLg,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-    maxWidth: "85%",
-  },
-  locChevron: { fontSize: 16, color: colors.text, marginTop: -4 },
   bell: {
     width: 40,
     height: 40,
     borderRadius: radii.pill,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceAlt,
     alignItems: "center",
     justifyContent: "center",
   },
-  bellIcon: { fontSize: 16 },
+  bellDot: {
+    position: "absolute",
+    top: 9,
+    right: 10,
+    width: 8,
+    height: 8,
+    borderRadius: radii.pill,
+    backgroundColor: colors.danger,
+    borderWidth: 1.5,
+    borderColor: colors.background,
+  },
 
   // البحث
   searchBlock: { paddingHorizontal: spacing.lg, gap: spacing.md, marginBottom: spacing.xs },
-  greeting: { fontSize: fontSize.h2, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
   searchRow: { flexDirection: "row", gap: spacing.md },
   searchShell: {
     flex: 1,
@@ -470,7 +525,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
+  catImg: { width: "100%", height: "100%" },
+  catEmoji: { fontSize: 26 },
+  catEmojiDual: { fontSize: 17, letterSpacing: -2 },
   catLabel: { fontSize: fontSize.body, color: colors.text, fontWeight: fontWeight.bold },
   catLabelActive: { color: "#fff" },
   catSub: { fontSize: fontSize.caption, color: colors.textMuted },

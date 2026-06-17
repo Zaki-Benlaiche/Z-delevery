@@ -87,6 +87,15 @@ const ar: Dict = {
   "cart.estimatedTotal": "الإجمالي التقديري",
   "cart.confirm": "أكّد الطلب",
 
+  // المفضّلة
+  "fav.title": "المفضّلة",
+  "fav.savedWord": "متجر محفوظ",
+  "fav.empty": "لا مفضّلة بعد",
+  "fav.emptyHint": "اضغط على القلب ♥ في أيّ متجر لتحفظه هنا وتصل إليه بسرعة",
+  "fav.browse": "تصفّح المتاجر",
+  "fav.unavailable": "متاجر غير متاحة حالياً",
+  "fav.unavailableHint": "بعض متاجرك المفضّلة ربما أُغلقت أو حُذفت",
+
   // الطلبات
   "orders.title": "طلباتي",
   "orders.empty": "لا توجد طلبات بعد",
@@ -97,6 +106,7 @@ const ar: Dict = {
   "account.welcome": "مرحباً بك في Z-delivry",
   "account.guestHint": "أنت تتصفّح كضيف — تصفّح المتاجر بحرّية، وسنحفظ رقمك تلقائياً عند أوّل طلب.",
   "account.haveAccount": "لديك حساب؟ سجّل الدخول",
+  "account.loginCtaTitle": "تسجيل الدخول",
   "account.login": "دخول",
   "account.signOut": "تسجيل الخروج",
   "account.myAddresses": "عناويني",
@@ -114,6 +124,16 @@ const ar: Dict = {
   "account.guest": "ضيف",
   "account.loginPrompt": "سجّل الدخول للوصول إلى طلباتك وعناوينك",
   "account.notifOn": "مفعّلة",
+
+  // تسجيل الدخول
+  "connexion.title": "أهلاً بعودتك 👋",
+  "connexion.subtitle": "سجّل الدخول للوصول إلى طلباتك وعناوينك المحفوظة",
+  "connexion.roleHint": "أدخل بصفتك",
+  "connexion.secure": "بياناتك آمنة معنا ولن تُشارَك مع أيّ طرف",
+  "connexion.terms": "بالمتابعة، أنت توافق على شروط الاستخدام وسياسة الخصوصية",
+  "connexion.perkFast": "توصيل سريع",
+  "connexion.perkSecure": "دفع آمن",
+  "connexion.perkTrack": "تتبّع مباشر",
 
   // الانضمام كشريك
   "partner.section": "انضمّ إلى Z-delivry",
@@ -217,6 +237,14 @@ const fr: Dict = {
   "cart.estimatedTotal": "Total estimé",
   "cart.confirm": "Confirmer la commande",
 
+  "fav.title": "Favoris",
+  "fav.savedWord": "enregistrés",
+  "fav.empty": "Aucun favori",
+  "fav.emptyHint": "Appuyez sur le cœur ♥ d'un magasin pour l'enregistrer ici et y accéder vite",
+  "fav.browse": "Parcourir les magasins",
+  "fav.unavailable": "Magasins indisponibles",
+  "fav.unavailableHint": "Certains de vos favoris ont peut-être fermé ou été supprimés",
+
   "orders.title": "Mes commandes",
   "orders.empty": "Aucune commande",
   "orders.emptyHintGuest": "Commandez et vos commandes apparaîtront ici — nous enregistrerons votre numéro",
@@ -225,6 +253,7 @@ const fr: Dict = {
   "account.welcome": "Bienvenue sur Z-delivry",
   "account.guestHint": "Vous naviguez en invité — explorez librement, nous enregistrerons votre numéro à la première commande.",
   "account.haveAccount": "Vous avez un compte ? Connectez-vous",
+  "account.loginCtaTitle": "Se connecter",
   "account.login": "Connexion",
   "account.signOut": "Déconnexion",
   "account.myAddresses": "Mes adresses",
@@ -242,6 +271,15 @@ const fr: Dict = {
   "account.guest": "Invité",
   "account.loginPrompt": "Connectez-vous pour accéder à vos commandes et adresses",
   "account.notifOn": "Activées",
+
+  "connexion.title": "Bon retour 👋",
+  "connexion.subtitle": "Connectez-vous pour accéder à vos commandes et adresses",
+  "connexion.roleHint": "Connectez-vous en tant que",
+  "connexion.secure": "Vos données sont protégées et jamais partagées",
+  "connexion.terms": "En continuant, vous acceptez les conditions d'utilisation et la politique de confidentialité",
+  "connexion.perkFast": "Livraison rapide",
+  "connexion.perkSecure": "Paiement sûr",
+  "connexion.perkTrack": "Suivi en direct",
 
   "partner.section": "Rejoignez Z-delivry",
   "partner.addStore": "Ajoutez votre magasin",

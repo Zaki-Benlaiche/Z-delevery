@@ -8,7 +8,8 @@ import { MerchantOffersScreen } from "../screens/merchant/MerchantOffersScreen";
 import { useT } from "../i18n";
 import { colors, fontSize, fontWeight, spacing } from "../theme/colors";
 import type { MerchantTabParamList } from "./types";
-import { Platform, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Tab = createBottomTabNavigator<MerchantTabParamList>();
 
@@ -20,6 +21,7 @@ function tabIcon(name: IconName, focused: IconName) {
 
 export function MerchantNavigator() {
   const { t } = useT();
+  const bottomInset = useSafeAreaInsets().bottom;
   return (
     <Tab.Navigator
       screenOptions={{
@@ -27,7 +29,13 @@ export function MerchantNavigator() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontSize: fontSize.caption, fontWeight: fontWeight.semibold, marginTop: 2 },
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            height: 62 + bottomInset + spacing.sm,
+            paddingBottom: (bottomInset > 0 ? bottomInset : spacing.sm) + spacing.sm,
+          },
+        ],
         tabBarItemStyle: { paddingTop: spacing.xs },
       }}
     >
@@ -57,8 +65,6 @@ export function MerchantNavigator() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    height: Platform.OS === "ios" ? 84 : 66,
-    paddingBottom: Platform.OS === "ios" ? 24 : spacing.sm,
     paddingTop: spacing.xs,
     borderTopWidth: 1,
     borderTopColor: colors.borderSoft,
