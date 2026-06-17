@@ -46,10 +46,21 @@
           "locationAlwaysAndWhenInUsePermission": "نحتاج موقعك لإظهار أقرب المتاجر."
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "نحتاج الوصول إلى صورك لرفع شعار المحلّ وصور المنتجات.",
+          "cameraPermission": "نحتاج الكاميرا لالتقاط صور المنتجات."
+        }
+      ]
     ],
     "extra": {
       "apiUrl": "https://zdelivry-api.onrender.com",
+      "cloudinary": {
+        "cloudName": "YOUR_CLOUDINARY_CLOUD_NAME",
+        "uploadPreset": "YOUR_UNSIGNED_UPLOAD_PRESET"
+      },
       "eas": {
         "projectId": "ebe4d59a-88dc-48ba-9a8d-91b110159f6b"
       }

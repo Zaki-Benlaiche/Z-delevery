@@ -36,6 +36,7 @@ function Tabs() {
   const bottomInset = insets.bottom;
   return (
     <Tab.Navigator
+      initialRouteName="HomeTab"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
@@ -52,14 +53,9 @@ function Tabs() {
       }}
     >
       <Tab.Screen
-        name="HomeTab"
-        component={HomeScreen}
-        options={{ tabBarLabel: t("tab.home"), tabBarIcon: tabIcon("home", "homeFill") }}
-      />
-      <Tab.Screen
-        name="FavoritesTab"
-        component={FavoritesScreen}
-        options={{ tabBarLabel: t("tab.favorites"), tabBarIcon: tabIcon("heartOutline", "heartFill") }}
+        name="AccountTab"
+        component={AccountScreen}
+        options={{ tabBarLabel: t("tab.account"), tabBarIcon: tabIcon("person", "personFill") }}
       />
       <Tab.Screen
         name="OrdersTab"
@@ -67,9 +63,14 @@ function Tabs() {
         options={{ tabBarLabel: t("tab.orders"), tabBarIcon: tabIcon("receipt", "receiptFill") }}
       />
       <Tab.Screen
-        name="AccountTab"
-        component={AccountScreen}
-        options={{ tabBarLabel: t("tab.account"), tabBarIcon: tabIcon("person", "personFill") }}
+        name="FavoritesTab"
+        component={FavoritesScreen}
+        options={{ tabBarLabel: t("tab.favorites"), tabBarIcon: tabIcon("heartOutline", "heartFill") }}
+      />
+      <Tab.Screen
+        name="HomeTab"
+        component={HomeScreen}
+        options={{ tabBarLabel: t("tab.home"), tabBarIcon: tabIcon("home", "homeFill") }}
       />
     </Tab.Navigator>
   );

@@ -18,6 +18,7 @@ import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 
 import { merchantsApi } from "../api/merchants";
 import { offersApi } from "../api/offers";
+import { cloudinaryThumb } from "../api/upload";
 import type { Merchant, MerchantType } from "../api/types";
 import { Screen } from "../components/Screen";
 import { Avatar } from "../components/Avatar";
@@ -320,7 +321,7 @@ function FeaturedCard({ merchant, onPress }: { merchant: Merchant; onPress: () =
     >
       <View style={[styles.railCover, { backgroundColor: meta.tint }]}>
         {merchant.logo_url ? (
-          <Image source={{ uri: merchant.logo_url }} style={styles.railCoverImg} resizeMode="cover" />
+          <Image source={{ uri: cloudinaryThumb(merchant.logo_url, { w: 400 })! }} style={styles.railCoverImg} resizeMode="cover" />
         ) : (
           <Text style={styles.railEmoji}>{meta.emoji}</Text>
         )}
@@ -354,7 +355,7 @@ export function MerchantCard({ merchant, onPress }: { merchant: Merchant; onPres
       {/* الواجهة */}
       <View style={[styles.cover, { backgroundColor: meta.tint }]}>
         {merchant.logo_url ? (
-          <Image source={{ uri: merchant.logo_url }} style={styles.coverImg} resizeMode="cover" />
+          <Image source={{ uri: cloudinaryThumb(merchant.logo_url, { w: 800 })! }} style={styles.coverImg} resizeMode="cover" />
         ) : (
           <Text style={styles.coverEmoji}>{meta.emoji}</Text>
         )}
@@ -503,8 +504,8 @@ const styles = StyleSheet.create({
   // الأقسام الرئيسية (Food/Fresh/Market)
   catRow: {
     flexDirection: "row",
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.xs,
     paddingTop: spacing.sm,
     paddingBottom: spacing.xs,
   },
@@ -520,8 +521,8 @@ const styles = StyleSheet.create({
   },
   catCardActive: { backgroundColor: colors.primary, borderColor: colors.primary, ...shadows.primary },
   catIcon: {
-    width: 80,
-    height: 80,
+    width: 104,
+    height: 104,
     borderRadius: radii.lg,
     alignItems: "center",
     justifyContent: "center",

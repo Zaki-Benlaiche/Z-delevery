@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 import { merchantsApi } from "../api/merchants";
+import { cloudinaryThumb } from "../api/upload";
 import type { MerchantType, Product } from "../api/types";
 import { Screen } from "../components/Screen";
 import { Card } from "../components/Card";
@@ -101,7 +102,7 @@ export function MerchantScreen({ route, navigation }: Props) {
       {/* ===== الواجهة (Hero) ===== */}
       <View style={[styles.cover, { backgroundColor: meta.tint }]}>
         {m.logo_url ? (
-          <Image source={{ uri: m.logo_url }} style={styles.coverImg} resizeMode="cover" />
+          <Image source={{ uri: cloudinaryThumb(m.logo_url, { w: 1080 })! }} style={styles.coverImg} resizeMode="cover" />
         ) : (
           <Text style={styles.coverEmoji}>{meta.emoji}</Text>
         )}

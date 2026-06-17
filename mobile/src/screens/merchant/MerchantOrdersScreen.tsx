@@ -10,6 +10,8 @@ import { Button } from "../../components/Button";
 import { EmptyState } from "../../components/EmptyState";
 import { PriceTag } from "../../components/PriceTag";
 import { StatusBadge } from "../../components/StatusBadge";
+import { ImageUploadField } from "../../components/ImageUploadField";
+import { CLOUDINARY_ENABLED } from "../../config";
 import { colors, fontSize, fontWeight, radii, spacing } from "../../theme/colors";
 
 const NEXT: Partial<Record<OrderStatus, { status: OrderStatus; label: string; danger?: boolean }[]>> = {
@@ -37,6 +39,12 @@ export function MerchantOrdersScreen() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-merchant"] }),
   });
 
+  const setLogo = useMutation({
+    mutationFn: (url: string) => merchantsApi.update(store.data!.id, { logo_url: url }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-merchant"] }),
+    onError: (e) => Alert.alert("تعذّر حفظ الشعار", (e as Error).message),
+  });
+
   const setStatus = useMutation({
     mutationFn: ({ id, status }: { id: string; status: OrderStatus }) => ordersApi.setStatus(id, status),
     onSuccess: (updated) =>
@@ -51,6 +59,16 @@ export function MerchantOrdersScreen() {
   return (
     <Screen padded={false}>
       <View style={styles.header}>
+        {CLOUDINARY_ENABLED && store.data ? (
+          <ImageUploadField
+            value={store.data.logo_url}
+            onChange={(url) => setLogo.mutate(url)}
+            shape="circle"
+            size={52}
+            label=""
+            folder="zdelivry/logos"
+          />
+        ) : null}
         <View style={{ flex: 1 }}>
           <Text style={styles.storeName} numberOfLines={1}>{store.data?.name ?? "متجري"}</Text>
           <Text style={[styles.statusText, { color: isOpen ? colors.success : colors.textMuted }]}>

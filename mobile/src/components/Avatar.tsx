@@ -1,5 +1,6 @@
 import { Image, StyleSheet, Text, View } from "react-native";
 
+import { cloudinaryThumb } from "../api/upload";
 import { colors, fontWeight, radii } from "../theme/colors";
 
 interface Props {
@@ -11,12 +12,13 @@ interface Props {
 
 export function Avatar({ uri, fallback = "?", size = 56, shape = "rounded" }: Props) {
   const radius = shape === "circle" ? size / 2 : shape === "square" ? 0 : radii.md;
+  const src = cloudinaryThumb(uri, { w: Math.round(size * 2) });
   return (
     <View
       style={[styles.wrap, { width: size, height: size, borderRadius: radius }]}
     >
-      {uri ? (
-        <Image source={{ uri }} style={[styles.img, { borderRadius: radius }]} />
+      {src ? (
+        <Image source={{ uri: src }} style={[styles.img, { borderRadius: radius }]} />
       ) : (
         <Text style={[styles.text, { fontSize: size * 0.4 }]}>{fallback.charAt(0).toUpperCase()}</Text>
       )}

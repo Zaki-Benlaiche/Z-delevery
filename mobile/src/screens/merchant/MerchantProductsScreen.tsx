@@ -12,6 +12,8 @@ import { Avatar } from "../../components/Avatar";
 import { EmptyState } from "../../components/EmptyState";
 import { PriceTag } from "../../components/PriceTag";
 import { Icon } from "../../components/Icon";
+import { ImageUploadField } from "../../components/ImageUploadField";
+import { CLOUDINARY_ENABLED } from "../../config";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../../theme/colors";
 
 export function MerchantProductsScreen() {
@@ -25,12 +27,13 @@ export function MerchantProductsScreen() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [desc, setDesc] = useState("");
+  const [image, setImage] = useState<string | null>(null);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["my-merchant"] });
 
   const openAdd = () => {
     setEditing(null);
-    setName(""); setPrice(""); setDesc("");
+    setName(""); setPrice(""); setDesc(""); setImage(null);
     setModalOpen(true);
   };
   const openEdit = (p: Product) => {
@@ -38,12 +41,13 @@ export function MerchantProductsScreen() {
     setName(p.name);
     setPrice(String(p.price));
     setDesc(p.description ?? "");
+    setImage(p.image_url ?? null);
     setModalOpen(true);
   };
 
   const save = useMutation({
     mutationFn: () => {
-      const payload = { name: name.trim(), price: parseFloat(price.replace(",", ".")), description: desc.trim() || null };
+      const payload = { name: name.trim(), price: parseFloat(price.replace(",", ".")), description: desc.trim() || null, image_url: image };
       return editing
         ? merchantsApi.updateProduct(merchantId!, editing.id, payload)
         : merchantsApi.addProduct(merchantId!, payload);
@@ -109,6 +113,11 @@ export function MerchantProductsScreen() {
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>{editing ? "تعديل المنتج" : "منتج جديد"}</Text>
+            {CLOUDINARY_ENABLED ? (
+              <View style={{ alignItems: "center" }}>
+                <ImageUploadField value={image} onChange={setImage} label="صورة المنتج" size={96} folder="zdelivry/products" />
+              </View>
+            ) : null}
             <Input label="اسم المنتج" value={name} onChangeText={setName} placeholder="مثال: بيتزا مارغريتا" icon="🍽️" />
             <Input label="السعر (دج)" value={price} onChangeText={setPrice} keyboardType="decimal-pad" placeholder="مثال: 800" icon="💵" />
             <Input label="وصف (اختياري)" value={desc} onChangeText={setDesc} placeholder="مكوّنات أو تفاصيل" />
