@@ -58,8 +58,8 @@
     "extra": {
       "apiUrl": "https://zdelivry-api.onrender.com",
       "cloudinary": {
-        "cloudName": "YOUR_CLOUDINARY_CLOUD_NAME",
-        "uploadPreset": "YOUR_UNSIGNED_UPLOAD_PRESET"
+        "cloudName": "dgebiyxv3",
+        "uploadPreset": "ml_default"
       },
       "eas": {
         "projectId": "ebe4d59a-88dc-48ba-9a8d-91b110159f6b"
