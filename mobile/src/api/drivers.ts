@@ -30,6 +30,16 @@ export interface DriverOrderDetail extends Order {
   customer: OrderContact | null;
 }
 
+/** ملخّص أرباح السائق وأدائه */
+export interface DriverEarnings {
+  deliveries: number;
+  total_earnings: number;
+  today_deliveries: number;
+  today_earnings: number;
+  active_orders: number;
+  rating: number;
+}
+
 export const driversApi = {
   register: (payload: { vehicle_type: string; license_url?: string }) =>
     api.post<Driver>("/drivers/register", payload),
@@ -49,6 +59,9 @@ export const driversApi = {
     const suffix = qs.toString() ? `?${qs}` : "";
     return api.get<Order[]>(`/drivers/available-orders${suffix}`);
   },
+
+  // ملخّص أرباح السائق وأدائه
+  earnings: () => api.get<DriverEarnings>("/drivers/earnings"),
 
   // تفاصيل الطلب للسائق (مع نقطة الاستلام وأرقام التواصل)
   orderDetail: (orderId: string) =>

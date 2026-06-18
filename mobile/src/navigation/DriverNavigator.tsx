@@ -5,8 +5,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon, type IconName } from "../components/Icon";
 import { AccountScreen } from "../screens/AccountScreen";
-import { OrdersScreen } from "../screens/OrdersScreen";
 import { DriverHomeScreen } from "../screens/driver/DriverHomeScreen";
+import { DriverHistoryScreen } from "../screens/driver/DriverHistoryScreen";
 import { DriverOrderScreen } from "../screens/driver/DriverOrderScreen";
 import { colors, fontSize, fontWeight, spacing } from "../theme/colors";
 import type { DriverStackParamList, DriverTabParamList } from "./types";
@@ -46,8 +46,8 @@ function DriverTabs() {
       />
       <Tab.Screen
         name="DriverHistoryTab"
-        component={OrdersScreen as React.ComponentType}
-        options={{ tabBarLabel: "السجلّ", tabBarIcon: tabIcon("receipt", "receiptFill") }}
+        component={DriverHistoryScreen}
+        options={{ tabBarLabel: "أرباحي", tabBarIcon: tabIcon("receipt", "receiptFill") }}
       />
       <Tab.Screen
         name="DriverAccountTab"
