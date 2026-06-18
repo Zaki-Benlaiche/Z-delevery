@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { Layout } from "./components/Layout";
+import { AdminLayout } from "./components/AdminLayout";
 import { useAuth } from "./auth/context";
 import { useMyMerchant } from "./hooks/useMyMerchant";
 import { LoginPage } from "./pages/LoginPage";
@@ -9,6 +10,10 @@ import { OrdersPage } from "./pages/OrdersPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { SetupPage } from "./pages/SetupPage";
+import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
+import { AdminMerchantsPage } from "./pages/admin/AdminMerchantsPage";
+import { AdminDriversPage } from "./pages/admin/AdminDriversPage";
+import { AdminOrdersPage } from "./pages/admin/AdminOrdersPage";
 
 /** يحرس الطرق الخاصّة بالتاجر — يعيد التوجيه حسب حالة المصادقة والمتجر */
 function Guarded({ children }: { children: React.ReactNode }) {
@@ -23,8 +28,25 @@ function Guarded({ children }: { children: React.ReactNode }) {
   return <Layout>{children}</Layout>;
 }
 
+/** منطقة الأدمن — متاحة لدور admin فقط */
+function AdminArea() {
+  return (
+    <Routes>
+      <Route path="/admin" element={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
+      <Route path="/admin/merchants" element={<AdminLayout><AdminMerchantsPage /></AdminLayout>} />
+      <Route path="/admin/drivers" element={<AdminLayout><AdminDriversPage /></AdminLayout>} />
+      <Route path="/admin/orders" element={<AdminLayout><AdminOrdersPage /></AdminLayout>} />
+      <Route path="*" element={<Navigate to="/admin" replace />} />
+    </Routes>
+  );
+}
+
 export default function App() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) return <div style={{ padding: 40 }}>...</div>;
+
+  if (user?.role === "admin") return <AdminArea />;
 
   return (
     <Routes>

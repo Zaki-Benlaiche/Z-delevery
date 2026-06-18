@@ -14,7 +14,11 @@ export type IconName =
   | "edit"
   | "trash"
   | "check"
-  | "bell";
+  | "bell"
+  | "dashboard"
+  | "drivers"
+  | "users"
+  | "x";
 
 const PATHS: Record<IconName, string> = {
   orders:
@@ -35,6 +39,12 @@ const PATHS: Record<IconName, string> = {
   trash: "M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
   check: "M20 6 9 17l-5-5",
   bell: "M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0",
+  dashboard: "M3 3h7v7H3z M14 3h7v4h-7z M14 11h7v10h-7z M3 14h7v7H3z",
+  drivers:
+    "M5 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M19 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M7 15h8 M15 15V8h2.5a2 2 0 0 1 1.8 1.1L21 13v2h-2 M5 13V6h8v9",
+  users:
+    "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75",
+  x: "M18 6 6 18 M6 6l12 12",
 };
 
 interface Props {
