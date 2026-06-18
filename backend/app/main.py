@@ -40,6 +40,30 @@ async def lifespan(app: FastAPI):
     await _safe_exec("UPDATE merchants SET \"type\"='food' WHERE lower(\"type\")='restaurant'")
     await _safe_exec("UPDATE merchants SET \"type\"='market' WHERE lower(\"type\") IN ('other','clothing')")
     await _safe_exec("UPDATE merchants SET \"type\"='food' WHERE \"type\" NOT IN ('food','fresh','market')")
+
+    # مصالحة أدوار الأدمن مع ADMIN_PHONES (المصدر الوحيد للحقيقة):
+    # نرقّي أرقام القائمة، وننزع الصلاحية عن أيّ أدمن رقمه ليس فيها (لأنّ الترقية لا تُلغى تلقائياً).
+    try:
+        from sqlalchemy import select
+        from app.core.database import AsyncSessionLocal
+        from app.models.enums import UserRole
+        from app.models.user import User
+
+        admins = settings.admin_phone_set
+        async with AsyncSessionLocal() as session:
+            users = (await session.execute(select(User))).scalars().all()
+            changed = False
+            for u in users:
+                if u.phone in admins and u.role != UserRole.ADMIN:
+                    u.role = UserRole.ADMIN
+                    changed = True
+                elif u.phone not in admins and u.role == UserRole.ADMIN:
+                    u.role = UserRole.CUSTOMER
+                    changed = True
+            if changed:
+                await session.commit()
+    except Exception:
+        pass
     yield
     await engine.dispose()
 

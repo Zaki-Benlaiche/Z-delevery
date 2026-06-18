@@ -45,9 +45,12 @@ async def verify_otp_and_login(payload: VerifyOTPRequest, db: AsyncSession = Dep
         await db.flush()
         is_new = True
 
-    # ترقية تلقائية لأرقام الأدمن المُكوّنة في .env
+    # مزامنة دور الأدمن مع ADMIN_PHONES (المصدر الوحيد للحقيقة): ترقية من في القائمة، ونزع عمّن خرج منها
     if payload.phone in settings.admin_phone_set and user.role != UserRole.ADMIN:
         user.role = UserRole.ADMIN
+        await db.flush()
+    elif payload.phone not in settings.admin_phone_set and user.role == UserRole.ADMIN:
+        user.role = UserRole.CUSTOMER
         await db.flush()
 
     return TokenResponse(
