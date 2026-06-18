@@ -49,7 +49,8 @@ export type IconName =
   | "tag"
   | "edit"
   | "camera"
-  | "image";
+  | "image"
+  | "navigation";
 
 const MAP: Record<IconName, { family: Family; glyph: string }> = {
   search: { family: "ion", glyph: "search" },
@@ -96,6 +97,7 @@ const MAP: Record<IconName, { family: Family; glyph: string }> = {
   edit: { family: "ion", glyph: "create-outline" },
   camera: { family: "ion", glyph: "camera" },
   image: { family: "ion", glyph: "image-outline" },
+  navigation: { family: "ion", glyph: "navigate" },
 };
 
 interface Props {

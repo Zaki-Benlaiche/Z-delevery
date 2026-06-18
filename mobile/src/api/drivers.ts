@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { Order, OrderStatus } from "./types";
+import type { Location, Order, OrderStatus } from "./types";
 
 export interface Driver {
   id: string;
@@ -10,6 +10,24 @@ export interface Driver {
   is_online: boolean;
   rating: number;
   current_location: { lat: number; lng: number } | null;
+}
+
+export interface OrderContact {
+  name: string | null;
+  phone: string | null;
+}
+
+export interface OrderPickup {
+  merchant_id: string;
+  name: string;
+  phone: string | null;
+  location: Location | null;
+}
+
+/** تفاصيل الطلب للسائق: يضيف نقطة الاستلام (المتجر) وجهة اتّصال الزبون */
+export interface DriverOrderDetail extends Order {
+  pickup: OrderPickup | null;
+  customer: OrderContact | null;
 }
 
 export const driversApi = {
@@ -31,6 +49,10 @@ export const driversApi = {
     const suffix = qs.toString() ? `?${qs}` : "";
     return api.get<Order[]>(`/drivers/available-orders${suffix}`);
   },
+
+  // تفاصيل الطلب للسائق (مع نقطة الاستلام وأرقام التواصل)
+  orderDetail: (orderId: string) =>
+    api.get<DriverOrderDetail>(`/drivers/orders/${orderId}`),
 
   claim: (orderId: string) =>
     api.post<Order>(`/drivers/orders/${orderId}/claim`),
