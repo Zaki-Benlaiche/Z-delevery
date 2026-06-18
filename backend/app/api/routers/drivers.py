@@ -1,8 +1,9 @@
 """نقاط نهاية السائقين — التسجيل، الحالة، الموقع اللحظي، واستلام الطلبات"""
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -17,6 +18,7 @@ from app.models.user import User
 from app.schemas.common import LocationOut
 from app.schemas.driver import (
     ContactOut,
+    DriverEarnings,
     DriverLocationUpdate,
     DriverOrderDetail,
     DriverOut,
@@ -30,6 +32,15 @@ router = APIRouter(prefix="/drivers", tags=["السائقون"])
 
 # الحالات التي يكون فيها للسائق طلب نشِط يستحقّ بثّ موقعه
 _ACTIVE_STATUSES = {OrderStatus.PICKED_UP, OrderStatus.ON_THE_WAY}
+
+# الطلبات المُسنَدة غير المنتهية = "جارية" في عدّاد السائق
+_DRIVER_ACTIVE = (
+    OrderStatus.ACCEPTED,
+    OrderStatus.PREPARING,
+    OrderStatus.READY,
+    OrderStatus.PICKED_UP,
+    OrderStatus.ON_THE_WAY,
+)
 
 
 def _driver_out(d: Driver) -> DriverOut:
@@ -198,6 +209,42 @@ async def available_orders(
         return haversine_km(lat, lng, c[0], c[1]) if c else float("inf")
 
     return [_order_out(o) for o in sorted(orders, key=_dist)]
+
+
+@router.get("/earnings", response_model=DriverEarnings)
+async def driver_earnings(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(UserRole.DRIVER, UserRole.ADMIN)),
+):
+    """ملخّص أرباح السائق: أرباحه = رسوم التوصيل (delivery_fee) للطلبات المُسلَّمة."""
+    driver = await _my_driver(user, db)
+
+    delivered = (Order.driver_id == driver.id, Order.status == OrderStatus.DELIVERED)
+    agg = select(func.count(), func.coalesce(func.sum(Order.delivery_fee), 0))
+
+    total_count, total_sum = (await db.execute(agg.where(*delivered))).one()
+
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_count, today_sum = (
+        await db.execute(agg.where(*delivered, Order.created_at >= today_start))
+    ).one()
+
+    active_count = (
+        await db.execute(
+            select(func.count()).select_from(Order).where(
+                Order.driver_id == driver.id, Order.status.in_(_DRIVER_ACTIVE)
+            )
+        )
+    ).scalar_one()
+
+    return DriverEarnings(
+        deliveries=total_count,
+        total_earnings=float(total_sum or 0),
+        today_deliveries=today_count,
+        today_earnings=float(today_sum or 0),
+        active_orders=active_count,
+        rating=float(driver.rating),
+    )
 
 
 @router.get("/orders/{order_id}", response_model=DriverOrderDetail)

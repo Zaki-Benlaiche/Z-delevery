@@ -46,3 +46,13 @@ class DriverOrderDetail(OrderOut):
     """تفاصيل الطلب للسائق: يضيف نقطة الاستلام وجهة اتّصال الزبون."""
     pickup: PickupOut | None = None
     customer: ContactOut | None = None
+
+
+class DriverEarnings(BaseModel):
+    """ملخّص أرباح السائق وأدائه — أرباحه = رسوم التوصيل للطلبات المُسلَّمة."""
+    deliveries: int          # عدد الطلبات المُسلَّمة (الكلّي)
+    total_earnings: float    # مجموع رسوم التوصيل المكتسبة
+    today_deliveries: int    # توصيلات اليوم
+    today_earnings: float    # أرباح اليوم
+    active_orders: int       # طلبات جارية الآن (مُسنَدة لم تُسلَّم)
+    rating: float
