@@ -6,6 +6,9 @@ import type { Product } from "../api/types";
 import { useMyMerchant } from "../hooks/useMyMerchant";
 import { Modal } from "../components/Modal";
 import { useToast } from "../components/Toast";
+import { ImageUpload } from "../components/ImageUpload";
+import { cloudinaryThumb } from "../api/upload";
+import { CLOUDINARY_ENABLED } from "../config";
 import { colors } from "../theme";
 
 export function ProductsPage() {
@@ -54,6 +57,17 @@ export function ProductsPage() {
         <div style={styles.grid}>
           {products.map((p) => (
             <div key={p.id} className="card" style={styles.productCard}>
+              <div style={styles.thumb}>
+                {p.image_url ? (
+                  <img
+                    src={cloudinaryThumb(p.image_url, { w: 120 })!}
+                    alt=""
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <span style={{ fontSize: 22 }}>🍽️</span>
+                )}
+              </div>
               <div style={{ flex: 1 }}>
                 <div style={styles.productName}>{p.name}</div>
                 {p.description && <div className="muted" style={{ fontSize: 13 }}>{p.description}</div>}
@@ -142,6 +156,7 @@ function ProductDialog({ merchantId, product, onClose }: DialogProps) {
   const [description, setDescription] = useState(product?.description ?? "");
   const [price, setPrice] = useState(String(product?.price ?? ""));
   const [category, setCategory] = useState(product?.category ?? "");
+  const [imageUrl, setImageUrl] = useState<string | null>(product?.image_url ?? null);
   const [error, setError] = useState<string | null>(null);
 
   const save = useMutation({
@@ -151,6 +166,7 @@ function ProductDialog({ merchantId, product, onClose }: DialogProps) {
         description: description || null,
         price: parseFloat(price),
         category: category || null,
+        image_url: imageUrl,
       };
       return product
         ? merchantsApi.updateProduct(merchantId, product.id, payload)
@@ -195,6 +211,17 @@ function ProductDialog({ merchantId, product, onClose }: DialogProps) {
       }
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {CLOUDINARY_ENABLED && (
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 4 }}>
+            <ImageUpload
+              value={imageUrl}
+              onChange={setImageUrl}
+              size={104}
+              label={imageUrl ? "تغيير الصورة" : "صورة المنتج"}
+              folder="zdelivry/products"
+            />
+          </div>
+        )}
         <div className="field">
           <label>الاسم *</label>
           <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
@@ -241,6 +268,17 @@ const styles: Record<string, React.CSSProperties> = {
   title: { fontSize: 24, fontWeight: 800 },
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: 12 },
   productCard: { display: "flex", gap: 16, alignItems: "flex-start" },
+  thumb: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    background: colors.surface,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    flexShrink: 0,
+  },
   productName: { fontWeight: 700, fontSize: 15 },
   priceRow: { display: "flex", gap: 8, alignItems: "center", marginTop: 4 },
   price: { color: colors.primary, fontWeight: 700, fontSize: 15 },

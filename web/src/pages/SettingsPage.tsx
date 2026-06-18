@@ -4,6 +4,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { merchantsApi } from "../api/merchants";
 import { useMyMerchant } from "../hooks/useMyMerchant";
 import { useToast } from "../components/Toast";
+import { ImageUpload } from "../components/ImageUpload";
+import { CLOUDINARY_ENABLED } from "../config";
 import { colors } from "../theme";
 
 export function SettingsPage() {
@@ -12,7 +14,7 @@ export function SettingsPage() {
   const toast = useToast();
 
   const update = useMutation({
-    mutationFn: (payload: { is_open?: boolean; open_hours?: string; description?: string }) =>
+    mutationFn: (payload: { is_open?: boolean; open_hours?: string; description?: string; logo_url?: string }) =>
       merchantsApi.update(merchant.data!.id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-merchant"] });
@@ -33,6 +35,23 @@ export function SettingsPage() {
   return (
     <div>
       <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 16 }}>إعدادات المتجر</h1>
+
+      {CLOUDINARY_ENABLED && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>صورة المتجر</h2>
+          <p className="muted" style={{ marginBottom: 12, fontSize: 13 }}>
+            تظهر للزبائن في الصفحة الرئيسية وصفحة متجرك. يُفضّل صورة مربّعة وواضحة.
+          </p>
+          <ImageUpload
+            value={m.logo_url}
+            onChange={(url) => update.mutate({ logo_url: url })}
+            shape="circle"
+            size={104}
+            label={m.logo_url ? "تغيير الصورة" : "أضف صورة المتجر"}
+            folder="zdelivry/logos"
+          />
+        </div>
+      )}
 
       <div className="card" style={{ marginBottom: 16 }}>
         <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>الحالة</h2>
