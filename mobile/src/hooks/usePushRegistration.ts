@@ -5,11 +5,17 @@
  */
 import { useEffect } from "react";
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 
 import { pushApi } from "../api/push";
 import { useAuth } from "../auth/context";
+
+// معرّف مشروع EAS — مطلوب لـ getExpoPushTokenAsync في dev/prod builds
+const PROJECT_ID =
+  (Constants.expoConfig?.extra?.eas as { projectId?: string } | undefined)?.projectId ??
+  (Constants.easConfig as { projectId?: string } | undefined)?.projectId;
 
 // كيف يظهر الإشعار حين يصل والتطبيق مفتوح
 Notifications.setNotificationHandler({
@@ -49,7 +55,9 @@ export function usePushRegistration() {
         }
         if (status !== "granted" || cancelled) return;
 
-        const tokenData = await Notifications.getExpoPushTokenAsync();
+        const tokenData = await Notifications.getExpoPushTokenAsync(
+          PROJECT_ID ? { projectId: PROJECT_ID } : undefined,
+        );
         if (cancelled) return;
         await pushApi.register(tokenData.data);
       } catch {

@@ -1,8 +1,10 @@
+import { useRef } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, type NavigationContainerRef } from "@react-navigation/native";
 
 import { useAuth } from "../auth/context";
 import { usePushRegistration } from "../hooks/usePushRegistration";
+import { useNotificationNavigation } from "../hooks/useNotificationNavigation";
 import { colors } from "../theme/colors";
 import { AppNavigator } from "./AppNavigator";
 import { DriverNavigator } from "./DriverNavigator";
@@ -10,8 +12,11 @@ import { MerchantNavigator } from "./MerchantNavigator";
 
 export function RootNavigator() {
   const { loading, user } = useAuth();
+  const navRef = useRef<NavigationContainerRef<Record<string, object | undefined>>>(null);
   // يطلب الإذن ويسجّل توكن Expo Push بعد تسجيل الدخول (no-op على المحاكي)
   usePushRegistration();
+  // يفتح الطلب عند الضغط على إشعار push
+  useNotificationNavigation(navRef);
 
   if (loading) {
     return (
@@ -31,5 +36,5 @@ export function RootNavigator() {
       <AppNavigator />
     );
 
-  return <NavigationContainer>{content}</NavigationContainer>;
+  return <NavigationContainer ref={navRef}>{content}</NavigationContainer>;
 }
