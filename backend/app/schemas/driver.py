@@ -4,6 +4,7 @@ import uuid
 from pydantic import BaseModel, Field
 
 from app.schemas.common import LocationOut
+from app.schemas.order import OrderOut
 
 
 class DriverRegister(BaseModel):
@@ -25,3 +26,23 @@ class DriverOut(BaseModel):
     is_online: bool
     rating: float
     current_location: LocationOut | None = None
+
+
+class ContactOut(BaseModel):
+    """جهة اتّصال (تاجر/زبون) — للسائق للتنسيق هاتفياً."""
+    name: str | None = None
+    phone: str | None = None
+
+
+class PickupOut(BaseModel):
+    """نقطة الاستلام = المتجر."""
+    merchant_id: uuid.UUID
+    name: str
+    phone: str | None = None
+    location: LocationOut | None = None
+
+
+class DriverOrderDetail(OrderOut):
+    """تفاصيل الطلب للسائق: يضيف نقطة الاستلام وجهة اتّصال الزبون."""
+    pickup: PickupOut | None = None
+    customer: ContactOut | None = None

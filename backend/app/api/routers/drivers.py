@@ -15,7 +15,14 @@ from app.models.merchant import Merchant
 from app.models.order import Order, OrderTracking
 from app.models.user import User
 from app.schemas.common import LocationOut
-from app.schemas.driver import DriverLocationUpdate, DriverOut, DriverRegister
+from app.schemas.driver import (
+    ContactOut,
+    DriverLocationUpdate,
+    DriverOrderDetail,
+    DriverOut,
+    DriverRegister,
+    PickupOut,
+)
 from app.schemas.order import OrderItemOut, OrderOut
 from app.services.realtime import manager
 
@@ -191,6 +198,52 @@ async def available_orders(
         return haversine_km(lat, lng, c[0], c[1]) if c else float("inf")
 
     return [_order_out(o) for o in sorted(orders, key=_dist)]
+
+
+@router.get("/orders/{order_id}", response_model=DriverOrderDetail)
+async def driver_order_detail(
+    order_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(UserRole.DRIVER, UserRole.ADMIN)),
+):
+    """تفاصيل طلب للسائق: نقطة الاستلام (المتجر) + هاتف التاجر والزبون للتنسيق.
+
+    متاح إن كان الطلب مُسنَداً لي، أو غير مُسنَد وقابلاً للاستلام (ليقرّر السائق).
+    """
+    driver = None if user.role == UserRole.ADMIN else await _my_driver(user, db)
+    stmt = select(Order).where(Order.id == order_id).options(selectinload(Order.items))
+    order = (await db.execute(stmt)).scalar_one_or_none()
+    if order is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "الطلب غير موجود")
+
+    if user.role != UserRole.ADMIN:
+        is_mine = driver is not None and order.driver_id == driver.id
+        is_claimable = order.driver_id is None and order.status in (
+            OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.READY,
+        )
+        if not (is_mine or is_claimable):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "لا تملك صلاحية عرض هذا الطلب")
+
+    merchant = await db.get(Merchant, order.merchant_id)
+    owner = await db.get(User, merchant.user_id) if merchant else None
+    customer = await db.get(User, order.customer_id)
+
+    pickup = None
+    if merchant is not None:
+        m_coords = read_point(merchant.location)
+        pickup = PickupOut(
+            merchant_id=merchant.id,
+            name=merchant.name,
+            phone=owner.phone if owner else None,
+            location=LocationOut(lat=m_coords[0], lng=m_coords[1]) if m_coords else None,
+        )
+
+    base = _order_out(order)
+    return DriverOrderDetail(
+        **base.model_dump(),
+        pickup=pickup,
+        customer=ContactOut(name=customer.name, phone=customer.phone) if customer else None,
+    )
 
 
 @router.post("/orders/{order_id}/claim", response_model=OrderOut)
