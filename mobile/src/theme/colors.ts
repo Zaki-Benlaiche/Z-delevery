@@ -116,4 +116,10 @@ export const shadows = {
     android: { elevation: 6 },
     default: {},
   })!,
+  // ظلّ ملوّن تركوازي للعناصر المحدَّدة الأنيقة
+  accent: Platform.select({
+    ios: { shadowColor: "#0A9396", shadowOpacity: 0.35, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } },
+    android: { elevation: 6 },
+    default: {},
+  })!,
 };

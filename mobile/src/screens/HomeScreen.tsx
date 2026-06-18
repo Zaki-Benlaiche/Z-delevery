@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "transparent",
   },
-  catCardActive: { backgroundColor: colors.primary, borderColor: colors.primary, ...shadows.primary },
+  catCardActive: { backgroundColor: colors.accent, borderColor: colors.accent, ...shadows.accent },
   catIcon: {
     width: 104,
     height: 104,
