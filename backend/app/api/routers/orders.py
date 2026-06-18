@@ -152,6 +152,61 @@ async def _push_new_order_to_merchant(order: Order, db: AsyncSession) -> None:
         )
 
 
+# الإسناد الذكي: نصف قطر البحث وعدد السائقين المُخطَرين عند جهوزية الطلب
+_NOTIFY_RADIUS_KM = 15.0
+_NOTIFY_DRIVERS_MAX = 8
+
+
+async def _push_ready_to_nearby_drivers(order: Order, db: AsyncSession) -> None:
+    """عند جهوزية الطلب: يُخطر أقرب السائقين المتّصلين الموثَّقين بتوفّر توصيل.
+
+    يختار السائقين online + verified ممّن لديهم توكن إشعارات وموقع معروف،
+    يرتّبهم بالأقرب لموقع الاستلام (المتجر) ضمن نصف القطر، ويُرسل لأقربهم.
+    """
+    if order.driver_id is not None:
+        return  # أُسنِد بالفعل
+
+    merchant = await db.get(Merchant, order.merchant_id)
+    pickup = read_point(merchant.location) if merchant else None
+    if pickup is None:
+        return
+
+    rows = (
+        await db.execute(
+            select(Driver.current_location, User.expo_push_token, User.name)
+            .join(User, User.id == Driver.user_id)
+            .where(
+                Driver.is_online.is_(True),
+                Driver.is_verified.is_(True),
+                Driver.current_location.isnot(None),
+                User.expo_push_token.isnot(None),
+            )
+        )
+    ).all()
+
+    # نحسب المسافة من كلّ سائق لنقطة الاستلام ونُبقي من هم ضمن نصف القطر
+    candidates: list[tuple[float, str]] = []
+    for location, token, _name in rows:
+        coords = read_point(location)
+        if coords is None:
+            continue
+        dist = haversine_km(pickup[0], pickup[1], coords[0], coords[1])
+        if dist <= _NOTIFY_RADIUS_KM:
+            candidates.append((dist, token))
+
+    candidates.sort(key=lambda c: c[0])
+    m_name = merchant.name if merchant else "متجر"
+    for dist, token in candidates[:_NOTIFY_DRIVERS_MAX]:
+        fire_and_forget(
+            send_push(
+                token,
+                "🛵 طلب جاهز للتوصيل",
+                f"توصيل من {m_name} ({dist:.1f} كم) — رسوم {float(order.delivery_fee):.0f} دج",
+                data={"order_id": str(order.id), "screen": "DriverOrder"},
+            )
+        )
+
+
 # ---------- الزبون: إنشاء الطلب ----------
 @router.post("", response_model=OrderOut, status_code=status.HTTP_201_CREATED)
 async def create_order(
@@ -349,6 +404,9 @@ async def update_status(
 
     await _record_tracking(order, db)
     await _push_status_to_customer(order, db)
+    # عند الجهوزية: أخطر أقرب السائقين المتّصلين بتوفّر توصيل (إن لم يكن مُسنَداً بعد)
+    if new_status == OrderStatus.READY:
+        await _push_ready_to_nearby_drivers(order, db)
     await db.flush()
     return _order_out(order)
 
