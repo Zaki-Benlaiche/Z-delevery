@@ -1,6 +1,18 @@
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
-import { useQuery } from "@tanstack/react-query";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CompositeScreenProps } from "@react-navigation/native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -8,6 +20,8 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Screen } from "../components/Screen";
 import { Icon, type IconName } from "../components/Icon";
 import { driversApi } from "../api/drivers";
+import { meApi } from "../api/me";
+import { uploadToCloudinary, cloudinaryThumb } from "../api/upload";
 import { useAuth } from "../auth/context";
 import { useT } from "../i18n";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/colors";
@@ -24,7 +38,11 @@ type Nav = Props["navigation"];
 export function AccountScreen({ navigation }: Props) {
   const { user, signOut } = useAuth();
   const { t, lang, setLang } = useT();
+  const queryClient = useQueryClient();
   const [notif, setNotif] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
 
   const isDriver = user?.role === "driver";
   const brand = isDriver ? colors.accent : colors.primary;
@@ -32,6 +50,18 @@ export function AccountScreen({ navigation }: Props) {
 
   const driverMe = useQuery({ queryKey: ["driver", "me"], queryFn: driversApi.me, enabled: isDriver, retry: false });
   const d = driverMe.data;
+
+  const profile = useQuery({ queryKey: ["me", "profile"], queryFn: meApi.profile, enabled: !!user });
+  const p = profile.data;
+
+  const saveProfile = useMutation({
+    mutationFn: meApi.updateProfile,
+    onSuccess: (next) => {
+      queryClient.setQueryData(["me", "profile"], next);
+      setEditing(false);
+    },
+    onError: (e) => Alert.alert("تعذّر الحفظ", (e as Error).message),
+  });
 
   const roleLabel = !user
     ? t("account.guest")
@@ -41,17 +71,81 @@ export function AccountScreen({ navigation }: Props) {
         ? "تاجر"
         : t("account.customer");
   const isCustomerOrGuest = !user || user.role === "customer";
+  const displayName = p?.name?.trim() || roleLabel;
+  const avatarPreview = cloudinaryThumb(p?.avatar_url, { w: 160 });
+
+  const pickAvatar = async () => {
+    if (uploading) return;
+    let ImagePicker: typeof import("expo-image-picker");
+    try {
+      ImagePicker = await import("expo-image-picker");
+    } catch {
+      Alert.alert("غير متاح", "ميزة الصور تتطلّب تحديث التطبيق إلى أحدث إصدار.");
+      return;
+    }
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert("الإذن مطلوب", "اسمح بالوصول إلى الصور لاختيار صورة الملف.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.6,
+    });
+    if (result.canceled) return;
+    try {
+      setUploading(true);
+      const url = await uploadToCloudinary(result.assets[0].uri, "avatars");
+      const next = await meApi.updateProfile({ avatar_url: url });
+      queryClient.setQueryData(["me", "profile"], next);
+    } catch (e) {
+      Alert.alert("تعذّر رفع الصورة", (e as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <Screen padded={false}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* رأس الملف الشخصي */}
         <View style={styles.profile}>
-          <View style={[styles.avatar, { backgroundColor: brandSoft }]}>
-            <Text style={[styles.avatarText, { color: brand }]}>{roleLabel.charAt(0)}</Text>
-          </View>
+          <Pressable
+            onPress={user ? pickAvatar : undefined}
+            style={[styles.avatar, { backgroundColor: brandSoft }]}
+          >
+            {avatarPreview ? (
+              <Image source={{ uri: avatarPreview }} style={styles.avatarImg} resizeMode="cover" />
+            ) : (
+              <Text style={[styles.avatarText, { color: brand }]}>{displayName.charAt(0)}</Text>
+            )}
+            {uploading ? (
+              <View style={styles.avatarOverlay}>
+                <ActivityIndicator color="#fff" />
+              </View>
+            ) : user ? (
+              <View style={[styles.camBadge, { backgroundColor: brand }]}>
+                <Icon name="camera" size={12} color="#fff" />
+              </View>
+            ) : null}
+          </Pressable>
           <View style={{ flex: 1 }}>
-            <Text style={styles.profileName}>{roleLabel}</Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.profileName} numberOfLines={1}>{displayName}</Text>
+              {user ? (
+                <Pressable
+                  hitSlop={8}
+                  onPress={() => {
+                    setNameDraft(p?.name ?? "");
+                    setEditing(true);
+                  }}
+                >
+                  <Icon name="edit" size={16} color={colors.textFaint} />
+                </Pressable>
+              ) : null}
+            </View>
             {isDriver && d ? (
               <View style={styles.driverMeta}>
                 <Icon name="scooter" size={13} color={colors.textMuted} />
@@ -67,11 +161,46 @@ export function AccountScreen({ navigation }: Props) {
               </View>
             ) : (
               <Text style={styles.profileSub}>
-                {user ? `#${user.user_id.slice(0, 8)}` : t("account.loginPrompt")}
+                {user ? (p?.phone ?? `#${user.user_id.slice(0, 8)}`) : t("account.loginPrompt")}
               </Text>
             )}
           </View>
         </View>
+
+        {/* تعديل الاسم */}
+        <Modal visible={editing} transparent animationType="fade" onRequestClose={() => setEditing(false)}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setEditing(false)}>
+            <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+              <Text style={styles.modalTitle}>تعديل الاسم</Text>
+              <TextInput
+                value={nameDraft}
+                onChangeText={setNameDraft}
+                placeholder="اكتب اسمك"
+                placeholderTextColor={colors.textFaint}
+                style={styles.modalInput}
+                textAlign="right"
+                autoFocus
+                maxLength={120}
+              />
+              <View style={styles.modalActions}>
+                <Pressable style={styles.modalCancel} onPress={() => setEditing(false)}>
+                  <Text style={styles.modalCancelText}>إلغاء</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.modalSave, { backgroundColor: brand }]}
+                  onPress={() => saveProfile.mutate({ name: nameDraft.trim() })}
+                  disabled={saveProfile.isPending || !nameDraft.trim()}
+                >
+                  {saveProfile.isPending ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Text style={styles.modalSaveText}>حفظ</Text>
+                  )}
+                </Pressable>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
 
         {/* ===== الإعدادات ===== */}
         <Text style={styles.groupTitle}>{t("account.settings")}</Text>
@@ -184,15 +313,40 @@ const styles = StyleSheet.create({
 
   profile: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.md, marginBottom: spacing.xl },
   avatar: {
-    width: 60,
-    height: 60,
+    width: 64,
+    height: 64,
     borderRadius: radii.pill,
     backgroundColor: colors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
+  },
+  avatarImg: { width: "100%", height: "100%" },
+  avatarOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(15,23,42,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  camBadge: {
+    position: "absolute",
+    bottom: 0,
+    insetInlineStart: 0,
+    width: 22,
+    height: 22,
+    borderRadius: radii.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: colors.canvas,
   },
   avatarText: { fontSize: 26, fontWeight: fontWeight.extrabold, color: colors.primary },
-  profileName: { fontSize: fontSize.h2, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
+  nameRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.sm },
+  profileName: { fontSize: fontSize.h2, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right", flexShrink: 1 },
   profileSub: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2 },
   driverMeta: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.xs, marginTop: spacing.xs },
   metaSep: { width: 1, height: 11, backgroundColor: colors.border, marginHorizontal: 2 },
@@ -270,4 +424,34 @@ const styles = StyleSheet.create({
     textAlign: "right",
     marginTop: 2,
   },
+
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(15,23,42,0.5)",
+    justifyContent: "center",
+    paddingHorizontal: spacing.xl,
+  },
+  modalCard: {
+    backgroundColor: colors.background,
+    borderRadius: radii.xl,
+    padding: spacing.lg,
+    gap: spacing.md,
+    ...shadows.lg,
+  },
+  modalTitle: { fontSize: fontSize.h4, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
+  modalInput: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    height: 50,
+    fontSize: fontSize.bodyLg,
+    color: colors.text,
+  },
+  modalActions: { flexDirection: "row-reverse", gap: spacing.sm },
+  modalSave: { flex: 1, height: 46, borderRadius: radii.lg, alignItems: "center", justifyContent: "center" },
+  modalSaveText: { color: "#fff", fontWeight: fontWeight.bold, fontSize: fontSize.body },
+  modalCancel: { flex: 1, height: 46, borderRadius: radii.lg, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface },
+  modalCancelText: { color: colors.textMuted, fontWeight: fontWeight.bold, fontSize: fontSize.body },
 });

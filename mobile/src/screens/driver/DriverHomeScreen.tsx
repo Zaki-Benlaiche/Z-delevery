@@ -57,6 +57,7 @@ interface ContentProps {
 
 function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProps) {
   const queryClient = useQueryClient();
+  const verified = driver.is_verified;
   const online = driver.is_online;
 
   const toggleOnline = useMutation({
@@ -111,6 +112,21 @@ function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProp
         ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
         ListHeaderComponent={
           <View style={{ gap: spacing.lg, marginBottom: spacing.lg }}>
+            {/* لافتة انتظار التوثيق */}
+            {!verified ? (
+              <View style={styles.pending}>
+                <View style={styles.pendingIcon}>
+                  <Icon name="shield" size={22} color={colors.warning} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.pendingTitle}>حسابك قيد التوثيق</Text>
+                  <Text style={styles.pendingSub}>
+                    ستتمكّن من الاتّصال واستلام الطلبات بمجرّد توثيق حسابك من إدارة المنصّة.
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+
             {/* بطاقة الاتّصال */}
             <View style={[styles.hero, online && styles.heroOn]}>
               <View style={styles.heroTop}>
@@ -119,15 +135,20 @@ function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProp
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.heroTitle, online && styles.onText]}>
-                    {online ? "أنت متّصل" : "ابدأ العمل"}
+                    {!verified ? "بانتظار التوثيق" : online ? "أنت متّصل" : "ابدأ العمل"}
                   </Text>
                   <Text style={[styles.heroSub, online && styles.onTextSoft]}>
-                    {online ? "تستقبل الطلبات القريبة الآن" : "فعّل المفتاح لاستقبال الطلبات"}
+                    {!verified
+                      ? "العمل متاح بعد توثيق الحساب"
+                      : online
+                        ? "تستقبل الطلبات القريبة الآن"
+                        : "فعّل المفتاح لاستقبال الطلبات"}
                   </Text>
                 </View>
                 <Switch
                   value={online}
                   onValueChange={(v) => toggleOnline.mutate(v)}
+                  disabled={!verified}
                   trackColor={{ true: "rgba(255,255,255,0.45)", false: colors.border }}
                   thumbColor="#fff"
                   ios_backgroundColor={colors.border}
@@ -296,6 +317,23 @@ const styles = StyleSheet.create({
   statusPillText: { fontSize: fontSize.caption + 1, fontWeight: fontWeight.bold },
 
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxxl },
+
+  // لافتة التوثيق
+  pending: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: colors.warningSoft,
+    borderRadius: radii.xl,
+    padding: spacing.md,
+  },
+  pendingIcon: {
+    width: 44, height: 44, borderRadius: radii.pill,
+    backgroundColor: "rgba(245,158,11,0.18)",
+    alignItems: "center", justifyContent: "center",
+  },
+  pendingTitle: { fontSize: fontSize.body, fontWeight: fontWeight.extrabold, color: "#92400E", textAlign: "right" },
+  pendingSub: { fontSize: fontSize.small, color: "#B45309", textAlign: "right", marginTop: 2, lineHeight: 19 },
 
   // بطاقة الاتّصال
   hero: {
