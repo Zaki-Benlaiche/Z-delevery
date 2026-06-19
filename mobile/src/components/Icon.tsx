@@ -50,7 +50,11 @@ export type IconName =
   | "edit"
   | "camera"
   | "image"
-  | "navigation";
+  | "navigation"
+  | "car"
+  | "bike"
+  | "wallet"
+  | "clockFast";
 
 const MAP: Record<IconName, { family: Family; glyph: string }> = {
   search: { family: "ion", glyph: "search" },
@@ -98,6 +102,10 @@ const MAP: Record<IconName, { family: Family; glyph: string }> = {
   camera: { family: "ion", glyph: "camera" },
   image: { family: "ion", glyph: "image-outline" },
   navigation: { family: "ion", glyph: "navigate" },
+  car: { family: "mci", glyph: "car" },
+  bike: { family: "mci", glyph: "bike" },
+  wallet: { family: "ion", glyph: "wallet-outline" },
+  clockFast: { family: "mci", glyph: "clock-fast" },
 };
 
 interface Props {
