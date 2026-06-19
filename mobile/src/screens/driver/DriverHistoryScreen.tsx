@@ -5,7 +5,6 @@ import { driversApi } from "../../api/drivers";
 import { ordersApi } from "../../api/orders";
 import type { Order } from "../../api/types";
 import { Screen } from "../../components/Screen";
-import { Card } from "../../components/Card";
 import { EmptyState } from "../../components/EmptyState";
 import { Skeleton } from "../../components/Skeleton";
 import { Icon, type IconName } from "../../components/Icon";
@@ -29,20 +28,32 @@ export function DriverHistoryScreen() {
   });
 
   const e = earnings.data;
+  const avg = e && e.deliveries > 0 ? e.total_earnings / e.deliveries : 0;
 
   const Header = (
-    <View style={{ gap: spacing.md }}>
+    <View style={{ gap: spacing.lg, marginBottom: spacing.lg }}>
       {/* بطاقة الأرباح الرئيسية */}
       <View style={styles.hero}>
-        <Text style={styles.heroLabel}>إجمالي أرباحك</Text>
+        <View style={styles.heroHead}>
+          <View style={styles.heroBadge}>
+            <Icon name="cash" size={16} color="#fff" />
+          </View>
+          <Text style={styles.heroLabel}>إجمالي أرباحك</Text>
+        </View>
         {earnings.isLoading ? (
-          <Skeleton width={160} height={34} radius={radii.sm} />
+          <Skeleton width={180} height={38} radius={radii.sm} />
         ) : (
           <Text style={styles.heroValue}>{money(e?.total_earnings ?? 0)}</Text>
         )}
-        <View style={styles.heroFoot}>
-          <Icon name="scooter" size={16} color="rgba(255,255,255,0.9)" />
-          <Text style={styles.heroSub}>{e?.deliveries ?? 0} توصيلة مكتملة</Text>
+        <View style={styles.heroFootRow}>
+          <View style={styles.heroChip}>
+            <Icon name="check" size={13} color="#fff" />
+            <Text style={styles.heroChipText}>{e?.deliveries ?? 0} توصيلة</Text>
+          </View>
+          <View style={styles.heroChip}>
+            <Icon name="scooter" size={13} color="#fff" />
+            <Text style={styles.heroChipText}>{money(avg)} / توصيلة</Text>
+          </View>
         </View>
       </View>
 
@@ -53,18 +64,21 @@ export function DriverHistoryScreen() {
           tint={colors.success}
           value={money(e?.today_earnings ?? 0)}
           label={`اليوم · ${e?.today_deliveries ?? 0} توصيلة`}
+          loading={earnings.isLoading}
         />
         <StatCard
           icon="receipt"
-          tint={colors.primary}
+          tint={colors.info}
           value={String(e?.active_orders ?? 0)}
           label="طلبات جارية"
+          loading={earnings.isLoading}
         />
         <StatCard
           icon="star"
           tint={colors.warning}
           value={Number(e?.rating ?? 0).toFixed(1)}
           label="تقييمك"
+          loading={earnings.isLoading}
         />
       </View>
 
@@ -73,9 +87,9 @@ export function DriverHistoryScreen() {
   );
 
   return (
-    <Screen padded={false}>
-      <View style={styles.header}>
-        <Text style={styles.title}>أرباحي</Text>
+    <Screen padded={false} background="white">
+      <View style={styles.topBar}>
+        <Text style={styles.topTitle}>أرباحي</Text>
       </View>
       <FlatList
         data={delivered.data ?? []}
@@ -90,7 +104,7 @@ export function DriverHistoryScreen() {
               earnings.refetch();
               delivered.refetch();
             }}
-            tintColor={colors.primary}
+            tintColor={colors.accent}
           />
         }
         ListEmptyComponent={
@@ -108,13 +122,17 @@ export function DriverHistoryScreen() {
   );
 }
 
-function StatCard({ icon, tint, value, label }: { icon: IconName; tint: string; value: string; label: string }) {
+function StatCard({ icon, tint, value, label, loading }: { icon: IconName; tint: string; value: string; label: string; loading?: boolean }) {
   return (
     <View style={styles.statCard}>
       <View style={[styles.statIcon, { backgroundColor: tint + "1A" }]}>
-        <Icon name={icon} size={16} color={tint} />
+        <Icon name={icon} size={15} color={tint} />
       </View>
-      <Text style={styles.statValue} numberOfLines={1}>{value}</Text>
+      {loading ? (
+        <Skeleton width={44} height={16} radius={radii.xs} />
+      ) : (
+        <Text style={styles.statValue} numberOfLines={1}>{value}</Text>
+      )}
       <Text style={styles.statLabel} numberOfLines={2}>{label}</Text>
     </View>
   );
@@ -123,7 +141,7 @@ function StatCard({ icon, tint, value, label }: { icon: IconName; tint: string; 
 function DeliveredCard({ order }: { order: Order }) {
   const count = order.items.reduce((s, i) => s + i.qty, 0);
   return (
-    <Card variant="outlined" padding="sm" style={styles.card}>
+    <View style={styles.card}>
       <View style={styles.cardIcon}>
         <Icon name="check" size={18} color={colors.success} />
       </View>
@@ -133,30 +151,45 @@ function DeliveredCard({ order }: { order: Order }) {
           {count} عناصر · {new Date(order.created_at).toLocaleDateString("fr-DZ")}
         </Text>
       </View>
-      <View style={{ alignItems: "flex-end" }}>
+      <View style={{ alignItems: "flex-start" }}>
         <Text style={styles.earn}>+{money(Number(order.delivery_fee))}</Text>
-        <Text style={styles.earnLabel}>توصيل</Text>
+        <Text style={styles.earnLabel}>أجرتك</Text>
       </View>
-    </Card>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { padding: spacing.lg, paddingBottom: spacing.sm },
-  title: { fontSize: fontSize.h2, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
+  topBar: { paddingHorizontal: spacing.lg, paddingTop: spacing.xs, paddingBottom: spacing.sm },
+  topTitle: { fontSize: fontSize.h2, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxxl },
 
   hero: {
     backgroundColor: colors.accent,
     borderRadius: radii.xl,
     padding: spacing.lg,
-    gap: spacing.xs,
+    gap: spacing.sm,
     ...shadows.accent,
   },
-  heroLabel: { color: "rgba(255,255,255,0.85)", fontSize: fontSize.small, fontWeight: fontWeight.semibold, textAlign: "right" },
-  heroValue: { color: "#fff", fontSize: 32, fontWeight: fontWeight.extrabold, textAlign: "right" },
-  heroFoot: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.xs, marginTop: spacing.xs },
-  heroSub: { color: "rgba(255,255,255,0.9)", fontSize: fontSize.small, fontWeight: fontWeight.semibold },
+  heroHead: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.sm },
+  heroBadge: {
+    width: 30, height: 30, borderRadius: radii.md,
+    backgroundColor: "rgba(255,255,255,0.22)",
+    alignItems: "center", justifyContent: "center",
+  },
+  heroLabel: { color: "rgba(255,255,255,0.9)", fontSize: fontSize.small, fontWeight: fontWeight.semibold },
+  heroValue: { color: "#fff", fontSize: fontSize.display, fontWeight: fontWeight.extrabold, textAlign: "right" },
+  heroFootRow: { flexDirection: "row-reverse", gap: spacing.sm, marginTop: spacing.xs },
+  heroChip: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: spacing.xs,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 1,
+    borderRadius: radii.pill,
+  },
+  heroChipText: { color: "#fff", fontSize: fontSize.caption + 1, fontWeight: fontWeight.semibold },
 
   statRow: { flexDirection: "row-reverse", gap: spacing.sm },
   statCard: {
@@ -170,13 +203,23 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     ...shadows.sm,
   },
-  statIcon: { width: 32, height: 32, borderRadius: radii.md, alignItems: "center", justifyContent: "center" },
-  statValue: { fontSize: fontSize.body, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
+  statIcon: { width: 30, height: 30, borderRadius: radii.md, alignItems: "center", justifyContent: "center" },
+  statValue: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
   statLabel: { fontSize: fontSize.caption, color: colors.textMuted, textAlign: "right" },
 
-  sectionTitle: { fontSize: fontSize.h4, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right", marginTop: spacing.sm },
+  sectionTitle: { fontSize: fontSize.h4, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
 
-  card: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.md },
+  card: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: colors.background,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    padding: spacing.md,
+    ...shadows.sm,
+  },
   cardIcon: { width: 38, height: 38, borderRadius: radii.pill, backgroundColor: colors.successSoft, alignItems: "center", justifyContent: "center" },
   cardId: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
   cardDate: { fontSize: fontSize.caption + 1, color: colors.textMuted, textAlign: "right", marginTop: 2 },

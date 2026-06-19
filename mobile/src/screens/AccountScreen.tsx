@@ -1,15 +1,19 @@
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { useQuery } from "@tanstack/react-query";
 import type { CompositeScreenProps } from "@react-navigation/native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 import { Screen } from "../components/Screen";
 import { Icon, type IconName } from "../components/Icon";
+import { driversApi } from "../api/drivers";
 import { useAuth } from "../auth/context";
 import { useT } from "../i18n";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/colors";
 import type { AppStackParamList, AppTabParamList } from "../navigation/types";
+
+const VEHICLE: Record<string, string> = { moto: "دراجة نارية", car: "سيّارة", bike: "دراجة هوائية" };
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<AppTabParamList, "AccountTab">,
@@ -21,6 +25,13 @@ export function AccountScreen({ navigation }: Props) {
   const { user, signOut } = useAuth();
   const { t, lang, setLang } = useT();
   const [notif, setNotif] = useState(true);
+
+  const isDriver = user?.role === "driver";
+  const brand = isDriver ? colors.accent : colors.primary;
+  const brandSoft = isDriver ? colors.accent + "16" : colors.primarySoft;
+
+  const driverMe = useQuery({ queryKey: ["driver", "me"], queryFn: driversApi.me, enabled: isDriver, retry: false });
+  const d = driverMe.data;
 
   const roleLabel = !user
     ? t("account.guest")
@@ -36,14 +47,29 @@ export function AccountScreen({ navigation }: Props) {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* رأس الملف الشخصي */}
         <View style={styles.profile}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{roleLabel.charAt(0)}</Text>
+          <View style={[styles.avatar, { backgroundColor: brandSoft }]}>
+            <Text style={[styles.avatarText, { color: brand }]}>{roleLabel.charAt(0)}</Text>
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.profileName}>{roleLabel}</Text>
-            <Text style={styles.profileSub}>
-              {user ? `#${user.user_id.slice(0, 8)}` : t("account.loginPrompt")}
-            </Text>
+            {isDriver && d ? (
+              <View style={styles.driverMeta}>
+                <Icon name="scooter" size={13} color={colors.textMuted} />
+                <Text style={styles.profileSub}>{VEHICLE[d.vehicle_type] ?? d.vehicle_type}</Text>
+                <View style={styles.metaSep} />
+                <Icon name="star" size={13} color={colors.warning} />
+                <Text style={styles.profileSub}>{Number(d.rating || 0).toFixed(1)}</Text>
+                <View style={[styles.verifyChip, { backgroundColor: d.is_verified ? colors.successSoft : colors.warningSoft }]}>
+                  <Text style={[styles.verifyText, { color: d.is_verified ? colors.success : colors.warning }]}>
+                    {d.is_verified ? "موثّق" : "قيد التوثيق"}
+                  </Text>
+                </View>
+              </View>
+            ) : (
+              <Text style={styles.profileSub}>
+                {user ? `#${user.user_id.slice(0, 8)}` : t("account.loginPrompt")}
+              </Text>
+            )}
           </View>
         </View>
 
@@ -61,7 +87,7 @@ export function AccountScreen({ navigation }: Props) {
             tint={colors.warningSoft}
             color={colors.warning}
             label={t("account.notifications")}
-            right={<Switch value={notif} onValueChange={setNotif} trackColor={{ true: colors.primary, false: colors.border }} thumbColor="#fff" />}
+            right={<Switch value={notif} onValueChange={setNotif} trackColor={{ true: brand, false: colors.border }} thumbColor="#fff" />}
           />
           <Divider />
           <Row
@@ -168,6 +194,10 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 26, fontWeight: fontWeight.extrabold, color: colors.primary },
   profileName: { fontSize: fontSize.h2, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
   profileSub: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2 },
+  driverMeta: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.xs, marginTop: spacing.xs },
+  metaSep: { width: 1, height: 11, backgroundColor: colors.border, marginHorizontal: 2 },
+  verifyChip: { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radii.pill, marginInlineStart: spacing.xs },
+  verifyText: { fontSize: fontSize.caption, fontWeight: fontWeight.bold },
 
   groupTitle: {
     fontSize: fontSize.small,
