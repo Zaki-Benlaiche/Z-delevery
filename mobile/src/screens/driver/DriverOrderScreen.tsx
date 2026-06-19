@@ -241,9 +241,9 @@ export function DriverOrderScreen({ route, navigation }: Props) {
 
       <View style={styles.footer}>
         {!order.driver_id ? (
-          <Button label="استلام الطلب" onPress={() => claim.mutate()} loading={claim.isPending} />
+          <Button label="استلام الطلب" onPress={() => claim.mutate()} loading={claim.isPending} style={styles.actionBtnMain} />
         ) : isMine && next ? (
-          <Button label={statusLabel(next)} onPress={() => advance.mutate(next)} loading={advance.isPending} />
+          <Button label={statusLabel(next)} onPress={() => advance.mutate(next)} loading={advance.isPending} style={styles.actionBtnMain} />
         ) : isMine ? (
           <Text style={styles.doneTxt}>اكتمل ✓</Text>
         ) : (
@@ -354,6 +354,7 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: colors.divider, marginVertical: spacing.xs + 2 },
   payNote: { fontSize: fontSize.caption + 1, color: colors.textMuted, marginTop: spacing.xs + 2, textAlign: "right" },
   footer: { position: "absolute", left: spacing.lg, right: spacing.lg, bottom: spacing.lg },
+  actionBtnMain: { backgroundColor: colors.accent },
   doneTxt: { textAlign: "center", color: colors.success, fontWeight: fontWeight.bold, fontSize: fontSize.bodyLg },
   takenTxt: { textAlign: "center", color: colors.textMuted, fontSize: fontSize.small + 1 },
 });
