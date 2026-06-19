@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -17,13 +18,12 @@ import { driversApi, type DriverOrderDetail } from "../../api/drivers";
 import type { OrderStatus } from "../../api/types";
 import { Button } from "../../components/Button";
 import { Screen } from "../../components/Screen";
-import { Card } from "../../components/Card";
 import { PriceTag } from "../../components/PriceTag";
 import { Skeleton } from "../../components/Skeleton";
 import { Icon } from "../../components/Icon";
 import { StatusBadge, statusLabel } from "../../components/StatusBadge";
 import { useCurrentLocation } from "../../hooks/useLocation";
-import { colors, fontSize, fontWeight, radii, spacing } from "../../theme/colors";
+import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../../theme/colors";
 import type { DriverStackParamList } from "../../navigation/types";
 
 type Props = NativeStackScreenProps<DriverStackParamList, "DriverOrder">;
@@ -34,6 +34,10 @@ const NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
   picked_up: "on_the_way",
   on_the_way: "delivered",
 };
+
+function money(n: number): string {
+  return `${Math.round(n).toLocaleString("fr-DZ")} دج`;
+}
 
 function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
   const R = 6371;
@@ -65,6 +69,7 @@ export function DriverOrderScreen({ route, navigation }: Props) {
   const queryClient = useQueryClient();
   const mapRef = useRef<MapView>(null);
   const myLoc = useCurrentLocation();
+  const insets = useSafeAreaInsets();
 
   const query = useQuery({
     queryKey: ["driver", "order", orderId],
@@ -117,6 +122,7 @@ export function DriverOrderScreen({ route, navigation }: Props) {
   const pickup = order.pickup?.location ?? null;
   const dest = order.delivery_location;
   const tripKm = pickup && dest ? distanceKm(pickup, dest) : null;
+  const count = order.items.reduce((s, i) => s + i.qty, 0);
 
   const fitMap = () => {
     const pts = [pickup, dest].filter(Boolean) as { lat: number; lng: number }[];
@@ -134,14 +140,21 @@ export function DriverOrderScreen({ route, navigation }: Props) {
     ? { latitude: pickup.lat, longitude: pickup.lng, latitudeDelta: 0.04, longitudeDelta: 0.04 }
     : undefined;
 
-  return (
-    <Screen padded={false}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <Card variant="soft" padding="md" style={styles.headerCard}>
-          <Text style={styles.orderId}>#{order.id.slice(0, 8)}</Text>
-          <StatusBadge status={order.status} />
-        </Card>
+  const footerPad = (insets.bottom > 0 ? insets.bottom : spacing.md) + spacing.sm;
 
+  return (
+    <Screen padded={false} background="white">
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: 132 + footerPad }]}>
+        {/* الرأس */}
+        <View style={styles.header}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.orderId}>طلب #{order.id.slice(0, 8)}</Text>
+            <Text style={styles.orderMeta}>{count} عناصر · {money(Number(order.total))} للتحصيل</Text>
+          </View>
+          <StatusBadge status={order.status} />
+        </View>
+
+        {/* الخريطة */}
         {region ? (
           <View style={styles.mapWrap}>
             <MapView ref={mapRef} style={styles.map} initialRegion={region} onMapReady={fitMap}>
@@ -181,71 +194,94 @@ export function DriverOrderScreen({ route, navigation }: Props) {
           </View>
         ) : null}
 
-        {/* نقطة الاستلام */}
-        <RouteCard
-          tint={colors.accent}
-          step="1"
-          label="الاستلام من"
-          title={order.pickup?.name ?? "المتجر"}
-          subtitle={
-            pickup && myLoc.location
-              ? `${distanceKm(myLoc.location, pickup).toFixed(1)} كم منك`
-              : undefined
-          }
-          phone={order.pickup?.phone ?? null}
-          onNavigate={pickup ? () => openMaps(pickup.lat, pickup.lng, order.pickup?.name) : undefined}
-        />
-
-        {/* وجهة التسليم */}
-        <RouteCard
-          tint={colors.primary}
-          step="2"
-          label="التسليم إلى"
-          title={order.customer?.name || "الزبون"}
-          subtitle={order.delivery_details ?? undefined}
-          phone={order.customer?.phone ?? null}
-          onNavigate={dest ? () => openMaps(dest.lat, dest.lng) : undefined}
-        />
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>المنتجات</Text>
-          {order.items.map((i) => (
-            <View key={i.id} style={styles.itemRow}>
-              <Text style={styles.itemQty}>×{i.qty}</Text>
-              <Text style={styles.itemName}>{i.product_name}</Text>
-            </View>
-          ))}
+        {/* بطاقة الرحلة: استلام ← تسليم */}
+        <View style={styles.journey}>
+          <Stop
+            tint={colors.accent}
+            step="1"
+            label="الاستلام من"
+            title={order.pickup?.name ?? "المتجر"}
+            subtitle={
+              pickup && myLoc.location
+                ? `${distanceKm(myLoc.location, pickup).toFixed(1)} كم منك`
+                : undefined
+            }
+            phone={order.pickup?.phone ?? null}
+            onNavigate={pickup ? () => openMaps(pickup.lat, pickup.lng, order.pickup?.name) : undefined}
+            connector
+          />
+          <Stop
+            tint={colors.primary}
+            step="2"
+            label="التسليم إلى"
+            title={order.customer?.name || "الزبون"}
+            subtitle={order.delivery_details ?? undefined}
+            phone={order.customer?.phone ?? null}
+            onNavigate={dest ? () => openMaps(dest.lat, dest.lng) : undefined}
+          />
         </View>
 
-        <View style={styles.section}>
-          <Card variant="outlined" padding="md" style={{ gap: spacing.xs }}>
+        {/* المنتجات */}
+        <View style={styles.block}>
+          <Text style={styles.blockTitle}>المنتجات ({count})</Text>
+          <View style={styles.card}>
+            {order.items.map((i, idx) => (
+              <View key={i.id} style={[styles.itemRow, idx > 0 && styles.itemRowBordered]}>
+                <View style={styles.qtyChip}>
+                  <Text style={styles.qtyText}>{i.qty}</Text>
+                </View>
+                <Text style={styles.itemName} numberOfLines={1}>{i.product_name}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* الملخّص المالي */}
+        <View style={styles.block}>
+          <Text style={styles.blockTitle}>الملخّص المالي</Text>
+          <View style={styles.card}>
             <View style={styles.sumRow}>
               <Text style={styles.sumLabel}>قيمة الطلب</Text>
               <PriceTag amount={Number(order.subtotal)} size="sm" muted />
             </View>
             <View style={styles.sumRow}>
-              <Text style={styles.sumLabel}>التوصيل</Text>
+              <Text style={styles.sumLabel}>رسوم التوصيل</Text>
               <PriceTag amount={Number(order.delivery_fee)} size="sm" muted />
             </View>
             <View style={styles.divider} />
             <View style={styles.sumRow}>
-              <Text style={[styles.sumLabel, styles.bold]}>الإجمالي يُحصَّل</Text>
+              <Text style={[styles.sumLabel, styles.bold]}>الإجمالي يُحصَّل نقداً</Text>
               <PriceTag amount={Number(order.total)} size="md" />
             </View>
-            <Text style={styles.payNote}>
-              {order.payment_method === "cash" ? "دفع نقداً عند الاستلام" : "دفع بطاقة"}
-            </Text>
-          </Card>
+            <View style={[styles.payChip, order.payment_method === "cash" ? styles.payCash : styles.payCard]}>
+              <Icon
+                name={order.payment_method === "cash" ? "cash" : "card"}
+                size={14}
+                color={order.payment_method === "cash" ? colors.success : colors.info}
+              />
+              <Text style={[styles.payChipText, { color: order.payment_method === "cash" ? colors.success : colors.info }]}>
+                {order.payment_method === "cash" ? "دفع نقداً عند التسليم" : "مدفوع بالبطاقة"}
+              </Text>
+            </View>
+          </View>
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+      {/* شريط الإجراء السفلي — يراعي safe-area */}
+      <View style={[styles.footer, { paddingBottom: footerPad }]}>
+        <View style={styles.earnRow}>
+          <Text style={styles.earnLabel}>أجرتك من هذه التوصيلة</Text>
+          <Text style={styles.earnValue}>{money(Number(order.delivery_fee))}</Text>
+        </View>
         {!order.driver_id ? (
           <Button label="استلام الطلب" onPress={() => claim.mutate()} loading={claim.isPending} style={styles.actionBtnMain} />
         ) : isMine && next ? (
           <Button label={statusLabel(next)} onPress={() => advance.mutate(next)} loading={advance.isPending} style={styles.actionBtnMain} />
         ) : isMine ? (
-          <Text style={styles.doneTxt}>اكتمل ✓</Text>
+          <View style={styles.donePill}>
+            <Icon name="check" size={18} color={colors.success} />
+            <Text style={styles.doneTxt}>اكتمل التسليم</Text>
+          </View>
         ) : (
           <Text style={styles.takenTxt}>هذا الطلب مُسنَد لسائق آخر</Text>
         )}
@@ -254,7 +290,7 @@ export function DriverOrderScreen({ route, navigation }: Props) {
   );
 }
 
-function RouteCard({
+function Stop({
   tint,
   step,
   label,
@@ -262,6 +298,7 @@ function RouteCard({
   subtitle,
   phone,
   onNavigate,
+  connector,
 }: {
   tint: string;
   step: string;
@@ -270,26 +307,30 @@ function RouteCard({
   subtitle?: string;
   phone: string | null;
   onNavigate?: () => void;
+  connector?: boolean;
 }) {
   return (
-    <View style={styles.routeCard}>
-      <View style={[styles.stepDot, { backgroundColor: tint }]}>
-        <Text style={styles.stepText}>{step}</Text>
+    <View style={styles.stop}>
+      <View style={styles.stepCol}>
+        <View style={[styles.stepDot, { backgroundColor: tint }]}>
+          <Text style={styles.stepText}>{step}</Text>
+        </View>
+        {connector ? <View style={styles.connector} /> : null}
       </View>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.routeLabel}>{label}</Text>
-        <Text style={styles.routeTitle} numberOfLines={1}>{title}</Text>
-        {subtitle ? <Text style={styles.routeSub} numberOfLines={2}>{subtitle}</Text> : null}
+      <View style={styles.stopBody}>
+        <Text style={styles.stopLabel}>{label}</Text>
+        <Text style={styles.stopTitle} numberOfLines={1}>{title}</Text>
+        {subtitle ? <Text style={styles.stopSub} numberOfLines={2}>{subtitle}</Text> : null}
       </View>
-      <View style={styles.routeActions}>
+      <View style={styles.stopActions}>
         {phone ? (
-          <Pressable style={[styles.actionBtn, { backgroundColor: colors.successSoft }]} onPress={() => callPhone(phone)}>
+          <Pressable style={[styles.actionCircle, { backgroundColor: colors.successSoft }]} onPress={() => callPhone(phone)}>
             <Icon name="phone" size={18} color={colors.success} />
           </Pressable>
         ) : null}
         {onNavigate ? (
-          <Pressable style={[styles.actionBtn, { backgroundColor: colors.primarySoft }]} onPress={onNavigate}>
-            <Icon name="navigation" size={18} color={colors.primary} />
+          <Pressable style={[styles.actionCircle, { backgroundColor: tint + "1A" }]} onPress={onNavigate}>
+            <Icon name="navigation" size={18} color={tint} />
           </Pressable>
         ) : null}
       </View>
@@ -298,16 +339,19 @@ function RouteCard({
 }
 
 const styles = StyleSheet.create({
-  scroll: { paddingBottom: 100 },
-  headerCard: {
-    flexDirection: "row",
+  scroll: { paddingTop: spacing.xs },
+
+  header: {
+    flexDirection: "row-reverse",
     alignItems: "center",
-    justifyContent: "space-between",
-    margin: spacing.lg,
-    marginBottom: 0,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
   },
-  orderId: { fontSize: fontSize.small + 1, fontWeight: fontWeight.bold, color: colors.text },
-  mapWrap: { height: 220, margin: spacing.lg, borderRadius: radii.lg, overflow: "hidden" },
+  orderId: { fontSize: fontSize.h3, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
+  orderMeta: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2 },
+
+  mapWrap: { height: 220, marginHorizontal: spacing.lg, borderRadius: radii.xl, overflow: "hidden", ...shadows.sm },
   map: { flex: 1 },
   tripBadge: {
     position: "absolute",
@@ -317,44 +361,99 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.xs,
     backgroundColor: colors.background,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 1,
     borderRadius: radii.pill,
+    ...shadows.sm,
   },
   tripText: { fontSize: fontSize.caption + 1, fontWeight: fontWeight.bold, color: colors.text },
 
-  routeCard: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    gap: spacing.md,
+  // بطاقة الرحلة
+  journey: {
     marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
+    marginTop: spacing.lg,
     padding: spacing.md,
     backgroundColor: colors.background,
-    borderRadius: radii.lg,
+    borderRadius: radii.xl,
     borderWidth: 1,
     borderColor: colors.borderSoft,
+    ...shadows.sm,
   },
-  stepDot: { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  stop: { flexDirection: "row-reverse", alignItems: "stretch", gap: spacing.md },
+  stepCol: { width: 30, alignItems: "center" },
+  stepDot: { width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center" },
   stepText: { color: "#fff", fontWeight: fontWeight.extrabold, fontSize: fontSize.small },
-  routeLabel: { fontSize: fontSize.caption, color: colors.textMuted, textAlign: "right" },
-  routeTitle: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
-  routeSub: { fontSize: fontSize.caption + 1, color: colors.textMuted, textAlign: "right", marginTop: 2 },
-  routeActions: { flexDirection: "row-reverse", gap: spacing.sm },
-  actionBtn: { width: 40, height: 40, borderRadius: radii.md, alignItems: "center", justifyContent: "center" },
+  connector: { flex: 1, width: 2, backgroundColor: colors.border, marginVertical: 4, borderRadius: 1 },
+  stopBody: { flex: 1, paddingBottom: spacing.lg },
+  stopLabel: { fontSize: fontSize.caption + 1, color: colors.textMuted, textAlign: "right" },
+  stopTitle: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right", marginTop: 1 },
+  stopSub: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2 },
+  stopActions: { flexDirection: "row-reverse", gap: spacing.sm, alignItems: "center" },
+  actionCircle: { width: 42, height: 42, borderRadius: radii.pill, alignItems: "center", justifyContent: "center" },
 
-  section: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, gap: spacing.xs + 2 },
-  sectionTitle: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.bold, color: colors.text, marginBottom: spacing.xs + 2, textAlign: "right" },
-  itemRow: { flexDirection: "row", gap: spacing.sm + 2, paddingVertical: spacing.xs, alignItems: "center" },
-  itemQty: { fontSize: fontSize.small + 1, fontWeight: fontWeight.bold, color: colors.primary, minWidth: 32 },
-  itemName: { fontSize: fontSize.small + 1, color: colors.text, flex: 1, textAlign: "right" },
-  sumRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: spacing.xs },
+  // كتل
+  block: { paddingHorizontal: spacing.lg, marginTop: spacing.lg, gap: spacing.sm },
+  blockTitle: { fontSize: fontSize.h4, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
+  card: {
+    backgroundColor: colors.background,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    padding: spacing.md,
+    ...shadows.sm,
+  },
+
+  itemRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.md, paddingVertical: spacing.sm },
+  itemRowBordered: { borderTopWidth: 1, borderTopColor: colors.divider },
+  qtyChip: { minWidth: 30, height: 26, paddingHorizontal: spacing.xs, borderRadius: radii.sm, backgroundColor: colors.accent + "14", alignItems: "center", justifyContent: "center" },
+  qtyText: { fontSize: fontSize.small, fontWeight: fontWeight.extrabold, color: colors.accent },
+  itemName: { flex: 1, fontSize: fontSize.body, color: colors.text, textAlign: "right" },
+
+  sumRow: { flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center", paddingVertical: spacing.xs },
   sumLabel: { color: colors.textMuted, fontSize: fontSize.small + 1 },
   bold: { fontWeight: fontWeight.extrabold, color: colors.text },
   divider: { height: 1, backgroundColor: colors.divider, marginVertical: spacing.xs + 2 },
-  payNote: { fontSize: fontSize.caption + 1, color: colors.textMuted, marginTop: spacing.xs + 2, textAlign: "right" },
-  footer: { position: "absolute", left: spacing.lg, right: spacing.lg, bottom: spacing.lg },
+  payChip: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    alignSelf: "flex-end",
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 1,
+    borderRadius: radii.pill,
+  },
+  payCash: { backgroundColor: colors.successSoft },
+  payCard: { backgroundColor: colors.infoSoft },
+  payChipText: { fontSize: fontSize.caption + 1, fontWeight: fontWeight.bold },
+
+  // الشريط السفلي
+  footer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSoft,
+    gap: spacing.sm,
+    ...shadows.lg,
+  },
+  earnRow: { flexDirection: "row-reverse", alignItems: "center", justifyContent: "space-between" },
+  earnLabel: { fontSize: fontSize.small, color: colors.textMuted, fontWeight: fontWeight.medium },
+  earnValue: { fontSize: fontSize.h3, fontWeight: fontWeight.extrabold, color: colors.accent },
   actionBtnMain: { backgroundColor: colors.accent },
-  doneTxt: { textAlign: "center", color: colors.success, fontWeight: fontWeight.bold, fontSize: fontSize.bodyLg },
-  takenTxt: { textAlign: "center", color: colors.textMuted, fontSize: fontSize.small + 1 },
+  donePill: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    height: 50,
+    borderRadius: radii.lg,
+    backgroundColor: colors.successSoft,
+  },
+  doneTxt: { color: colors.success, fontWeight: fontWeight.extrabold, fontSize: fontSize.bodyLg },
+  takenTxt: { textAlign: "center", color: colors.textMuted, fontSize: fontSize.small + 1, paddingVertical: spacing.md },
 });
