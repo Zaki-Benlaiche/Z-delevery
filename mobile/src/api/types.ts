@@ -84,6 +84,15 @@ export interface OrderItem {
   options: string | null;
 }
 
+/** معلومات السائق المُسنَد — تُعرض للزبون في شاشة التتبّع */
+export interface DriverBrief {
+  name: string | null;
+  phone: string | null;
+  vehicle_type: string | null;
+  rating: number;
+  location: Location | null;
+}
+
 export interface Order {
   id: string;
   customer_id: string;
@@ -100,6 +109,7 @@ export interface Order {
   delivery_details: string | null;
   items: OrderItem[];
   created_at: string;
+  driver: DriverBrief | null;
 }
 
 export interface TrackingEntry {

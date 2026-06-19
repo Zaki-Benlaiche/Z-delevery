@@ -49,6 +49,15 @@ class TrackingOut(BaseModel):
     timestamp: datetime
 
 
+class DriverBrief(BaseModel):
+    """معلومات السائق المُسنَد — تُعرض للزبون في شاشة التتبّع."""
+    name: str | None = None
+    phone: str | None = None
+    vehicle_type: str | None = None
+    rating: float = 0
+    location: LocationOut | None = None
+
+
 class OrderOut(BaseModel):
     id: uuid.UUID
     customer_id: uuid.UUID
@@ -65,6 +74,7 @@ class OrderOut(BaseModel):
     delivery_details: str | None
     items: list[OrderItemOut] = []
     created_at: datetime
+    driver: DriverBrief | None = None  # يُملأ في تفاصيل الطلب المفردة عند وجود سائق
 
 
 class OrderStatusUpdate(BaseModel):

@@ -337,6 +337,24 @@ async def list_orders(
     return [_order_out(o) for o in rows]
 
 
+async def _driver_brief(driver_id: uuid.UUID, db: AsyncSession) -> "DriverBrief | None":
+    """معلومات السائق المُسنَد (اسم/هاتف/مركبة/تقييم/موقع) لعرضها للزبون."""
+    from app.schemas.order import DriverBrief
+
+    driver = await db.get(Driver, driver_id)
+    if driver is None:
+        return None
+    owner = await db.get(User, driver.user_id)
+    coords = read_point(driver.current_location)
+    return DriverBrief(
+        name=owner.name if owner else None,
+        phone=owner.phone if owner else None,
+        vehicle_type=driver.vehicle_type,
+        rating=float(driver.rating),
+        location=LocationOut(lat=coords[0], lng=coords[1]) if coords else None,
+    )
+
+
 @router.get("/{order_id}", response_model=OrderOut)
 async def get_order(
     order_id: uuid.UUID,
@@ -345,7 +363,10 @@ async def get_order(
 ):
     order = await _load_order(order_id, db)
     await _assert_can_view(order, user, db)
-    return _order_out(order)
+    out = _order_out(order)
+    if order.driver_id is not None:
+        out.driver = await _driver_brief(order.driver_id, db)
+    return out
 
 
 @router.get("/{order_id}/tracking", response_model=list[TrackingOut])

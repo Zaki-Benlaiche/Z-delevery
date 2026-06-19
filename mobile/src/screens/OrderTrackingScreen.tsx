@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { useQuery } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -8,6 +8,7 @@ import type { Order, OrderStatus } from "../api/types";
 import { RatingCard } from "../components/RatingCard";
 import { Screen } from "../components/Screen";
 import { Card } from "../components/Card";
+import { Icon } from "../components/Icon";
 import { PriceTag } from "../components/PriceTag";
 import { Skeleton } from "../components/Skeleton";
 import { StatusBadge, statusLabel } from "../components/StatusBadge";
@@ -26,6 +27,16 @@ const TIMELINE: OrderStatus[] = [
   "on_the_way",
   "delivered",
 ];
+
+const VEHICLE_LABEL: Record<string, string> = {
+  moto: "دراجة نارية",
+  car: "سيارة",
+  bike: "دراجة هوائية",
+};
+
+function callPhone(phone: string) {
+  Linking.openURL(`tel:${phone}`).catch(() => Alert.alert("تعذّر الاتّصال", phone));
+}
 
 export function OrderTrackingScreen({ route }: Props) {
   const { orderId } = route.params;
@@ -58,6 +69,8 @@ export function OrderTrackingScreen({ route }: Props) {
   const dest = order.delivery_location;
   const driver = live.driverLocation;
   const hasMap = Boolean(dest);
+  const showDriver =
+    order.driver != null && status !== "delivered" && status !== "cancelled";
 
   return (
     <Screen padded={false}>
@@ -96,6 +109,8 @@ export function OrderTrackingScreen({ route }: Props) {
             </MapView>
           </View>
         ) : null}
+
+        {showDriver ? <DriverCard driver={order.driver!} /> : null}
 
         <View style={styles.timeline}>
           <Text style={styles.section}>تقدّم الطلب</Text>
@@ -147,6 +162,38 @@ export function OrderTrackingScreen({ route }: Props) {
   );
 }
 
+function DriverCard({ driver }: { driver: NonNullable<Order["driver"]> }) {
+  const vehicle = driver.vehicle_type ? VEHICLE_LABEL[driver.vehicle_type] ?? driver.vehicle_type : null;
+  return (
+    <View style={styles.driverWrap}>
+      <Text style={styles.section}>سائقك</Text>
+      <Card variant="outlined" padding="md" style={styles.driverCard}>
+        <View style={styles.driverAvatar}>
+          <Icon name="scooter" size={22} color={colors.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.driverName} numberOfLines={1}>
+            {driver.name || "سائق التوصيل"}
+          </Text>
+          <View style={styles.driverMeta}>
+            <Icon name="star" size={13} color={colors.warning} />
+            <Text style={styles.driverMetaText}>{driver.rating.toFixed(1)}</Text>
+            {vehicle ? <Text style={styles.driverMetaText}>· {vehicle}</Text> : null}
+          </View>
+        </View>
+        {driver.phone ? (
+          <Pressable
+            style={[styles.callBtn, { backgroundColor: colors.successSoft }]}
+            onPress={() => callPhone(driver.phone!)}
+          >
+            <Icon name="phone" size={20} color={colors.success} />
+          </Pressable>
+        ) : null}
+      </Card>
+    </View>
+  );
+}
+
 function SumRow({ label, amount, bold }: { label: string; amount: number; bold?: boolean }) {
   return (
     <View style={styles.sumRow}>
@@ -170,6 +217,20 @@ const styles = StyleSheet.create({
   liveDot: { fontSize: fontSize.caption, color: colors.textMuted },
   mapWrap: { height: 260, margin: spacing.lg, borderRadius: radii.lg, overflow: "hidden" },
   map: { flex: 1 },
+  driverWrap: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
+  driverCard: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.md },
+  driverAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  driverName: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  driverMeta: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.xs, marginTop: 2 },
+  driverMetaText: { fontSize: fontSize.caption + 1, color: colors.textMuted },
+  callBtn: { width: 44, height: 44, borderRadius: radii.md, alignItems: "center", justifyContent: "center" },
   timeline: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
   section: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.bold, color: colors.text, marginBottom: spacing.sm, textAlign: "right" },
   tlRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingVertical: spacing.xs + 2 },
