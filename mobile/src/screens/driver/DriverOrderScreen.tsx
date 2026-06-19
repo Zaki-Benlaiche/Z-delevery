@@ -20,9 +20,10 @@ import { Button } from "../../components/Button";
 import { Screen } from "../../components/Screen";
 import { PriceTag } from "../../components/PriceTag";
 import { Skeleton } from "../../components/Skeleton";
-import { Icon } from "../../components/Icon";
+import { Icon, type IconName } from "../../components/Icon";
 import { StatusBadge, statusLabel } from "../../components/StatusBadge";
 import { useCurrentLocation } from "../../hooks/useLocation";
+import { timeAgo } from "../../utils/time";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../../theme/colors";
 import type { DriverStackParamList } from "../../navigation/types";
 
@@ -34,6 +35,13 @@ const NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
   picked_up: "on_the_way",
   on_the_way: "delivered",
 };
+
+// مراحل التوصيل من منظور السائق — كلّ مرحلة "مكتملة" إن كانت الحالة ضمنها
+const STEPS: { label: string; icon: IconName; reached: OrderStatus[] }[] = [
+  { label: "الاستلام", icon: "bag", reached: ["picked_up", "on_the_way", "delivered"] },
+  { label: "في الطريق", icon: "navigation", reached: ["on_the_way", "delivered"] },
+  { label: "التسليم", icon: "check", reached: ["delivered"] },
+];
 
 function money(n: number): string {
   return `${Math.round(n).toLocaleString("fr-DZ")} دج`;
@@ -103,6 +111,18 @@ export function DriverOrderScreen({ route, navigation }: Props) {
     onError: (e) => Alert.alert("تعذّر التحديث", (e as Error).message),
   });
 
+  // تأكيد قبل الخطوة الأخيرة (لا رجعة فيها وتشمل تحصيل المبلغ نقداً)
+  const confirmAdvance = (n: OrderStatus) => {
+    if (n === "delivered") {
+      Alert.alert("تأكيد التسليم", "هل سلّمت الطلب للزبون وحصّلت المبلغ؟", [
+        { text: "إلغاء", style: "cancel" },
+        { text: "نعم، سُلّم", onPress: () => advance.mutate(n) },
+      ]);
+    } else {
+      advance.mutate(n);
+    }
+  };
+
   if (query.isLoading || !query.data) {
     return (
       <Screen>
@@ -144,15 +164,27 @@ export function DriverOrderScreen({ route, navigation }: Props) {
 
   return (
     <Screen padded={false} background="white">
+      {/* شريط علوي مخصّص (بدل الرأس الأصلي لتفادي الفراغ + توحيد الهوية) */}
+      <View style={styles.topbar}>
+        <Pressable onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={8}>
+          <Icon name="back" size={22} color={colors.text} />
+        </Pressable>
+        <Text style={styles.topbarTitle}>تفاصيل الطلب</Text>
+        <View style={styles.backBtn} />
+      </View>
+
       <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: 132 + footerPad }]}>
         {/* الرأس */}
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
             <Text style={styles.orderId}>طلب #{order.id.slice(0, 8)}</Text>
-            <Text style={styles.orderMeta}>{count} عناصر · {money(Number(order.total))} للتحصيل</Text>
+            <Text style={styles.orderMeta}>{count} عناصر · {money(Number(order.total))} للتحصيل · {timeAgo(order.created_at)}</Text>
           </View>
           <StatusBadge status={order.status} />
         </View>
+
+        {/* شريط تقدّم التوصيل */}
+        {order.status !== "cancelled" ? <DeliverySteps status={order.status} /> : null}
 
         {/* الخريطة */}
         {region ? (
@@ -276,7 +308,7 @@ export function DriverOrderScreen({ route, navigation }: Props) {
         {!order.driver_id ? (
           <Button label="استلام الطلب" onPress={() => claim.mutate()} loading={claim.isPending} style={styles.actionBtnMain} />
         ) : isMine && next ? (
-          <Button label={statusLabel(next)} onPress={() => advance.mutate(next)} loading={advance.isPending} style={styles.actionBtnMain} />
+          <Button label={statusLabel(next)} onPress={() => confirmAdvance(next)} loading={advance.isPending} style={styles.actionBtnMain} />
         ) : isMine ? (
           <View style={styles.donePill}>
             <Icon name="check" size={18} color={colors.success} />
@@ -287,6 +319,46 @@ export function DriverOrderScreen({ route, navigation }: Props) {
         )}
       </View>
     </Screen>
+  );
+}
+
+function DeliverySteps({ status }: { status: OrderStatus }) {
+  return (
+    <View style={styles.steps}>
+      {STEPS.map((s, idx) => {
+        const done = s.reached.includes(status);
+        // المرحلة "الحالية" = أوّل مرحلة غير مكتملة
+        const prevDone = idx === 0 ? true : STEPS[idx - 1].reached.includes(status);
+        const current = !done && prevDone;
+        const active = done || current;
+        return (
+          <View key={s.label} style={styles.stepItem}>
+            <View style={styles.stepLine}>
+              {idx > 0 ? (
+                <View style={[styles.lineSeg, STEPS[idx - 1].reached.includes(status) && styles.lineSegOn]} />
+              ) : (
+                <View style={styles.lineSeg} />
+              )}
+              <View style={[styles.stepCircle, done && styles.stepCircleDone, current && styles.stepCircleCurrent]}>
+                <Icon
+                  name={done ? "check" : s.icon}
+                  size={14}
+                  color={done ? "#fff" : current ? colors.accent : colors.textFaint}
+                />
+              </View>
+              {idx < STEPS.length - 1 ? (
+                <View style={[styles.lineSeg, s.reached.includes(status) && styles.lineSegOn]} />
+              ) : (
+                <View style={styles.lineSeg} />
+              )}
+            </View>
+            <Text style={[styles.stepLabel, active && styles.stepLabelActive]} numberOfLines={1}>
+              {s.label}
+            </Text>
+          </View>
+        );
+      })}
+    </View>
   );
 }
 
@@ -341,6 +413,18 @@ function Stop({
 const styles = StyleSheet.create({
   scroll: { paddingTop: spacing.xs },
 
+  topbar: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSoft,
+  },
+  backBtn: { width: 40, height: 40, borderRadius: radii.pill, alignItems: "center", justifyContent: "center" },
+  topbarTitle: { fontSize: fontSize.h4, fontWeight: fontWeight.extrabold, color: colors.text },
+
   header: {
     flexDirection: "row-reverse",
     alignItems: "center",
@@ -350,6 +434,23 @@ const styles = StyleSheet.create({
   },
   orderId: { fontSize: fontSize.h3, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
   orderMeta: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2 },
+
+  // شريط التقدّم
+  steps: { flexDirection: "row-reverse", paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
+  stepItem: { flex: 1, alignItems: "center", gap: spacing.xs },
+  stepLine: { flexDirection: "row", alignItems: "center", alignSelf: "stretch" },
+  lineSeg: { flex: 1, height: 2, backgroundColor: colors.border },
+  lineSegOn: { backgroundColor: colors.accent },
+  stepCircle: {
+    width: 30, height: 30, borderRadius: 15,
+    backgroundColor: colors.surface,
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 1, borderColor: colors.border,
+  },
+  stepCircleDone: { backgroundColor: colors.accent, borderColor: colors.accent },
+  stepCircleCurrent: { backgroundColor: colors.accent + "14", borderColor: colors.accent, borderWidth: 2 },
+  stepLabel: { fontSize: fontSize.caption + 1, color: colors.textMuted, fontWeight: fontWeight.medium },
+  stepLabelActive: { color: colors.text, fontWeight: fontWeight.bold },
 
   mapWrap: { height: 220, marginHorizontal: spacing.lg, borderRadius: radii.xl, overflow: "hidden", ...shadows.sm },
   map: { flex: 1 },

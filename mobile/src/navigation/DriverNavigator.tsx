@@ -74,7 +74,7 @@ export function DriverNavigator() {
       <Stack.Screen
         name="DriverOrder"
         component={DriverOrderScreen}
-        options={{ title: "تفاصيل الطلب" }}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

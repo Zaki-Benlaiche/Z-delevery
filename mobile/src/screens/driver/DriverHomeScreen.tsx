@@ -13,6 +13,7 @@ import { Skeleton } from "../../components/Skeleton";
 import { Icon, type IconName } from "../../components/Icon";
 import { useCurrentLocation } from "../../hooks/useLocation";
 import { useDriverLocationSender } from "../../hooks/useDriverLocationSender";
+import { timeAgo } from "../../utils/time";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../../theme/colors";
 import type { DriverStackParamList, DriverTabParamList } from "../../navigation/types";
 import { DriverRegisterScreen } from "./DriverRegisterScreen";
@@ -266,7 +267,7 @@ function OrderCard({ order, onPress, accent }: { order: Order; onPress: () => vo
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.cardId}>طلب #{order.id.slice(0, 8)}</Text>
-          <Text style={styles.cardMeta}>{count} عناصر</Text>
+          <Text style={styles.cardMeta}>{count} عناصر · {timeAgo(order.created_at)}</Text>
         </View>
         <View style={styles.payout}>
           <Text style={styles.payoutValue}>{money(Number(order.delivery_fee))}</Text>
