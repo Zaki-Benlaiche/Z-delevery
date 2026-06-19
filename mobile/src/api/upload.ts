@@ -11,23 +11,33 @@ export async function uploadToCloudinary(localUri: string, folder = "zdelivry"):
   }
 
   const form = new FormData();
-  // React Native يقبل كائن {uri,type,name} كملفّ في FormData
+  // كائن {uri,type,name} هو جزء الملفّ الخاصّ بشبكة React Native (يدعمه XHR).
+  // ملاحظة: fetch العامّ في Expo الحديث يرفضه ("unsupported FormDataPart")، لذا نستخدم XMLHttpRequest.
   form.append("file", { uri: localUri, type: "image/jpeg", name: "upload.jpg" } as unknown as Blob);
   form.append("upload_preset", CLOUDINARY.uploadPreset);
   form.append("folder", folder);
 
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/image/upload`,
-    { method: "POST", body: form },
-  );
+  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/image/upload`;
 
-  if (!res.ok) {
-    throw new Error(`تعذّر رفع الصورة (${res.status})`);
-  }
-
-  const json = (await res.json()) as { secure_url?: string };
-  if (!json.secure_url) throw new Error("استجابة رفع غير صالحة");
-  return json.secure_url;
+  return new Promise<string>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const json = JSON.parse(xhr.responseText) as { secure_url?: string };
+          if (json.secure_url) resolve(json.secure_url);
+          else reject(new Error("استجابة رفع غير صالحة"));
+        } catch {
+          reject(new Error("استجابة رفع غير صالحة"));
+        }
+      } else {
+        reject(new Error(`تعذّر رفع الصورة (${xhr.status})`));
+      }
+    };
+    xhr.onerror = () => reject(new Error("فشل الاتّصال بخادم الصور"));
+    xhr.send(form);
+  });
 }
 
 /**
