@@ -102,7 +102,7 @@ async def register_driver(
         user_id=user.id,
         vehicle_type=payload.vehicle_type,
         license_url=payload.license_url,
-        is_verified=True,  # توثيق تلقائي ليبدأ السائق العمل فوراً (لا توجد مراجعة إدارية بعد)
+        is_verified=False,  # ينتظر توثيق الإدارة من لوحة الأدمن قبل الاتّصال واستلام الطلبات
     )
     db.add(driver)
     # أي مستخدم ينضمّ للتوصيل يصبح سائقاً تلقائياً (ترقية الدور)

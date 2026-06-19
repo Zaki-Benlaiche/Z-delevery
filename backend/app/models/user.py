@@ -16,6 +16,7 @@ class User(Base, UUIDMixin, TimestampMixin):
 
     phone: Mapped[str] = mapped_column(String(20), unique=True, index=True)
     name: Mapped[str | None] = mapped_column(String(120))
+    avatar_url: Mapped[str | None] = mapped_column(String(500))
     email: Mapped[str | None] = mapped_column(String(160), unique=True)
     password_hash: Mapped[str | None] = mapped_column(String(255))
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.CUSTOMER)
