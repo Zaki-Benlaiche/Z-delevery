@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CompositeScreenProps } from "@react-navigation/native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
@@ -76,19 +77,12 @@ export function AccountScreen({ navigation }: Props) {
 
   const pickAvatar = async () => {
     if (uploading) return;
-    let ImagePicker: typeof import("expo-image-picker");
-    try {
-      ImagePicker = await import("expo-image-picker");
-    } catch {
-      Alert.alert("غير متاح", "ميزة الصور تتطلّب تحديث التطبيق إلى أحدث إصدار.");
-      return;
-    }
-    // الوحدة الـ native قد تكون غائبة عن بناءٍ قديم (الاستيراد ينجح لكنّ الدوالّ undefined)
+    // الوحدة الـ native قد تكون غائبة عن بناءٍ قديم (الدوالّ undefined)
     if (
       typeof ImagePicker.requestMediaLibraryPermissionsAsync !== "function" ||
       typeof ImagePicker.launchImageLibraryAsync !== "function"
     ) {
-      Alert.alert("تتطلّب تحديثاً", "ميزة الصور تحتاج نسخة أحدث من التطبيق (بناء جديد). سنفعّلها في التحديث القادم.");
+      Alert.alert("تتطلّب تحديثاً", "ميزة الصور تحتاج نسخة أحدث من التطبيق (بناء جديد).");
       return;
     }
     try {
