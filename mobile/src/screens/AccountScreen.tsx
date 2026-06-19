@@ -146,6 +146,7 @@ export function AccountScreen({ navigation }: Props) {
                 </Pressable>
               ) : null}
             </View>
+            {isDriver ? <Text style={[styles.roleTag, { color: brand }]}>LIVREUR</Text> : null}
             {isDriver && d ? (
               <View style={styles.driverMeta}>
                 <Icon name="scooter" size={13} color={colors.textMuted} />
@@ -347,6 +348,7 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 26, fontWeight: fontWeight.extrabold, color: colors.primary },
   nameRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.sm },
   profileName: { fontSize: fontSize.h2, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right", flexShrink: 1 },
+  roleTag: { fontSize: fontSize.caption + 1, fontWeight: fontWeight.extrabold, letterSpacing: 1.5, textAlign: "right", marginTop: 1 },
   profileSub: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2 },
   driverMeta: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.xs, marginTop: spacing.xs },
   metaSep: { width: 1, height: 11, backgroundColor: colors.border, marginHorizontal: 2 },
