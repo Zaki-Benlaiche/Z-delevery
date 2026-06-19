@@ -83,19 +83,27 @@ export function AccountScreen({ navigation }: Props) {
       Alert.alert("غير متاح", "ميزة الصور تتطلّب تحديث التطبيق إلى أحدث إصدار.");
       return;
     }
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert("الإذن مطلوب", "اسمح بالوصول إلى الصور لاختيار صورة الملف.");
+    // الوحدة الـ native قد تكون غائبة عن بناءٍ قديم (الاستيراد ينجح لكنّ الدوالّ undefined)
+    if (
+      typeof ImagePicker.requestMediaLibraryPermissionsAsync !== "function" ||
+      typeof ImagePicker.launchImageLibraryAsync !== "function"
+    ) {
+      Alert.alert("تتطلّب تحديثاً", "ميزة الصور تحتاج نسخة أحدث من التطبيق (بناء جديد). سنفعّلها في التحديث القادم.");
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.6,
-    });
-    if (result.canceled) return;
     try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert("الإذن مطلوب", "اسمح بالوصول إلى الصور لاختيار صورة الملف.");
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.6,
+      });
+      if (result.canceled) return;
       setUploading(true);
       const url = await uploadToCloudinary(result.assets[0].uri, "avatars");
       const next = await meApi.updateProfile({ avatar_url: url });

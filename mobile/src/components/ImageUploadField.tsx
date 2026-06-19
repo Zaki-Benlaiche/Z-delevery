@@ -39,21 +39,29 @@ export function ImageUploadField({
       Alert.alert("غير متاح", "ميزة رفع الصور تتطلّب تحديث التطبيق إلى أحدث إصدار.");
       return;
     }
-
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert("الإذن مطلوب", "اسمح بالوصول إلى الصور لرفع صورة.");
+    // الوحدة الـ native قد تكون غائبة عن بناءٍ قديم (الاستيراد ينجح لكنّ الدوالّ undefined)
+    if (
+      typeof ImagePicker.requestMediaLibraryPermissionsAsync !== "function" ||
+      typeof ImagePicker.launchImageLibraryAsync !== "function"
+    ) {
+      Alert.alert("تتطلّب تحديثاً", "ميزة رفع الصور تحتاج نسخة أحدث من التطبيق (بناء جديد). سنفعّلها في التحديث القادم.");
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect,
-      quality: 0.6,
-    });
-    if (result.canceled) return;
 
     try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert("الإذن مطلوب", "اسمح بالوصول إلى الصور لرفع صورة.");
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect,
+        quality: 0.6,
+      });
+      if (result.canceled) return;
+
       setUploading(true);
       const url = await uploadToCloudinary(result.assets[0].uri, folder);
       onChange(url);
