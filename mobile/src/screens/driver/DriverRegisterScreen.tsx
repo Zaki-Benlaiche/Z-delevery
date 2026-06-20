@@ -7,23 +7,25 @@ import { driversApi } from "../../api/drivers";
 import { Button } from "../../components/Button";
 import { Screen } from "../../components/Screen";
 import { Icon, type IconName } from "../../components/Icon";
+import { useT } from "../../i18n";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../../theme/colors";
 
 type VehicleType = "moto" | "car" | "bike";
 
-const VEHICLES: { value: VehicleType; label: string; icon: IconName; hint: string }[] = [
-  { value: "moto", label: "دراجة نارية", icon: "scooter", hint: "الأسرع للمدينة" },
-  { value: "car", label: "سيّارة", icon: "car", hint: "للطلبات الكبيرة" },
-  { value: "bike", label: "دراجة هوائية", icon: "bike", hint: "اقتصادية" },
+const VEHICLES: { value: VehicleType; labelKey: string; icon: IconName; hintKey: string }[] = [
+  { value: "moto", labelKey: "partner.vehMoto", icon: "scooter", hintKey: "driver.vehMotoHint" },
+  { value: "car", labelKey: "partner.vehCar", icon: "car", hintKey: "driver.vehCarHint" },
+  { value: "bike", labelKey: "partner.vehBike", icon: "bike", hintKey: "driver.vehBikeHint" },
 ];
 
-const BENEFITS: { icon: IconName; title: string; sub: string }[] = [
-  { icon: "wallet", title: "أرباح فورية", sub: "تكسب رسوم كل توصيلة تنجزها" },
-  { icon: "navigation", title: "طلبات قربك", sub: "نرسل لك أقرب الطلبات إليك" },
-  { icon: "clockFast", title: "مرونة كاملة", sub: "اعمل متى شئت — اتّصل واقطع الاتّصال" },
+const BENEFITS: { icon: IconName; titleKey: string; subKey: string }[] = [
+  { icon: "wallet", titleKey: "driver.benefitEarnTitle", subKey: "driver.benefitEarnSub" },
+  { icon: "navigation", titleKey: "driver.benefitNearTitle", subKey: "driver.benefitNearSub" },
+  { icon: "clockFast", titleKey: "driver.benefitFlexTitle", subKey: "driver.benefitFlexSub" },
 ];
 
 export function DriverRegisterScreen() {
+  const { t } = useT();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const [vehicleType, setVehicleType] = useState<VehicleType>("moto");
@@ -31,7 +33,7 @@ export function DriverRegisterScreen() {
   const register = useMutation({
     mutationFn: () => driversApi.register({ vehicle_type: vehicleType }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["driver", "me"] }),
-    onError: (e) => Alert.alert("تعذّر التسجيل", (e as Error).message),
+    onError: (e) => Alert.alert(t("driver.regError"), (e as Error).message),
   });
 
   const footerPad = (insets.bottom > 0 ? insets.bottom : spacing.md) + spacing.sm;
@@ -44,27 +46,27 @@ export function DriverRegisterScreen() {
           <View style={styles.heroIcon}>
             <Icon name="scooter" size={36} color="#fff" />
           </View>
-          <Text style={styles.heroTitle}>انضمّ إلى سائقي Z-delivry</Text>
-          <Text style={styles.heroSub}>سجّل في خطوة واحدة وابدأ كسب المال من التوصيل في منطقتك</Text>
+          <Text style={styles.heroTitle}>{t("driver.joinTitle")}</Text>
+          <Text style={styles.heroSub}>{t("driver.joinSub")}</Text>
         </View>
 
         {/* المزايا */}
         <View style={styles.benefits}>
           {BENEFITS.map((b) => (
-            <View key={b.title} style={styles.benefitRow}>
+            <View key={b.titleKey} style={styles.benefitRow}>
               <View style={styles.benefitIcon}>
                 <Icon name={b.icon} size={20} color={colors.accent} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.benefitTitle}>{b.title}</Text>
-                <Text style={styles.benefitSub}>{b.sub}</Text>
+                <Text style={styles.benefitTitle}>{t(b.titleKey)}</Text>
+                <Text style={styles.benefitSub}>{t(b.subKey)}</Text>
               </View>
             </View>
           ))}
         </View>
 
         {/* اختيار المركبة */}
-        <Text style={styles.section}>اختر مركبتك</Text>
+        <Text style={styles.section}>{t("driver.chooseVehicle")}</Text>
         <View style={styles.vehicleRow}>
           {VEHICLES.map((v) => {
             const active = v.value === vehicleType;
@@ -83,9 +85,9 @@ export function DriverRegisterScreen() {
                   <Icon name={v.icon} size={26} color={active ? "#fff" : colors.textMuted} />
                 </View>
                 <Text style={[styles.vehicleLabel, active && styles.vehicleLabelActive]} numberOfLines={1}>
-                  {v.label}
+                  {t(v.labelKey)}
                 </Text>
-                <Text style={styles.vehicleHint} numberOfLines={1}>{v.hint}</Text>
+                <Text style={styles.vehicleHint} numberOfLines={1}>{t(v.hintKey)}</Text>
               </Pressable>
             );
           })}
@@ -94,15 +96,13 @@ export function DriverRegisterScreen() {
         {/* ملاحظة التوثيق */}
         <View style={styles.noteCard}>
           <Icon name="shield" size={18} color={colors.info} />
-          <Text style={styles.noteText}>
-            بعد التسجيل يبقى حسابك قيد التوثيق من المنصّة قبل أن يصبح فعّالاً لاستلام الطلبات الحقيقية.
-          </Text>
+          <Text style={styles.noteText}>{t("driver.regNote")}</Text>
         </View>
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: footerPad }]}>
         <Button
-          label="إكمال التسجيل"
+          label={t("driver.completeReg")}
           onPress={() => register.mutate()}
           loading={register.isPending}
           style={styles.cta}

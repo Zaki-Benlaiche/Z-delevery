@@ -28,7 +28,7 @@ import { useT } from "../i18n";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/colors";
 import type { AppStackParamList, AppTabParamList } from "../navigation/types";
 
-const VEHICLE: Record<string, string> = { moto: "دراجة نارية", car: "سيّارة", bike: "دراجة هوائية" };
+const VEHICLE_KEY: Record<string, string> = { moto: "partner.vehMoto", car: "partner.vehCar", bike: "partner.vehBike" };
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<AppTabParamList, "AccountTab">,
@@ -61,7 +61,7 @@ export function AccountScreen({ navigation }: Props) {
       queryClient.setQueryData(["me", "profile"], next);
       setEditing(false);
     },
-    onError: (e) => Alert.alert("تعذّر الحفظ", (e as Error).message),
+    onError: (e) => Alert.alert(t("account.uploadError"), (e as Error).message),
   });
 
   const roleLabel = !user
@@ -69,7 +69,7 @@ export function AccountScreen({ navigation }: Props) {
     : user.role === "driver"
       ? t("account.driver")
       : user.role === "merchant"
-        ? "تاجر"
+        ? t("account.merchant")
         : t("account.customer");
   const isCustomerOrGuest = !user || user.role === "customer";
   const displayName = p?.name?.trim() || roleLabel;
@@ -82,13 +82,13 @@ export function AccountScreen({ navigation }: Props) {
       typeof ImagePicker.requestMediaLibraryPermissionsAsync !== "function" ||
       typeof ImagePicker.launchImageLibraryAsync !== "function"
     ) {
-      Alert.alert("تتطلّب تحديثاً", "ميزة الصور تحتاج نسخة أحدث من التطبيق (بناء جديد).");
+      Alert.alert(t("driver.needBuildTitle"), t("driver.needBuildMsg"));
       return;
     }
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert("الإذن مطلوب", "اسمح بالوصول إلى الصور لاختيار صورة الملف.");
+        Alert.alert(t("account.permTitle"), t("account.permMsg"));
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -103,7 +103,7 @@ export function AccountScreen({ navigation }: Props) {
       const next = await meApi.updateProfile({ avatar_url: url });
       queryClient.setQueryData(["me", "profile"], next);
     } catch (e) {
-      Alert.alert("تعذّر رفع الصورة", (e as Error).message);
+      Alert.alert(t("account.uploadError"), (e as Error).message);
     } finally {
       setUploading(false);
     }
@@ -148,17 +148,17 @@ export function AccountScreen({ navigation }: Props) {
                 </Pressable>
               ) : null}
             </View>
-            {isDriver ? <Text style={[styles.roleTag, { color: brand }]}>LIVREUR</Text> : null}
+            {isDriver ? <Text style={[styles.roleTag, { color: brand }]}>{t("driver.roleTag")}</Text> : null}
             {isDriver && d ? (
               <View style={styles.driverMeta}>
                 <Icon name="scooter" size={13} color={colors.textMuted} />
-                <Text style={styles.profileSub}>{VEHICLE[d.vehicle_type] ?? d.vehicle_type}</Text>
+                <Text style={styles.profileSub}>{VEHICLE_KEY[d.vehicle_type] ? t(VEHICLE_KEY[d.vehicle_type]) : d.vehicle_type}</Text>
                 <View style={styles.metaSep} />
                 <Icon name="star" size={13} color={colors.warning} />
                 <Text style={styles.profileSub}>{Number(d.rating || 0).toFixed(1)}</Text>
                 <View style={[styles.verifyChip, { backgroundColor: d.is_verified ? colors.successSoft : colors.warningSoft }]}>
                   <Text style={[styles.verifyText, { color: d.is_verified ? colors.success : colors.warning }]}>
-                    {d.is_verified ? "موثّق" : "قيد التوثيق"}
+                    {d.is_verified ? t("driver.verified") : t("driver.pendingShort")}
                   </Text>
                 </View>
               </View>
@@ -174,11 +174,11 @@ export function AccountScreen({ navigation }: Props) {
         <Modal visible={editing} transparent animationType="fade" onRequestClose={() => setEditing(false)}>
           <Pressable style={styles.modalBackdrop} onPress={() => setEditing(false)}>
             <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
-              <Text style={styles.modalTitle}>تعديل الاسم</Text>
+              <Text style={styles.modalTitle}>{t("account.editName")}</Text>
               <TextInput
                 value={nameDraft}
                 onChangeText={setNameDraft}
-                placeholder="اكتب اسمك"
+                placeholder={t("account.namePlaceholder")}
                 placeholderTextColor={colors.textFaint}
                 style={styles.modalInput}
                 textAlign="right"
@@ -187,7 +187,7 @@ export function AccountScreen({ navigation }: Props) {
               />
               <View style={styles.modalActions}>
                 <Pressable style={styles.modalCancel} onPress={() => setEditing(false)}>
-                  <Text style={styles.modalCancelText}>إلغاء</Text>
+                  <Text style={styles.modalCancelText}>{t("common.cancel")}</Text>
                 </Pressable>
                 <Pressable
                   style={[styles.modalSave, { backgroundColor: brand }]}
@@ -197,7 +197,7 @@ export function AccountScreen({ navigation }: Props) {
                   {saveProfile.isPending ? (
                     <ActivityIndicator color="#fff" size="small" />
                   ) : (
-                    <Text style={styles.modalSaveText}>حفظ</Text>
+                    <Text style={styles.modalSaveText}>{t("common.save")}</Text>
                   )}
                 </Pressable>
               </View>

@@ -4,6 +4,7 @@ import { StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon, type IconName } from "../components/Icon";
+import { useT } from "../i18n";
 import { AccountScreen } from "../screens/AccountScreen";
 import { DriverHomeScreen } from "../screens/driver/DriverHomeScreen";
 import { DriverHistoryScreen } from "../screens/driver/DriverHistoryScreen";
@@ -21,6 +22,7 @@ function tabIcon(name: IconName, focused: IconName) {
 }
 
 function DriverTabs() {
+  const { t } = useT();
   const bottomInset = useSafeAreaInsets().bottom;
   return (
     <Tab.Navigator
@@ -42,17 +44,17 @@ function DriverTabs() {
       <Tab.Screen
         name="DriverHomeTab"
         component={DriverHomeScreen}
-        options={{ tabBarLabel: "العمل", tabBarIcon: tabIcon("scooter", "scooter") }}
+        options={{ tabBarLabel: t("tab.work"), tabBarIcon: tabIcon("scooter", "scooter") }}
       />
       <Tab.Screen
         name="DriverHistoryTab"
         component={DriverHistoryScreen}
-        options={{ tabBarLabel: "أرباحي", tabBarIcon: tabIcon("receipt", "receiptFill") }}
+        options={{ tabBarLabel: t("driver.earnings"), tabBarIcon: tabIcon("receipt", "receiptFill") }}
       />
       <Tab.Screen
         name="DriverAccountTab"
         component={AccountScreen as React.ComponentType}
-        options={{ tabBarLabel: "حسابي", tabBarIcon: tabIcon("person", "personFill") }}
+        options={{ tabBarLabel: t("tab.account"), tabBarIcon: tabIcon("person", "personFill") }}
       />
     </Tab.Navigator>
   );

@@ -8,13 +8,18 @@ import { Screen } from "../../components/Screen";
 import { EmptyState } from "../../components/EmptyState";
 import { Skeleton } from "../../components/Skeleton";
 import { Icon, type IconName } from "../../components/Icon";
+import { useT } from "../../i18n";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../../theme/colors";
 
-function money(n: number): string {
-  return `${Math.round(n).toLocaleString("fr-DZ")} دج`;
+type TFn = (key: string) => string;
+
+function money(n: number, cur: string): string {
+  return `${Math.round(n).toLocaleString("fr-DZ")} ${cur}`;
 }
 
 export function DriverHistoryScreen() {
+  const { t } = useT();
+  const cur = t("common.currency");
   const earnings = useQuery({
     queryKey: ["driver", "earnings"],
     queryFn: driversApi.earnings,
@@ -38,21 +43,21 @@ export function DriverHistoryScreen() {
           <View style={styles.heroBadge}>
             <Icon name="cash" size={16} color="#fff" />
           </View>
-          <Text style={styles.heroLabel}>إجمالي أرباحك</Text>
+          <Text style={styles.heroLabel}>{t("driver.totalEarnings")}</Text>
         </View>
         {earnings.isLoading ? (
           <Skeleton width={180} height={38} radius={radii.sm} />
         ) : (
-          <Text style={styles.heroValue}>{money(e?.total_earnings ?? 0)}</Text>
+          <Text style={styles.heroValue}>{money(e?.total_earnings ?? 0, cur)}</Text>
         )}
         <View style={styles.heroFootRow}>
           <View style={styles.heroChip}>
             <Icon name="check" size={13} color="#fff" />
-            <Text style={styles.heroChipText}>{e?.deliveries ?? 0} توصيلة</Text>
+            <Text style={styles.heroChipText}>{e?.deliveries ?? 0} {t("driver.deliveriesWord")}</Text>
           </View>
           <View style={styles.heroChip}>
             <Icon name="scooter" size={13} color="#fff" />
-            <Text style={styles.heroChipText}>{money(avg)} / توصيلة</Text>
+            <Text style={styles.heroChipText}>{money(avg, cur)} {t("driver.perDelivery")}</Text>
           </View>
         </View>
       </View>
@@ -62,34 +67,34 @@ export function DriverHistoryScreen() {
         <StatCard
           icon="cash"
           tint={colors.success}
-          value={money(e?.today_earnings ?? 0)}
-          label={`اليوم · ${e?.today_deliveries ?? 0} توصيلة`}
+          value={money(e?.today_earnings ?? 0, cur)}
+          label={`${t("driver.today")} · ${e?.today_deliveries ?? 0} ${t("driver.deliveriesWord")}`}
           loading={earnings.isLoading}
         />
         <StatCard
           icon="receipt"
           tint={colors.info}
           value={String(e?.active_orders ?? 0)}
-          label="طلبات جارية"
+          label={t("driver.activeOrders")}
           loading={earnings.isLoading}
         />
         <StatCard
           icon="star"
           tint={colors.warning}
           value={Number(e?.rating ?? 0).toFixed(1)}
-          label="تقييمك"
+          label={t("driver.yourRating")}
           loading={earnings.isLoading}
         />
       </View>
 
-      <Text style={styles.sectionTitle}>سجلّ التوصيلات</Text>
+      <Text style={styles.sectionTitle}>{t("driver.deliveryHistory")}</Text>
     </View>
   );
 
   return (
     <Screen padded={false} background="white">
       <View style={styles.topBar}>
-        <Text style={styles.topTitle}>أرباحي</Text>
+        <Text style={styles.topTitle}>{t("driver.earnings")}</Text>
       </View>
       <FlatList
         data={delivered.data ?? []}
@@ -111,12 +116,12 @@ export function DriverHistoryScreen() {
           !delivered.isLoading ? (
             <EmptyState
               icon="🛵"
-              title="لا توصيلات بعد"
-              hint="ستظهر هنا توصيلاتك المكتملة وأرباحها"
+              title={t("driver.noDeliveries")}
+              hint={t("driver.noDeliveriesHint")}
             />
           ) : null
         }
-        renderItem={({ item }) => <DeliveredCard order={item} />}
+        renderItem={({ item }) => <DeliveredCard order={item} t={t} cur={cur} />}
       />
     </Screen>
   );
@@ -138,7 +143,7 @@ function StatCard({ icon, tint, value, label, loading }: { icon: IconName; tint:
   );
 }
 
-function DeliveredCard({ order }: { order: Order }) {
+function DeliveredCard({ order, t, cur }: { order: Order; t: TFn; cur: string }) {
   const count = order.items.reduce((s, i) => s + i.qty, 0);
   return (
     <View style={styles.card}>
@@ -148,12 +153,12 @@ function DeliveredCard({ order }: { order: Order }) {
       <View style={{ flex: 1 }}>
         <Text style={styles.cardId}>#{order.id.slice(0, 8)}</Text>
         <Text style={styles.cardDate}>
-          {count} عناصر · {new Date(order.created_at).toLocaleDateString("fr-DZ")}
+          {count} {t("driver.items")} · {new Date(order.created_at).toLocaleDateString("fr-DZ")}
         </Text>
       </View>
       <View style={{ alignItems: "flex-start" }}>
-        <Text style={styles.earn}>+{money(Number(order.delivery_fee))}</Text>
-        <Text style={styles.earnLabel}>أجرتك</Text>
+        <Text style={styles.earn}>+{money(Number(order.delivery_fee), cur)}</Text>
+        <Text style={styles.earnLabel}>{t("driver.yourFee")}</Text>
       </View>
     </View>
   );

@@ -11,7 +11,8 @@ import { Card } from "../components/Card";
 import { Icon } from "../components/Icon";
 import { PriceTag } from "../components/PriceTag";
 import { Skeleton } from "../components/Skeleton";
-import { StatusBadge, statusLabel } from "../components/StatusBadge";
+import { StatusBadge } from "../components/StatusBadge";
+import { useT } from "../i18n";
 import { useOrderTracking } from "../hooks/useOrderTracking";
 import { colors, fontSize, fontWeight, radii, spacing } from "../theme/colors";
 import type { AppStackParamList } from "../navigation/types";
@@ -28,18 +29,19 @@ const TIMELINE: OrderStatus[] = [
   "delivered",
 ];
 
-const VEHICLE_LABEL: Record<string, string> = {
-  moto: "دراجة نارية",
-  car: "سيارة",
-  bike: "دراجة هوائية",
+const VEHICLE_KEY: Record<string, string> = {
+  moto: "partner.vehMoto",
+  car: "partner.vehCar",
+  bike: "partner.vehBike",
 };
 
-function callPhone(phone: string) {
-  Linking.openURL(`tel:${phone}`).catch(() => Alert.alert("تعذّر الاتّصال", phone));
+function callPhone(phone: string, errLabel: string) {
+  Linking.openURL(`tel:${phone}`).catch(() => Alert.alert(errLabel, phone));
 }
 
 export function OrderTrackingScreen({ route }: Props) {
   const { orderId } = route.params;
+  const { t } = useT();
   const live = useOrderTracking(orderId);
 
   const query = useQuery({
@@ -79,7 +81,7 @@ export function OrderTrackingScreen({ route }: Props) {
           <Text style={styles.orderId}>#{order.id.slice(0, 8)}</Text>
           <StatusBadge status={status} />
           <Text style={styles.liveDot}>
-            {live.connected ? "● بثّ مباشر" : "○ غير متّصل"}
+            {live.connected ? t("track.live") : t("track.offline")}
           </Text>
         </Card>
 
@@ -96,13 +98,13 @@ export function OrderTrackingScreen({ route }: Props) {
             >
               <Marker
                 coordinate={{ latitude: dest!.lat, longitude: dest!.lng }}
-                title="وجهة التسليم"
+                title={t("track.destination")}
                 pinColor={colors.primary}
               />
               {driver ? (
                 <Marker
                   coordinate={{ latitude: driver.lat, longitude: driver.lng }}
-                  title="السائق"
+                  title={t("track.driverMarker")}
                   pinColor={colors.accent}
                 />
               ) : null}
@@ -113,7 +115,7 @@ export function OrderTrackingScreen({ route }: Props) {
         {showDriver ? <DriverCard driver={order.driver!} /> : null}
 
         <View style={styles.timeline}>
-          <Text style={styles.section}>تقدّم الطلب</Text>
+          <Text style={styles.section}>{t("track.progress")}</Text>
           {TIMELINE.map((s) => {
             const reached = TIMELINE.indexOf(s) <= TIMELINE.indexOf(status);
             return (
@@ -130,7 +132,7 @@ export function OrderTrackingScreen({ route }: Props) {
                     { color: reached ? colors.text : colors.textMuted },
                   ]}
                 >
-                  {statusLabel(s)}
+                  {t(`status.${s}`)}
                 </Text>
               </View>
             );
@@ -138,7 +140,7 @@ export function OrderTrackingScreen({ route }: Props) {
         </View>
 
         <View style={styles.summaryWrap}>
-          <Text style={styles.section}>تفاصيل الطلب</Text>
+          <Text style={styles.section}>{t("track.details")}</Text>
           <Card variant="outlined" padding="md" style={{ gap: spacing.xs }}>
             {order.items.map((i) => (
               <View key={i.id} style={styles.sumRow}>
@@ -147,11 +149,11 @@ export function OrderTrackingScreen({ route }: Props) {
               </View>
             ))}
             <View style={styles.divider} />
-            <SumRow label="المجموع الفرعي" amount={Number(order.subtotal)} />
-            <SumRow label="رسوم التوصيل" amount={Number(order.delivery_fee)} />
-            <SumRow label="الإجمالي" amount={Number(order.total)} bold />
+            <SumRow label={t("track.subtotal")} amount={Number(order.subtotal)} />
+            <SumRow label={t("track.deliveryFee")} amount={Number(order.delivery_fee)} />
+            <SumRow label={t("track.total")} amount={Number(order.total)} bold />
             <Text style={styles.payNote}>
-              الدفع: {order.payment_method === "cash" ? "نقداً عند الاستلام" : "بطاقة"}
+              {t("track.payLabel")}: {order.payment_method === "cash" ? t("track.payCash") : t("track.payCard")}
             </Text>
           </Card>
         </View>
@@ -163,17 +165,22 @@ export function OrderTrackingScreen({ route }: Props) {
 }
 
 function DriverCard({ driver }: { driver: NonNullable<Order["driver"]> }) {
-  const vehicle = driver.vehicle_type ? VEHICLE_LABEL[driver.vehicle_type] ?? driver.vehicle_type : null;
+  const { t } = useT();
+  const vehicle = driver.vehicle_type
+    ? VEHICLE_KEY[driver.vehicle_type]
+      ? t(VEHICLE_KEY[driver.vehicle_type])
+      : driver.vehicle_type
+    : null;
   return (
     <View style={styles.driverWrap}>
-      <Text style={styles.section}>سائقك</Text>
+      <Text style={styles.section}>{t("track.yourDriver")}</Text>
       <Card variant="outlined" padding="md" style={styles.driverCard}>
         <View style={styles.driverAvatar}>
           <Icon name="scooter" size={22} color={colors.primary} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.driverName} numberOfLines={1}>
-            {driver.name || "سائق التوصيل"}
+            {driver.name || t("track.driverFallback")}
           </Text>
           <View style={styles.driverMeta}>
             <Icon name="star" size={13} color={colors.warning} />
@@ -184,7 +191,7 @@ function DriverCard({ driver }: { driver: NonNullable<Order["driver"]> }) {
         {driver.phone ? (
           <Pressable
             style={[styles.callBtn, { backgroundColor: colors.successSoft }]}
-            onPress={() => callPhone(driver.phone!)}
+            onPress={() => callPhone(driver.phone!, t("driver.callError"))}
           >
             <Icon name="phone" size={20} color={colors.success} />
           </Pressable>

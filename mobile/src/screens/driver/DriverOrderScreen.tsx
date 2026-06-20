@@ -21,13 +21,15 @@ import { Screen } from "../../components/Screen";
 import { PriceTag } from "../../components/PriceTag";
 import { Skeleton } from "../../components/Skeleton";
 import { Icon, type IconName } from "../../components/Icon";
-import { StatusBadge, statusLabel } from "../../components/StatusBadge";
+import { StatusBadge } from "../../components/StatusBadge";
 import { useCurrentLocation } from "../../hooks/useLocation";
+import { useT } from "../../i18n";
 import { timeAgo } from "../../utils/time";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../../theme/colors";
 import type { DriverStackParamList } from "../../navigation/types";
 
 type Props = NativeStackScreenProps<DriverStackParamList, "DriverOrder">;
+type TFn = (key: string) => string;
 
 // الانتقالات المتاحة للسائق على ترتيب التنفيذ
 const NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
@@ -37,14 +39,14 @@ const NEXT: Partial<Record<OrderStatus, OrderStatus>> = {
 };
 
 // مراحل التوصيل من منظور السائق — كلّ مرحلة "مكتملة" إن كانت الحالة ضمنها
-const STEPS: { label: string; icon: IconName; reached: OrderStatus[] }[] = [
-  { label: "الاستلام", icon: "bag", reached: ["picked_up", "on_the_way", "delivered"] },
-  { label: "في الطريق", icon: "navigation", reached: ["on_the_way", "delivered"] },
-  { label: "التسليم", icon: "check", reached: ["delivered"] },
+const STEPS: { labelKey: string; icon: IconName; reached: OrderStatus[] }[] = [
+  { labelKey: "driver.stepPickup", icon: "bag", reached: ["picked_up", "on_the_way", "delivered"] },
+  { labelKey: "driver.stepOnway", icon: "navigation", reached: ["on_the_way", "delivered"] },
+  { labelKey: "driver.stepDeliver", icon: "check", reached: ["delivered"] },
 ];
 
-function money(n: number): string {
-  return `${Math.round(n).toLocaleString("fr-DZ")} دج`;
+function money(n: number, cur: string): string {
+  return `${Math.round(n).toLocaleString("fr-DZ")} ${cur}`;
 }
 
 function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
@@ -68,12 +70,14 @@ function openMaps(lat: number, lng: number, label?: string) {
   );
 }
 
-function callPhone(phone: string) {
-  Linking.openURL(`tel:${phone}`).catch(() => Alert.alert("تعذّر الاتّصال", phone));
+function callPhone(phone: string, t: TFn) {
+  Linking.openURL(`tel:${phone}`).catch(() => Alert.alert(t("driver.callError"), phone));
 }
 
 export function DriverOrderScreen({ route, navigation }: Props) {
   const { orderId } = route.params;
+  const { t } = useT();
+  const cur = t("common.currency");
   const queryClient = useQueryClient();
   const mapRef = useRef<MapView>(null);
   const myLoc = useCurrentLocation();
@@ -94,7 +98,7 @@ export function DriverOrderScreen({ route, navigation }: Props) {
       queryClient.invalidateQueries({ queryKey: ["driver", "available"] });
       queryClient.invalidateQueries({ queryKey: ["driver", "my-orders"] });
     },
-    onError: (e) => Alert.alert("تعذّر استلام الطلب", (e as Error).message),
+    onError: (e) => Alert.alert(t("driver.claimError"), (e as Error).message),
   });
 
   const advance = useMutation({
@@ -103,20 +107,20 @@ export function DriverOrderScreen({ route, navigation }: Props) {
       queryClient.invalidateQueries({ queryKey: ["driver", "order", orderId] });
       queryClient.invalidateQueries({ queryKey: ["driver", "my-orders"] });
       if (o.status === "delivered") {
-        Alert.alert("اكتمل التسليم", "أحسنت! يمكنك استلام طلبٍ جديد", [
-          { text: "حسناً", onPress: () => navigation.goBack() },
+        Alert.alert(t("driver.completed"), t("driver.deliveredMsg"), [
+          { text: t("common.ok"), onPress: () => navigation.goBack() },
         ]);
       }
     },
-    onError: (e) => Alert.alert("تعذّر التحديث", (e as Error).message),
+    onError: (e) => Alert.alert(t("driver.updateError"), (e as Error).message),
   });
 
   // تأكيد قبل الخطوة الأخيرة (لا رجعة فيها وتشمل تحصيل المبلغ نقداً)
   const confirmAdvance = (n: OrderStatus) => {
     if (n === "delivered") {
-      Alert.alert("تأكيد التسليم", "هل سلّمت الطلب للزبون وحصّلت المبلغ؟", [
-        { text: "إلغاء", style: "cancel" },
-        { text: "نعم، سُلّم", onPress: () => advance.mutate(n) },
+      Alert.alert(t("driver.confirmDeliveryTitle"), t("driver.confirmDeliveryMsg"), [
+        { text: t("common.cancel"), style: "cancel" },
+        { text: t("driver.confirmYes"), onPress: () => advance.mutate(n) },
       ]);
     } else {
       advance.mutate(n);
@@ -169,7 +173,7 @@ export function DriverOrderScreen({ route, navigation }: Props) {
         <Pressable onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={8}>
           <Icon name="back" size={22} color={colors.text} />
         </Pressable>
-        <Text style={styles.topbarTitle}>تفاصيل الطلب</Text>
+        <Text style={styles.topbarTitle}>{t("driver.orderDetails")}</Text>
         <View style={styles.backBtn} />
       </View>
 
@@ -177,14 +181,14 @@ export function DriverOrderScreen({ route, navigation }: Props) {
         {/* الرأس */}
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.orderId}>طلب #{order.id.slice(0, 8)}</Text>
-            <Text style={styles.orderMeta}>{count} عناصر · {money(Number(order.total))} للتحصيل · {timeAgo(order.created_at)}</Text>
+            <Text style={styles.orderId}>{t("driver.order")} #{order.id.slice(0, 8)}</Text>
+            <Text style={styles.orderMeta}>{count} {t("driver.items")} · {money(Number(order.total), cur)} {t("driver.forCollection")} · {timeAgo(order.created_at, t)}</Text>
           </View>
           <StatusBadge status={order.status} />
         </View>
 
         {/* شريط تقدّم التوصيل */}
-        {order.status !== "cancelled" ? <DeliverySteps status={order.status} /> : null}
+        {order.status !== "cancelled" ? <DeliverySteps status={order.status} t={t} /> : null}
 
         {/* الخريطة */}
         {region ? (
@@ -193,15 +197,15 @@ export function DriverOrderScreen({ route, navigation }: Props) {
               {pickup ? (
                 <Marker
                   coordinate={{ latitude: pickup.lat, longitude: pickup.lng }}
-                  title={order.pickup?.name ?? "الاستلام"}
-                  description="نقطة الاستلام"
+                  title={order.pickup?.name ?? t("driver.stepPickup")}
+                  description={t("driver.pickupFrom")}
                   pinColor={colors.accent}
                 />
               ) : null}
               {dest ? (
                 <Marker
                   coordinate={{ latitude: dest.lat, longitude: dest.lng }}
-                  title="وجهة التسليم"
+                  title={t("driver.deliverTo")}
                   pinColor={colors.primary}
                 />
               ) : null}
@@ -220,7 +224,7 @@ export function DriverOrderScreen({ route, navigation }: Props) {
             {tripKm != null ? (
               <View style={styles.tripBadge}>
                 <Icon name="scooter" size={14} color={colors.text} />
-                <Text style={styles.tripText}>{tripKm.toFixed(1)} كم للرحلة</Text>
+                <Text style={styles.tripText}>{tripKm.toFixed(1)} {t("driver.tripKm")}</Text>
               </View>
             ) : null}
           </View>
@@ -229,13 +233,14 @@ export function DriverOrderScreen({ route, navigation }: Props) {
         {/* بطاقة الرحلة: استلام ← تسليم */}
         <View style={styles.journey}>
           <Stop
+            t={t}
             tint={colors.accent}
             step="1"
-            label="الاستلام من"
-            title={order.pickup?.name ?? "المتجر"}
+            label={t("driver.pickupFrom")}
+            title={order.pickup?.name ?? t("driver.store")}
             subtitle={
               pickup && myLoc.location
-                ? `${distanceKm(myLoc.location, pickup).toFixed(1)} كم منك`
+                ? `${distanceKm(myLoc.location, pickup).toFixed(1)} ${t("driver.kmFromYou")}`
                 : undefined
             }
             phone={order.pickup?.phone ?? null}
@@ -243,10 +248,11 @@ export function DriverOrderScreen({ route, navigation }: Props) {
             connector
           />
           <Stop
+            t={t}
             tint={colors.primary}
             step="2"
-            label="التسليم إلى"
-            title={order.customer?.name || "الزبون"}
+            label={t("driver.deliverTo")}
+            title={order.customer?.name || t("driver.customer")}
             subtitle={order.delivery_details ?? undefined}
             phone={order.customer?.phone ?? null}
             onNavigate={dest ? () => openMaps(dest.lat, dest.lng) : undefined}
@@ -255,7 +261,7 @@ export function DriverOrderScreen({ route, navigation }: Props) {
 
         {/* المنتجات */}
         <View style={styles.block}>
-          <Text style={styles.blockTitle}>المنتجات ({count})</Text>
+          <Text style={styles.blockTitle}>{t("driver.products")} ({count})</Text>
           <View style={styles.card}>
             {order.items.map((i, idx) => (
               <View key={i.id} style={[styles.itemRow, idx > 0 && styles.itemRowBordered]}>
@@ -270,20 +276,20 @@ export function DriverOrderScreen({ route, navigation }: Props) {
 
         {/* الملخّص المالي */}
         <View style={styles.block}>
-          <Text style={styles.blockTitle}>الملخّص المالي</Text>
+          <Text style={styles.blockTitle}>{t("driver.financial")}</Text>
           <View style={styles.card}>
             <View style={styles.sumRow}>
-              <Text style={styles.sumLabel}>قيمة الطلب</Text>
-              <PriceTag amount={Number(order.subtotal)} size="sm" muted />
+              <Text style={styles.sumLabel}>{t("driver.orderValue")}</Text>
+              <PriceTag amount={Number(order.subtotal)} size="sm" muted currency={cur} />
             </View>
             <View style={styles.sumRow}>
-              <Text style={styles.sumLabel}>رسوم التوصيل</Text>
-              <PriceTag amount={Number(order.delivery_fee)} size="sm" muted />
+              <Text style={styles.sumLabel}>{t("driver.deliveryFeeLabel")}</Text>
+              <PriceTag amount={Number(order.delivery_fee)} size="sm" muted currency={cur} />
             </View>
             <View style={styles.divider} />
             <View style={styles.sumRow}>
-              <Text style={[styles.sumLabel, styles.bold]}>الإجمالي يُحصَّل نقداً</Text>
-              <PriceTag amount={Number(order.total)} size="md" />
+              <Text style={[styles.sumLabel, styles.bold]}>{t("driver.totalCash")}</Text>
+              <PriceTag amount={Number(order.total)} size="md" currency={cur} />
             </View>
             <View style={[styles.payChip, order.payment_method === "cash" ? styles.payCash : styles.payCard]}>
               <Icon
@@ -292,7 +298,7 @@ export function DriverOrderScreen({ route, navigation }: Props) {
                 color={order.payment_method === "cash" ? colors.success : colors.info}
               />
               <Text style={[styles.payChipText, { color: order.payment_method === "cash" ? colors.success : colors.info }]}>
-                {order.payment_method === "cash" ? "دفع نقداً عند التسليم" : "مدفوع بالبطاقة"}
+                {order.payment_method === "cash" ? t("driver.payCashNote") : t("driver.payCardNote")}
               </Text>
             </View>
           </View>
@@ -302,27 +308,27 @@ export function DriverOrderScreen({ route, navigation }: Props) {
       {/* شريط الإجراء السفلي — يراعي safe-area */}
       <View style={[styles.footer, { paddingBottom: footerPad }]}>
         <View style={styles.earnRow}>
-          <Text style={styles.earnLabel}>أجرتك من هذه التوصيلة</Text>
-          <Text style={styles.earnValue}>{money(Number(order.delivery_fee))}</Text>
+          <Text style={styles.earnLabel}>{t("driver.yourFeeFromThis")}</Text>
+          <Text style={styles.earnValue}>{money(Number(order.delivery_fee), cur)}</Text>
         </View>
         {!order.driver_id ? (
-          <Button label="استلام الطلب" onPress={() => claim.mutate()} loading={claim.isPending} style={styles.actionBtnMain} />
+          <Button label={t("driver.claimOrder")} onPress={() => claim.mutate()} loading={claim.isPending} style={styles.actionBtnMain} />
         ) : isMine && next ? (
-          <Button label={statusLabel(next)} onPress={() => confirmAdvance(next)} loading={advance.isPending} style={styles.actionBtnMain} />
+          <Button label={t(`status.${next}`)} onPress={() => confirmAdvance(next)} loading={advance.isPending} style={styles.actionBtnMain} />
         ) : isMine ? (
           <View style={styles.donePill}>
             <Icon name="check" size={18} color={colors.success} />
-            <Text style={styles.doneTxt}>اكتمل التسليم</Text>
+            <Text style={styles.doneTxt}>{t("driver.completed")}</Text>
           </View>
         ) : (
-          <Text style={styles.takenTxt}>هذا الطلب مُسنَد لسائق آخر</Text>
+          <Text style={styles.takenTxt}>{t("driver.takenByOther")}</Text>
         )}
       </View>
     </Screen>
   );
 }
 
-function DeliverySteps({ status }: { status: OrderStatus }) {
+function DeliverySteps({ status, t }: { status: OrderStatus; t: TFn }) {
   return (
     <View style={styles.steps}>
       {STEPS.map((s, idx) => {
@@ -332,7 +338,7 @@ function DeliverySteps({ status }: { status: OrderStatus }) {
         const current = !done && prevDone;
         const active = done || current;
         return (
-          <View key={s.label} style={styles.stepItem}>
+          <View key={s.labelKey} style={styles.stepItem}>
             <View style={styles.stepLine}>
               {idx > 0 ? (
                 <View style={[styles.lineSeg, STEPS[idx - 1].reached.includes(status) && styles.lineSegOn]} />
@@ -353,7 +359,7 @@ function DeliverySteps({ status }: { status: OrderStatus }) {
               )}
             </View>
             <Text style={[styles.stepLabel, active && styles.stepLabelActive]} numberOfLines={1}>
-              {s.label}
+              {t(s.labelKey)}
             </Text>
           </View>
         );
@@ -363,6 +369,7 @@ function DeliverySteps({ status }: { status: OrderStatus }) {
 }
 
 function Stop({
+  t,
   tint,
   step,
   label,
@@ -372,6 +379,7 @@ function Stop({
   onNavigate,
   connector,
 }: {
+  t: TFn;
   tint: string;
   step: string;
   label: string;
@@ -396,7 +404,7 @@ function Stop({
       </View>
       <View style={styles.stopActions}>
         {phone ? (
-          <Pressable style={[styles.actionCircle, { backgroundColor: colors.successSoft }]} onPress={() => callPhone(phone)}>
+          <Pressable style={[styles.actionCircle, { backgroundColor: colors.successSoft }]} onPress={() => callPhone(phone, t)}>
             <Icon name="phone" size={18} color={colors.success} />
           </Pressable>
         ) : null}

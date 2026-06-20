@@ -13,6 +13,7 @@ import { Skeleton } from "../../components/Skeleton";
 import { Icon, type IconName } from "../../components/Icon";
 import { useCurrentLocation } from "../../hooks/useLocation";
 import { useDriverLocationSender } from "../../hooks/useDriverLocationSender";
+import { useT } from "../../i18n";
 import { timeAgo } from "../../utils/time";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../../theme/colors";
 import type { DriverStackParamList, DriverTabParamList } from "../../navigation/types";
@@ -22,11 +23,13 @@ type Props = CompositeScreenProps<
   BottomTabScreenProps<DriverTabParamList, "DriverHomeTab">,
   NativeStackScreenProps<DriverStackParamList>
 >;
+type TFn = (key: string) => string;
 
-const VEHICLE: Record<string, string> = { moto: "دراجة نارية", car: "سيّارة", bike: "دراجة هوائية" };
+// مفاتيح ترجمة نوع المركبة
+const VEHICLE_KEY: Record<string, string> = { moto: "partner.vehMoto", car: "partner.vehCar", bike: "partner.vehBike" };
 
-function money(n: number): string {
-  return `${Math.round(n).toLocaleString("fr-DZ")} دج`;
+function money(n: number, cur: string): string {
+  return `${Math.round(n).toLocaleString("fr-DZ")} ${cur}`;
 }
 
 export function DriverHomeScreen({ navigation }: Props) {
@@ -57,6 +60,8 @@ interface ContentProps {
 }
 
 function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProps) {
+  const { t } = useT();
+  const cur = t("common.currency");
   const queryClient = useQueryClient();
   const verified = driver.is_verified;
   const online = driver.is_online;
@@ -64,7 +69,7 @@ function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProp
   const toggleOnline = useMutation({
     mutationFn: (next: boolean) => driversApi.setOnline(next),
     onSuccess: (d) => queryClient.setQueryData(["driver", "me"], d),
-    onError: (e) => Alert.alert("تعذّر التبديل", (e as Error).message),
+    onError: (e) => Alert.alert(t("driver.toggleError"), (e as Error).message),
   });
 
   const earnings = useQuery({
@@ -97,11 +102,11 @@ function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProp
   return (
     <Screen padded={false} background="white">
       <View style={styles.topBar}>
-        <Text style={styles.topTitle}>العمل</Text>
+        <Text style={styles.topTitle}>{t("tab.work")}</Text>
         <View style={[styles.statusPill, online ? styles.statusPillOn : styles.statusPillOff]}>
           <View style={[styles.statusDot, { backgroundColor: online ? colors.success : colors.textFaint }]} />
           <Text style={[styles.statusPillText, { color: online ? colors.success : colors.textMuted }]}>
-            {online ? "متّصل" : "غير متّصل"}
+            {online ? t("driver.online") : t("driver.offline")}
           </Text>
         </View>
       </View>
@@ -120,10 +125,8 @@ function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProp
                   <Icon name="shield" size={22} color={colors.warning} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.pendingTitle}>حسابك قيد التوثيق</Text>
-                  <Text style={styles.pendingSub}>
-                    ستتمكّن من الاتّصال واستلام الطلبات بمجرّد توثيق حسابك من إدارة المنصّة.
-                  </Text>
+                  <Text style={styles.pendingTitle}>{t("driver.pendingTitle")}</Text>
+                  <Text style={styles.pendingSub}>{t("driver.pendingSub")}</Text>
                 </View>
               </View>
             ) : null}
@@ -136,14 +139,14 @@ function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProp
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.heroTitle, online && styles.onText]}>
-                    {!verified ? "بانتظار التوثيق" : online ? "أنت متّصل" : "ابدأ العمل"}
+                    {!verified ? t("driver.heroPending") : online ? t("driver.heroOnline") : t("driver.heroStart")}
                   </Text>
                   <Text style={[styles.heroSub, online && styles.onTextSoft]}>
                     {!verified
-                      ? "العمل متاح بعد توثيق الحساب"
+                      ? t("driver.heroSubPending")
                       : online
-                        ? "تستقبل الطلبات القريبة الآن"
-                        : "فعّل المفتاح لاستقبال الطلبات"}
+                        ? t("driver.heroSubOnline")
+                        : t("driver.heroSubStart")}
                   </Text>
                 </View>
                 <Switch
@@ -158,7 +161,7 @@ function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProp
               <View style={[styles.heroMetaRow, online && styles.heroMetaRowOn]}>
                 <Icon name="scooter" size={14} color={online ? "rgba(255,255,255,0.9)" : colors.textMuted} />
                 <Text style={[styles.heroMeta, online && styles.onTextSoft]}>
-                  {VEHICLE[driver.vehicle_type] ?? driver.vehicle_type}
+                  {VEHICLE_KEY[driver.vehicle_type] ? t(VEHICLE_KEY[driver.vehicle_type]) : driver.vehicle_type}
                 </Text>
                 <View style={[styles.heroMetaSep, online && { backgroundColor: "rgba(255,255,255,0.4)" }]} />
                 <Icon name="star" size={14} color={online ? "rgba(255,255,255,0.9)" : colors.warning} />
@@ -168,7 +171,7 @@ function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProp
                 {!driver.is_verified ? (
                   <>
                     <View style={[styles.heroMetaSep, online && { backgroundColor: "rgba(255,255,255,0.4)" }]} />
-                    <Text style={[styles.heroMeta, online && styles.onTextSoft]}>قيد التوثيق</Text>
+                    <Text style={[styles.heroMeta, online && styles.onTextSoft]}>{t("driver.pendingShort")}</Text>
                   </>
                 ) : null}
               </View>
@@ -179,37 +182,37 @@ function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProp
               <StatCard
                 icon="cash"
                 tint={colors.success}
-                value={money(e?.today_earnings ?? 0)}
-                label="أرباح اليوم"
+                value={money(e?.today_earnings ?? 0, cur)}
+                label={t("driver.todayEarnings")}
                 loading={earnings.isLoading}
               />
               <StatCard
                 icon="check"
                 tint={colors.accent}
                 value={String(e?.today_deliveries ?? 0)}
-                label="توصيلات اليوم"
+                label={t("driver.todayDeliveries")}
                 loading={earnings.isLoading}
               />
               <StatCard
                 icon="receipt"
                 tint={colors.info}
                 value={String(activeOrders.length)}
-                label="طلبات جارية"
+                label={t("driver.activeOrders")}
               />
             </View>
 
             {/* الطلبات الجارية */}
             {activeOrders.length > 0 ? (
               <View style={{ gap: spacing.md }}>
-                <Text style={styles.sectionTitle}>طلباتك الجارية</Text>
+                <Text style={styles.sectionTitle}>{t("driver.yourActive")}</Text>
                 {activeOrders.map((o) => (
-                  <OrderCard key={o.id} order={o} accent onPress={() => navigation.navigate("DriverOrder", { orderId: o.id })} />
+                  <OrderCard key={o.id} order={o} accent t={t} cur={cur} onPress={() => navigation.navigate("DriverOrder", { orderId: o.id })} />
                 ))}
               </View>
             ) : null}
 
             <Text style={styles.sectionTitle}>
-              {online ? "طلبات متاحة قربك" : "الطلبات المتاحة"}
+              {online ? t("driver.availableNear") : t("driver.available")}
             </Text>
           </View>
         }
@@ -225,13 +228,13 @@ function DriverHomeContent({ driver, navigation, userLat, userLng }: ContentProp
         }
         ListEmptyComponent={
           online && !available.isLoading ? (
-            <EmptyState icon="🛵" title="لا توجد طلبات متاحة الآن" hint="ابقَ متّصلاً — ستظهر الطلبات القريبة هنا فور توفّرها" />
+            <EmptyState icon="🛵" title={t("driver.noOrders")} hint={t("driver.noOrdersHint")} />
           ) : !online ? (
-            <EmptyState icon="⚡" title="أنت غير متّصل" hint="فعّل المفتاح أعلاه لبدء استقبال الطلبات" />
+            <EmptyState icon="⚡" title={t("driver.offlineTitle")} hint={t("driver.offlineHint")} />
           ) : null
         }
         renderItem={({ item }) => (
-          <OrderCard order={item} onPress={() => navigation.navigate("DriverOrder", { orderId: item.id })} />
+          <OrderCard order={item} t={t} cur={cur} onPress={() => navigation.navigate("DriverOrder", { orderId: item.id })} />
         )}
       />
     </Screen>
@@ -254,7 +257,7 @@ function StatCard({ icon, tint, value, label, loading }: { icon: IconName; tint:
   );
 }
 
-function OrderCard({ order, onPress, accent }: { order: Order; onPress: () => void; accent?: boolean }) {
+function OrderCard({ order, onPress, accent, t, cur }: { order: Order; onPress: () => void; accent?: boolean; t: TFn; cur: string }) {
   const count = order.items.reduce((s, i) => s + i.qty, 0);
   return (
     <Pressable
@@ -266,12 +269,12 @@ function OrderCard({ order, onPress, accent }: { order: Order; onPress: () => vo
           <Icon name="receipt" size={20} color={accent ? "#fff" : colors.accent} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.cardId}>طلب #{order.id.slice(0, 8)}</Text>
-          <Text style={styles.cardMeta}>{count} عناصر · {timeAgo(order.created_at)}</Text>
+          <Text style={styles.cardId}>{t("driver.order")} #{order.id.slice(0, 8)}</Text>
+          <Text style={styles.cardMeta}>{count} {t("driver.items")} · {timeAgo(order.created_at, t)}</Text>
         </View>
         <View style={styles.payout}>
-          <Text style={styles.payoutValue}>{money(Number(order.delivery_fee))}</Text>
-          <Text style={styles.payoutLabel}>أجرتك</Text>
+          <Text style={styles.payoutValue}>{money(Number(order.delivery_fee), cur)}</Text>
+          <Text style={styles.payoutLabel}>{t("driver.yourFee")}</Text>
         </View>
       </View>
 
@@ -283,9 +286,9 @@ function OrderCard({ order, onPress, accent }: { order: Order; onPress: () => vo
       ) : null}
 
       <View style={styles.cardFoot}>
-        <Text style={styles.collectText}>تحصيل {money(Number(order.total))}</Text>
+        <Text style={styles.collectText}>{t("driver.collect")} {money(Number(order.total), cur)}</Text>
         <View style={[styles.cta, accent && styles.ctaAccent]}>
-          <Text style={styles.ctaText}>{accent ? "متابعة التوصيل" : "عرض واستلام"}</Text>
+          <Text style={styles.ctaText}>{accent ? t("driver.continueDelivery") : t("driver.viewClaim")}</Text>
           <Icon name="chevronLeft" size={15} color="#fff" />
         </View>
       </View>

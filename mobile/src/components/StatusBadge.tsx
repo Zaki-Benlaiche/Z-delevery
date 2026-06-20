@@ -1,18 +1,8 @@
 import { StyleSheet, Text, View } from "react-native";
 
 import type { OrderStatus } from "../api/types";
+import { useT } from "../i18n";
 import { colors, fontWeight, radii, spacing } from "../theme/colors";
-
-const LABELS: Record<OrderStatus, string> = {
-  pending: "بانتظار التاجر",
-  accepted: "تم القبول",
-  preparing: "قيد التحضير",
-  ready: "جاهز للاستلام",
-  picked_up: "استلمه السائق",
-  on_the_way: "في الطريق إليك",
-  delivered: "سُلِّم",
-  cancelled: "أُلغي",
-};
 
 // خلفية فاتحة لكل لون لإعطاء مظهر pill بمظهر هادئ
 const SOFT_BG: Record<OrderStatus, string> = {
@@ -27,6 +17,7 @@ const SOFT_BG: Record<OrderStatus, string> = {
 };
 
 export function StatusBadge({ status, size = "md" }: { status: OrderStatus; size?: "sm" | "md" }) {
+  const { t } = useT();
   const color = colors.status[status];
   const bg = SOFT_BG[status];
   return (
@@ -38,13 +29,9 @@ export function StatusBadge({ status, size = "md" }: { status: OrderStatus; size
       ]}
     >
       <View style={[styles.dot, { backgroundColor: color }]} />
-      <Text style={[styles.text, size === "sm" && styles.textSm, { color }]}>{LABELS[status]}</Text>
+      <Text style={[styles.text, size === "sm" && styles.textSm, { color }]}>{t(`status.${status}`)}</Text>
     </View>
   );
-}
-
-export function statusLabel(status: OrderStatus): string {
-  return LABELS[status];
 }
 
 const styles = StyleSheet.create({
