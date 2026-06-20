@@ -70,6 +70,7 @@ function etaRange(km: number | null): string {
 export function HomeScreen({ navigation }: Props) {
   const { t } = useT();
   const [search, setSearch] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
   const [activeCat, setActiveCat] = useState<MerchantType>("food");
   const [area, setArea] = useState<string | null>(null);
   const debouncedSearch = useDebouncedValue(search, 350);
@@ -157,19 +158,23 @@ export function HomeScreen({ navigation }: Props) {
       {/* العنوان + البحث */}
       <View style={styles.searchBlock}>
         <View style={styles.searchRow}>
-          <View style={styles.searchShell}>
-            <Icon name="search" size={18} color={colors.textMuted} />
+          <View style={[styles.searchShell, searchFocused && styles.searchShellFocused]}>
+            <View style={styles.searchIconWrap}>
+              <Icon name="search" size={17} color={colors.accent} />
+            </View>
             <TextInput
               style={styles.search}
               placeholder={t("home.search")}
               placeholderTextColor={colors.textFaint}
               value={search}
               onChangeText={setSearch}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
               returnKeyType="search"
             />
             {search.length > 0 ? (
-              <Pressable hitSlop={8} onPress={() => setSearch("")}>
-                <Icon name="close" size={16} color={colors.textFaint} />
+              <Pressable hitSlop={8} style={styles.searchClear} onPress={() => setSearch("")}>
+                <Icon name="close" size={14} color={colors.textMuted} />
               </Pressable>
             ) : null}
           </View>
@@ -488,17 +493,36 @@ const styles = StyleSheet.create({
   searchRow: { flexDirection: "row", gap: spacing.md },
   searchShell: {
     flex: 1,
-    height: 50,
+    height: 54,
     borderRadius: radii.pill,
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.background,
+    borderWidth: 1.5,
+    borderColor: colors.borderSoft,
+    paddingInlineStart: spacing.sm,
+    paddingInlineEnd: spacing.lg,
     flexDirection: "row-reverse",
     alignItems: "center",
     gap: spacing.sm,
+    ...shadows.sm,
   },
-  searchIcon: { fontSize: 16 },
+  searchShellFocused: { borderColor: colors.accent, ...shadows.md },
+  searchIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.pill,
+    backgroundColor: colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   search: { flex: 1, fontSize: fontSize.body, color: colors.text, textAlign: "right" },
-  clearIcon: { fontSize: 14, color: colors.textFaint },
+  searchClear: {
+    width: 24,
+    height: 24,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   locError: { color: colors.warning, fontSize: fontSize.small, textAlign: "right" },
 
   // الأقسام الرئيسية (Food/Fresh/Market)
