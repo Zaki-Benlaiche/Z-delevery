@@ -54,9 +54,9 @@ export function FavoritesScreen({ navigation }: Props) {
 
       {favIds.length === 0 ? (
         <FavEmpty
-          icon="heartFill"
-          tint={colors.dangerSoft}
-          color={colors.danger}
+          icon="heartOutline"
+          tint={colors.primarySoft}
+          color={colors.accent}
           title={t("fav.empty")}
           hint={t("fav.emptyHint")}
           ctaLabel={t("fav.browse")}
