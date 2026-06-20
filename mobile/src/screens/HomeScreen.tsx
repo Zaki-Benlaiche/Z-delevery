@@ -201,20 +201,27 @@ export function HomeScreen({ navigation }: Props) {
           return (
             <Pressable
               key={c.key}
-              style={[styles.catCard, active && styles.catCardActive]}
+              style={({ pressed }) => [styles.catCard, active && styles.catCardActive, pressed && styles.pressed]}
               onPress={() => setActiveCat(c.key)}
             >
-              <View style={[styles.catIcon, { backgroundColor: active ? "#fff" : c.color }]}>
-                {c.image ? (
-                  <Image source={c.image} style={styles.catImg} resizeMode="cover" />
-                ) : (
-                  <Text style={[styles.catEmoji, c.dual && styles.catEmojiDual]}>{c.emoji}</Text>
-                )}
+              <View style={styles.catIconWrap}>
+                <View style={[styles.catIcon, active && styles.catIconActive, !c.image && { backgroundColor: c.color }]}>
+                  {c.image ? (
+                    <Image source={c.image} style={styles.catImg} resizeMode="cover" />
+                  ) : (
+                    <Text style={[styles.catEmoji, c.dual && styles.catEmojiDual]}>{c.emoji}</Text>
+                  )}
+                </View>
+                {active ? (
+                  <View style={styles.catCheck}>
+                    <Icon name="check" size={11} color="#fff" />
+                  </View>
+                ) : null}
               </View>
               <Text style={[styles.catLabel, active && styles.catLabelActive]} numberOfLines={1}>
                 {t(c.labelKey)}
               </Text>
-              <Text style={[styles.catSub, active && styles.catSubActive]} numberOfLines={1}>
+              <Text style={styles.catSub} numberOfLines={1}>
                 {t(c.subKey)}
               </Text>
             </Pressable>
@@ -539,8 +546,8 @@ const styles = StyleSheet.create({
   // الأقسام الرئيسية (Food/Fresh/Market)
   catRow: {
     flexDirection: "row",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.xs,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
     paddingBottom: spacing.xs,
   },
@@ -549,27 +556,46 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.xs,
     paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xs,
     borderRadius: radii.xl,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     borderWidth: 1.5,
-    borderColor: "transparent",
+    borderColor: colors.borderSoft,
+    ...shadows.sm,
   },
-  catCardActive: { backgroundColor: colors.accent, borderColor: colors.accent, ...shadows.accent },
+  catCardActive: { borderColor: colors.accent, backgroundColor: colors.primarySoft },
+  catIconWrap: { position: "relative" },
   catIcon: {
-    width: 104,
-    height: 104,
-    borderRadius: radii.lg,
+    width: 84,
+    height: 84,
+    borderRadius: radii.pill,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "#fff",
+    ...shadows.sm,
   },
+  catIconActive: { borderColor: colors.accent },
   catImg: { width: "100%", height: "100%" },
   catEmoji: { fontSize: 26 },
   catEmojiDual: { fontSize: 17, letterSpacing: -2 },
-  catLabel: { fontSize: fontSize.body, color: colors.text, fontWeight: fontWeight.bold },
-  catLabelActive: { color: "#fff" },
+  catCheck: {
+    position: "absolute",
+    bottom: -2,
+    insetInlineStart: -2,
+    width: 22,
+    height: 22,
+    borderRadius: radii.pill,
+    backgroundColor: colors.accent,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: colors.background,
+  },
+  catLabel: { fontSize: fontSize.body, color: colors.text, fontWeight: fontWeight.bold, marginTop: spacing.xs },
+  catLabelActive: { color: colors.accent },
   catSub: { fontSize: fontSize.caption, color: colors.textMuted },
-  catSubActive: { color: "rgba(255,255,255,0.9)" },
 
   sectionRow: {
     flexDirection: "row-reverse",
