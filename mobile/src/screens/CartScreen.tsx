@@ -19,6 +19,7 @@ import { Segmented } from "../components/Segmented";
 import { useAuth } from "../auth/context";
 import { useCurrentLocation } from "../hooks/useLocation";
 import { useCart, type CartLine } from "../store/cart";
+import { isValidDzPhone, normalizeDzPhone } from "../utils/phone";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/colors";
 import type { AppStackParamList } from "../navigation/types";
 
@@ -76,7 +77,7 @@ export function CartScreen({ navigation }: Props) {
     if (!cart.merchantId) return;
 
     if (isGuest) {
-      if (guestPhone.replace(/[^\d]/g, "").length < 9) {
+      if (!isValidDzPhone(guestPhone)) {
         Alert.alert("أدخل رقم هاتفك", "نحتاج رقمك للتواصل بشأن الطلب");
         return;
       }
@@ -86,7 +87,7 @@ export function CartScreen({ navigation }: Props) {
       }
       try {
         setRegistering(true);
-        await quickSignIn(guestPhone.replace(/[^\d]/g, ""), guestName.trim() || undefined);
+        await quickSignIn(normalizeDzPhone(guestPhone), guestName.trim() || undefined);
       } catch (e) {
         setRegistering(false);
         Alert.alert("تعذّر إتمام الطلب", (e as Error).message);
@@ -142,9 +143,11 @@ export function CartScreen({ navigation }: Props) {
                 value={guestPhone}
                 onChangeText={(t) => setGuestPhone(t.replace(/[^\d]/g, ""))}
                 keyboardType="phone-pad"
-                placeholder="0555 12 34 56"
-                icon="📱"
-                maxLength={15}
+                placeholder="555 12 34 56"
+                iconName="phone"
+                prefix="+213"
+                style={styles.phoneInput}
+                maxLength={12}
               />
               <Input
                 label="الاسم (اختياري)"
@@ -361,6 +364,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     ...shadows.sm,
   },
+  phoneInput: { textAlign: "left", writingDirection: "ltr" },
 
   // الملخّص
   summary: { gap: spacing.md },

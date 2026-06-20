@@ -17,6 +17,7 @@ import { Icon, type IconName } from "../components/Icon";
 import { Input } from "../components/Input";
 import { Screen } from "../components/Screen";
 import { useT } from "../i18n";
+import { isValidDzPhone, normalizeDzPhone } from "../utils/phone";
 import type { UserRole } from "../api/types";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/colors";
 import type { AppStackParamList } from "../navigation/types";
@@ -33,15 +34,14 @@ export function ConnexionScreen({ navigation }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const submit = async () => {
-    const digits = phone.replace(/[^\d]/g, "");
-    if (digits.length < 9) {
+    if (!isValidDzPhone(phone)) {
       setError(t("partner.needPhone"));
       return;
     }
     setError(null);
     try {
       setLoading(true);
-      await quickSignIn(digits, name.trim() || undefined, role);
+      await quickSignIn(normalizeDzPhone(phone), name.trim() || undefined, role);
       navigation.goBack();
     } catch (e) {
       Alert.alert("⚠️", (e as Error).message);
@@ -113,13 +113,15 @@ export function ConnexionScreen({ navigation }: Props) {
                   setPhone(v.replace(/[^\d]/g, ""));
                 }}
                 keyboardType="phone-pad"
-                placeholder="0555 12 34 56"
+                placeholder="555 12 34 56"
                 autoComplete="tel"
                 iconName="phone"
+                prefix="+213"
                 tint={colors.accent}
+                style={styles.phoneInput}
                 error={error}
                 hint={!error ? t("connexion.phoneHint") : undefined}
-                maxLength={15}
+                maxLength={12}
               />
             </View>
 
@@ -339,6 +341,7 @@ const styles = StyleSheet.create({
   roleSub: { fontSize: fontSize.caption, color: colors.textFaint, textAlign: "center", lineHeight: 15 },
 
   field: { marginTop: spacing.lg },
+  phoneInput: { textAlign: "left", writingDirection: "ltr" },
   cta: { marginTop: spacing.xl },
 
   secureRow: {

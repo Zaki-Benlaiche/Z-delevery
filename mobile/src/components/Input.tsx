@@ -14,9 +14,11 @@ interface Props extends TextInputProps {
   hint?: string;
   /** لون التركيز (الحدّ + الأيقونة) — افتراضياً البرتقالي */
   tint?: string;
+  /** بادئة ثابتة قبل الحقل (مثل مفتاح الدولة +213) */
+  prefix?: string;
 }
 
-export function Input({ label, error, icon, iconName, hint, tint = colors.primary, style, onFocus, onBlur, ...rest }: Props) {
+export function Input({ label, error, icon, iconName, hint, tint = colors.primary, prefix, style, onFocus, onBlur, ...rest }: Props) {
   const [focused, setFocused] = useState(false);
 
   return (
@@ -34,6 +36,12 @@ export function Input({ label, error, icon, iconName, hint, tint = colors.primar
           <Icon name={iconName} size={18} color={error ? colors.danger : focused ? tint : colors.textMuted} />
         ) : icon ? (
           <Text style={styles.icon}>{icon}</Text>
+        ) : null}
+        {prefix ? (
+          <View style={styles.prefixWrap}>
+            <Text style={styles.prefixText}>{prefix}</Text>
+            <View style={styles.prefixDivider} />
+          </View>
         ) : null}
         <TextInput
           placeholderTextColor={colors.textFaint}
@@ -84,6 +92,9 @@ const styles = StyleSheet.create({
   },
   shellError: { borderColor: colors.danger, backgroundColor: colors.dangerSoft },
   icon: { fontSize: 18, color: colors.textMuted },
+  prefixWrap: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  prefixText: { fontSize: 15, color: colors.text, fontWeight: fontWeight.bold },
+  prefixDivider: { width: 1, height: 22, backgroundColor: colors.border },
   input: {
     flex: 1,
     fontSize: 15,

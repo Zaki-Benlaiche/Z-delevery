@@ -13,6 +13,7 @@ import { Icon, type IconName } from "../components/Icon";
 import { useAuth } from "../auth/context";
 import { useCurrentLocation } from "../hooks/useLocation";
 import { useT } from "../i18n";
+import { isValidDzPhone, normalizeDzPhone } from "../utils/phone";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/colors";
 import type { AppStackParamList } from "../navigation/types";
 
@@ -38,7 +39,7 @@ export function PartnerScreen({ route, navigation }: Props) {
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
-    if (phone.replace(/[^\d]/g, "").length < 9) {
+    if (!isValidDzPhone(phone)) {
       Alert.alert("✋", t("partner.needPhone"));
       return;
     }
@@ -56,7 +57,7 @@ export function PartnerScreen({ route, navigation }: Props) {
     try {
       // تسجيل دخول سريع دائماً → توكن جديد بالدور المطلوب (يتجاوز انتهاء الصلاحية)
       await quickSignIn(
-        phone.replace(/[^\d]/g, ""),
+        normalizeDzPhone(phone),
         name.trim() || undefined,
         mode === "store" ? "merchant" : "driver",
       );
@@ -112,9 +113,11 @@ export function PartnerScreen({ route, navigation }: Props) {
             value={phone}
             onChangeText={(v) => setPhone(v.replace(/[^\d]/g, ""))}
             keyboardType="phone-pad"
-            placeholder="0555 12 34 56"
-            icon="📱"
-            maxLength={15}
+            placeholder="555 12 34 56"
+            iconName="phone"
+            prefix="+213"
+            style={styles.phoneInput}
+            maxLength={12}
           />
           <Input
             label={t("partner.yourName")}
@@ -204,6 +207,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     ...shadows.sm,
   },
+  phoneInput: { textAlign: "left", writingDirection: "ltr" },
   label: { fontSize: fontSize.small, fontWeight: fontWeight.semibold, color: colors.text, textAlign: "right", marginTop: spacing.xs },
 
   catRow: { flexDirection: "row", gap: spacing.sm },
