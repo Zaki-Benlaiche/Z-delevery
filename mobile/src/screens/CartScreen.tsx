@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useLayoutEffect, useState } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -9,16 +9,15 @@ import { ordersApi } from "../api/orders";
 import type { Address, OrderCreatePayload, PaymentMethod } from "../api/types";
 import { Button } from "../components/Button";
 import { Screen } from "../components/Screen";
-import { Card } from "../components/Card";
 import { Avatar } from "../components/Avatar";
+import { Icon, type IconName } from "../components/Icon";
 import { Input } from "../components/Input";
-import { EmptyState } from "../components/EmptyState";
 import { PriceTag } from "../components/PriceTag";
 import { QuantityStepper } from "../components/QuantityStepper";
-import { Segmented } from "../components/Segmented";
 import { useAuth } from "../auth/context";
 import { useCurrentLocation } from "../hooks/useLocation";
 import { useCart, type CartLine } from "../store/cart";
+import { useT } from "../i18n";
 import { isValidDzPhone, normalizeDzPhone } from "../utils/phone";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/colors";
 import type { AppStackParamList } from "../navigation/types";
@@ -27,6 +26,7 @@ type Props = NativeStackScreenProps<AppStackParamList, "Cart">;
 
 export function CartScreen({ navigation }: Props) {
   const cart = useCart();
+  const { t } = useT();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { user, quickSignIn } = useAuth();
@@ -39,6 +39,10 @@ export function CartScreen({ navigation }: Props) {
   const [guestName, setGuestName] = useState("");
   const [guestAddress, setGuestAddress] = useState("");
   const [registering, setRegistering] = useState(false);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ title: t("cart.title") });
+  }, [navigation, t]);
 
   const addresses = useQuery({
     queryKey: ["addresses"],
@@ -53,19 +57,22 @@ export function CartScreen({ navigation }: Props) {
       await queryClient.invalidateQueries({ queryKey: ["orders"] });
       navigation.replace("OrderTracking", { orderId: order.id });
     },
-    onError: (e) => Alert.alert("تعذّر إنشاء الطلب", (e as Error).message),
+    onError: (e) => Alert.alert(t("cart.orderError"), (e as Error).message),
   });
 
   if (cart.lines.length === 0) {
     return (
       <Screen background="white">
-        <EmptyState
-          icon="🛒"
-          title="سلّتك فارغة"
-          hint="اختر متجراً وأضف منتجات لإكمال الطلب"
-          ctaLabel="تصفّح المتاجر"
-          onCta={() => navigation.goBack()}
-        />
+        <View style={styles.empty}>
+          <View style={styles.emptyIconOuter}>
+            <View style={styles.emptyIconInner}>
+              <Icon name="bag" size={34} color={colors.accent} />
+            </View>
+          </View>
+          <Text style={styles.emptyTitle}>{t("cart.empty")}</Text>
+          <Text style={styles.emptyHint}>{t("cart.emptyHint")}</Text>
+          <Button label={t("cart.browse")} variant="accent" fullWidth={false} style={styles.emptyCta} onPress={() => navigation.goBack()} />
+        </View>
       </Screen>
     );
   }
@@ -78,11 +85,11 @@ export function CartScreen({ navigation }: Props) {
 
     if (isGuest) {
       if (!isValidDzPhone(guestPhone)) {
-        Alert.alert("أدخل رقم هاتفك", "نحتاج رقمك للتواصل بشأن الطلب");
+        Alert.alert(t("cart.needPhoneTitle"), t("cart.needPhoneMsg"));
         return;
       }
       if (!guestAddress.trim()) {
-        Alert.alert("أدخل عنوان التسليم", "اكتب وصف مكان التسليم");
+        Alert.alert(t("cart.needAddressTitle"), t("cart.needAddressMsg"));
         return;
       }
       try {
@@ -90,7 +97,7 @@ export function CartScreen({ navigation }: Props) {
         await quickSignIn(normalizeDzPhone(guestPhone), guestName.trim() || undefined);
       } catch (e) {
         setRegistering(false);
-        Alert.alert("تعذّر إتمام الطلب", (e as Error).message);
+        Alert.alert(t("cart.checkoutError"), (e as Error).message);
         return;
       }
       setRegistering(false);
@@ -106,7 +113,7 @@ export function CartScreen({ navigation }: Props) {
     }
 
     if (!selectedAddress) {
-      Alert.alert("اختر عنوان التسليم", "لم تختر عنواناً بعد");
+      Alert.alert(t("cart.selectAddressTitle"), t("cart.selectAddressMsg"));
       return;
     }
     placeOrder.mutate({
@@ -118,89 +125,88 @@ export function CartScreen({ navigation }: Props) {
   };
 
   const addrList = addresses.data ?? [];
+  const cur = t("common.currency");
 
   return (
     <Screen padded={false} background="canvas">
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 100 }]}
+        contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 130 }]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* ===== المنتجات ===== */}
-        <SectionHeader title="منتجاتك" badge={`${cart.count()}`} />
+        <SectionHeader title={t("cart.yourItems")} badge={`${cart.count()}`} />
         <View style={styles.group}>
           {cart.lines.map((line) => (
-            <CartRow key={line.product.id} line={line} />
+            <CartRow key={line.product.id} line={line} cur={cur} t={t} />
           ))}
         </View>
 
         {isGuest ? (
           <>
             {/* ===== بيانات الضيف ===== */}
-            <SectionHeader title="بياناتك" />
+            <SectionHeader title={t("cart.yourInfo")} />
             <View style={styles.guestBox}>
               <Input
-                label="رقم الهاتف"
+                label={t("cart.phone")}
                 value={guestPhone}
-                onChangeText={(t) => setGuestPhone(t.replace(/[^\d]/g, ""))}
+                onChangeText={(v) => setGuestPhone(v.replace(/[^\d]/g, ""))}
                 keyboardType="phone-pad"
                 placeholder="555 12 34 56"
                 iconName="phone"
                 prefix="+213"
+                tint={colors.accent}
                 style={styles.phoneInput}
                 maxLength={12}
               />
               <Input
-                label="الاسم (اختياري)"
+                label={t("cart.nameOptional")}
                 value={guestName}
                 onChangeText={setGuestName}
-                placeholder="مثال: زكريا"
-                icon="🙂"
+                placeholder={t("account.nameExample")}
+                iconName="person"
+                tint={colors.accent}
               />
             </View>
 
             {/* ===== عنوان التسليم ===== */}
-            <SectionHeader title="عنوان التسليم" />
+            <SectionHeader title={t("cart.deliveryAddress")} />
             <View style={styles.guestBox}>
               <Input
                 value={guestAddress}
                 onChangeText={setGuestAddress}
-                placeholder="مثال: حي النصر، عمارة 5، الطابق 2"
-                icon="📍"
+                placeholder={t("cart.addressExample")}
+                iconName="location"
+                tint={colors.accent}
                 multiline
-                hint="نستخدم موقعك الحالي لتحديد مكان التسليم بدقّة"
+                hint={t("cart.addressHint")}
               />
             </View>
           </>
         ) : (
           <>
             {/* ===== عنوان التسليم ===== */}
-            <SectionHeader title="عنوان التسليم" />
+            <SectionHeader title={t("cart.deliveryAddress")} />
             {addresses.isLoading ? (
-              <Text style={styles.muted}>…جارٍ التحميل</Text>
+              <Text style={styles.muted}>{t("common.loading")}</Text>
             ) : addrList.length === 0 ? (
-              <Card variant="outlined" padding="md" style={styles.emptyAddr}>
-                <Text style={styles.muted}>📍 ليست لديك عناوين محفوظة بعد</Text>
-                <Button
-                  label="إضافة عنوان"
-                  variant="secondary"
-                  size="sm"
-                  onPress={() => navigation.navigate("AddAddress")}
-                />
-              </Card>
+              <View style={styles.emptyAddr}>
+                <Icon name="location" size={20} color={colors.textMuted} />
+                <Text style={styles.muted}>{t("cart.noAddresses")}</Text>
+                <Button label={t("cart.addAddress")} variant="accent" size="sm" fullWidth={false} onPress={() => navigation.navigate("AddAddress")} />
+              </View>
             ) : (
               <View style={styles.group}>
                 {addrList.map((item) => {
                   const active = selectedAddress?.id === item.id;
                   return (
-                    <Card
+                    <Pressable
                       key={item.id}
-                      variant="outlined"
-                      padding="md"
                       onPress={() => setSelectedAddress(item)}
-                      style={StyleSheet.flatten([styles.addrCard, active && styles.addrCardActive])}
+                      style={[styles.addrCard, active && styles.addrCardActive]}
                     >
                       <View style={[styles.radio, active && styles.radioActive]}>
-                        {active ? <Text style={styles.radioCheck}>✓</Text> : null}
+                        {active ? <Icon name="check" size={12} color="#fff" /> : null}
                       </View>
                       <View style={styles.addrText}>
                         <Text style={styles.addrLabel}>{item.label}</Text>
@@ -208,49 +214,53 @@ export function CartScreen({ navigation }: Props) {
                           <Text style={styles.addrDetails} numberOfLines={1}>{item.details}</Text>
                         ) : null}
                       </View>
-                      <Text style={styles.addrPin}>📍</Text>
-                    </Card>
+                      <View style={[styles.addrPin, active && styles.addrPinActive]}>
+                        <Icon name="locationFill" size={16} color={active ? colors.accent : colors.textMuted} />
+                      </View>
+                    </Pressable>
                   );
                 })}
-                <Card variant="flat" padding="sm" onPress={() => navigation.navigate("AddAddress")} style={styles.addAddrRow}>
-                  <Text style={styles.addAddrText}>＋ إضافة عنوان جديد</Text>
-                </Card>
+                <Pressable onPress={() => navigation.navigate("AddAddress")} style={styles.addAddrRow}>
+                  <Icon name="plus" size={16} color={colors.accent} />
+                  <Text style={styles.addAddrText}>{t("cart.addAddress")}</Text>
+                </Pressable>
               </View>
             )}
           </>
         )}
 
         {/* ===== طريقة الدفع ===== */}
-        <SectionHeader title="طريقة الدفع" />
-        <Segmented
-          value={payment}
-          onChange={setPayment}
-          options={[
-            { value: "cash", label: "💵 نقداً" },
-            { value: "card", label: "💳 بطاقة" },
-          ]}
-        />
+        <SectionHeader title={t("cart.payment")} />
+        <View style={styles.payRow}>
+          <PayCard icon="cash" label={t("cart.cash")} active={payment === "cash"} onPress={() => setPayment("cash")} />
+          <PayCard icon="card" label={t("cart.card")} active={payment === "card"} onPress={() => setPayment("card")} />
+        </View>
 
         {/* ===== ملخّص الطلب ===== */}
-        <SectionHeader title="ملخّص الطلب" />
-        <Card variant="soft" padding="md" style={styles.summary}>
-          <SummaryRow label="المجموع الفرعي" amount={cart.subtotal()} />
+        <SectionHeader title={t("cart.summary")} />
+        <View style={styles.summary}>
+          <SummaryRow label={t("cart.subtotal")} amount={cart.subtotal()} cur={cur} />
           <View style={styles.sumRow}>
-            <Text style={styles.sumLabel}>رسوم التوصيل</Text>
-            <Text style={styles.sumPending}>تُحسب عند التأكيد</Text>
+            <Text style={styles.sumLabel}>{t("cart.deliveryFee")}</Text>
+            <Text style={styles.sumPending}>{t("cart.computedLater")}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.sumRow}>
-            <Text style={styles.totalLabel}>الإجمالي التقديري</Text>
-            <PriceTag amount={cart.subtotal()} size="lg" />
+            <Text style={styles.totalLabel}>{t("cart.estimatedTotal")}</Text>
+            <PriceTag amount={cart.subtotal()} size="lg" currency={cur} />
           </View>
-        </Card>
+        </View>
       </ScrollView>
 
       {/* ===== شريط التأكيد ===== */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.sm }]}>
+      <View style={[styles.footer, { paddingBottom: (insets.bottom || spacing.sm) + spacing.sm }]}>
+        <View style={styles.footerRow}>
+          <Text style={styles.footerCount}>{t("orders.itemCount").replace("{n}", String(cart.count()))}</Text>
+          <PriceTag amount={cart.subtotal()} size="lg" currency={cur} />
+        </View>
         <Button
-          label={`أكّد الطلب · ${Math.round(cart.subtotal()).toLocaleString("ar-DZ")} دج`}
+          label={t("cart.confirm")}
+          variant="accent"
           onPress={submit}
           loading={placeOrder.isPending || registering}
           size="lg"
@@ -263,123 +273,161 @@ export function CartScreen({ navigation }: Props) {
 function SectionHeader({ title, badge }: { title: string; badge?: string }) {
   return (
     <View style={styles.sectionRow}>
+      <View style={styles.sectionBar} />
+      <Text style={styles.section}>{title}</Text>
       {badge ? (
         <View style={styles.sectionBadge}>
           <Text style={styles.sectionBadgeText}>{badge}</Text>
         </View>
       ) : null}
-      <Text style={styles.section}>{title}</Text>
     </View>
   );
 }
 
-function SummaryRow({ label, amount }: { label: string; amount: number }) {
+function SummaryRow({ label, amount, cur }: { label: string; amount: number; cur: string }) {
   return (
     <View style={styles.sumRow}>
       <Text style={styles.sumLabel}>{label}</Text>
-      <PriceTag amount={amount} size="md" muted />
+      <PriceTag amount={amount} size="md" currency={cur} muted />
     </View>
   );
 }
 
-function CartRow({ line }: { line: CartLine }) {
+function PayCard({ icon, label, active, onPress }: { icon: IconName; label: string; active: boolean; onPress: () => void }) {
+  return (
+    <Pressable style={[styles.payCard, active && styles.payCardActive]} onPress={onPress}>
+      <Icon name={icon} size={20} color={active ? colors.accent : colors.textMuted} />
+      <Text style={[styles.payLabel, active && styles.payLabelActive]}>{label}</Text>
+      {active ? (
+        <View style={styles.payCheck}>
+          <Icon name="check" size={10} color="#fff" />
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
+
+function CartRow({ line, cur, t }: { line: CartLine; cur: string; t: (k: string) => string }) {
   const cart = useCart();
   return (
-    <Card variant="flat" padding="sm" style={styles.row}>
+    <View style={styles.row}>
       <Avatar uri={line.product.image_url} fallback={line.product.name} size={56} shape="rounded" />
       <View style={styles.rowBody}>
-        <Text style={styles.rowName} numberOfLines={1}>{line.product.name}</Text>
-        <PriceTag amount={Number(line.product.price) * line.qty} size="md" />
+        <View style={styles.rowTop}>
+          <Text style={styles.rowName} numberOfLines={1}>{line.product.name}</Text>
+          <Pressable hitSlop={8} onPress={() => cart.remove(line.product.id)}>
+            <Icon name="trash" size={16} color={colors.textFaint} />
+          </Pressable>
+        </View>
+        <Text style={styles.rowUnit}>{Math.round(Number(line.product.price)).toLocaleString("ar-DZ")} {cur} · {t("cart.each")}</Text>
+        <View style={styles.rowBottom}>
+          <QuantityStepper
+            value={line.qty}
+            variant="compact"
+            min={1}
+            onMinus={() => cart.setQty(line.product.id, line.qty - 1)}
+            onPlus={() => cart.setQty(line.product.id, line.qty + 1)}
+          />
+          <PriceTag amount={Number(line.product.price) * line.qty} size="md" currency={cur} />
+        </View>
       </View>
-      <QuantityStepper
-        value={line.qty}
-        variant="compact"
-        min={1}
-        onMinus={() => cart.setQty(line.product.id, line.qty - 1)}
-        onPlus={() => cart.setQty(line.product.id, line.qty + 1)}
-      />
-    </Card>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   scroll: { padding: spacing.lg },
 
-  sectionRow: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    gap: spacing.sm,
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
-  },
+  // فارغة
+  empty: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.xl, paddingBottom: spacing.huge },
+  emptyIconOuter: { width: 112, height: 112, borderRadius: radii.pill, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center", marginBottom: spacing.lg },
+  emptyIconInner: { width: 72, height: 72, borderRadius: radii.pill, backgroundColor: colors.background, alignItems: "center", justifyContent: "center", ...shadows.sm },
+  emptyTitle: { fontSize: fontSize.h4, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "center" },
+  emptyHint: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs, lineHeight: 20, maxWidth: 280 },
+  emptyCta: { marginTop: spacing.xl, paddingHorizontal: spacing.xxl },
+
+  sectionRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.sm, marginTop: spacing.xl, marginBottom: spacing.md },
+  sectionBar: { width: 4, height: 18, borderRadius: radii.pill, backgroundColor: colors.accent },
   section: { fontSize: fontSize.h4, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
-  sectionBadge: {
-    minWidth: 22,
-    height: 22,
-    paddingHorizontal: 6,
-    borderRadius: radii.pill,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  sectionBadge: { minWidth: 22, height: 22, paddingHorizontal: 6, borderRadius: radii.pill, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" },
   sectionBadgeText: { color: "#fff", fontSize: fontSize.caption, fontWeight: fontWeight.bold },
 
   group: {
     backgroundColor: colors.background,
     borderRadius: radii.xl,
-    padding: spacing.xs,
-    gap: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    padding: spacing.sm,
+    gap: spacing.sm,
     ...shadows.sm,
   },
-  row: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.md },
+
+  // صفّ المنتج
+  row: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.md, padding: spacing.sm },
   rowBody: { flex: 1, gap: spacing.xs },
-  rowName: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  rowTop: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.sm },
+  rowName: { flex: 1, fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  rowUnit: { fontSize: fontSize.caption + 1, color: colors.textMuted, textAlign: "right" },
+  rowBottom: { flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center", marginTop: 2 },
 
   // العناوين
-  addrCard: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.md },
-  addrCardActive: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
-  radio: {
-    width: 22,
-    height: 22,
-    borderRadius: radii.pill,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  radioActive: { borderColor: colors.primary, backgroundColor: colors.primary },
-  radioCheck: { color: "#fff", fontSize: 12, fontWeight: fontWeight.bold },
+  addrCard: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.md, padding: spacing.md, borderRadius: radii.lg, borderWidth: 1.5, borderColor: "transparent", backgroundColor: colors.surface },
+  addrCardActive: { borderColor: colors.accent, backgroundColor: colors.primarySoft },
+  radio: { width: 22, height: 22, borderRadius: radii.pill, borderWidth: 2, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
+  radioActive: { borderColor: colors.accent, backgroundColor: colors.accent },
   addrText: { flex: 1 },
   addrLabel: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
   addrDetails: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2 },
-  addrPin: { fontSize: 18 },
-  addAddrRow: { alignItems: "center" },
-  addAddrText: { color: colors.primary, fontWeight: fontWeight.bold, fontSize: fontSize.body },
-  emptyAddr: { gap: spacing.md, alignItems: "center" },
-  muted: { color: colors.textMuted, textAlign: "right" },
-  guestBox: {
-    backgroundColor: colors.background,
-    borderRadius: radii.xl,
-    padding: spacing.lg,
-    gap: spacing.md,
-    ...shadows.sm,
-  },
+  addrPin: { width: 32, height: 32, borderRadius: radii.pill, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" },
+  addrPinActive: { backgroundColor: "#fff" },
+  addAddrRow: { flexDirection: "row-reverse", alignItems: "center", justifyContent: "center", gap: spacing.xs, paddingVertical: spacing.md },
+  addAddrText: { color: colors.accent, fontWeight: fontWeight.bold, fontSize: fontSize.body },
+  emptyAddr: { backgroundColor: colors.background, borderRadius: radii.xl, borderWidth: 1, borderColor: colors.borderSoft, padding: spacing.lg, gap: spacing.md, alignItems: "center", ...shadows.sm },
+  muted: { color: colors.textMuted, textAlign: "center" },
+  guestBox: { backgroundColor: colors.background, borderRadius: radii.xl, borderWidth: 1, borderColor: colors.borderSoft, padding: spacing.lg, gap: spacing.md, ...shadows.sm },
   phoneInput: { textAlign: "left", writingDirection: "ltr" },
 
+  // الدفع
+  payRow: { flexDirection: "row-reverse", gap: spacing.sm },
+  payCard: {
+    flex: 1,
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    borderRadius: radii.lg,
+    backgroundColor: colors.background,
+    borderWidth: 1.5,
+    borderColor: colors.borderSoft,
+    ...shadows.sm,
+  },
+  payCardActive: { borderColor: colors.accent, backgroundColor: colors.primarySoft },
+  payLabel: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.textMuted },
+  payLabelActive: { color: colors.accent },
+  payCheck: { width: 18, height: 18, borderRadius: radii.pill, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" },
+
   // الملخّص
-  summary: { gap: spacing.md },
+  summary: { backgroundColor: colors.background, borderRadius: radii.xl, borderWidth: 1, borderColor: colors.borderSoft, padding: spacing.lg, gap: spacing.md, ...shadows.sm },
   sumRow: { flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center" },
   sumLabel: { color: colors.textMuted, fontSize: fontSize.body },
   sumPending: { color: colors.textFaint, fontSize: fontSize.small, fontStyle: "italic" },
-  divider: { height: 1, backgroundColor: colors.border },
+  divider: { height: 1, backgroundColor: colors.divider },
   totalLabel: { color: colors.text, fontSize: fontSize.bodyLg, fontWeight: fontWeight.extrabold },
 
   footer: {
     position: "absolute",
-    left: spacing.lg,
-    right: spacing.lg,
+    left: 0,
+    right: 0,
     bottom: 0,
-    paddingTop: spacing.sm,
-    backgroundColor: "transparent",
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSoft,
+    gap: spacing.sm,
+    ...shadows.lg,
   },
+  footerRow: { flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center" },
+  footerCount: { fontSize: fontSize.small, color: colors.textMuted, fontWeight: fontWeight.semibold },
 });

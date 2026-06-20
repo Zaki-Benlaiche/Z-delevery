@@ -21,6 +21,7 @@ const ar: Dict = {
   "common.cancel": "إلغاء",
   "common.save": "حفظ",
   "common.ok": "حسناً",
+  "common.loading": "جارٍ التحميل…",
 
   // التبويبات
   "tab.work": "العمل",
@@ -110,6 +111,16 @@ const ar: Dict = {
   "cart.computedLater": "تُحسب عند التأكيد",
   "cart.estimatedTotal": "الإجمالي التقديري",
   "cart.confirm": "أكّد الطلب",
+  "cart.title": "السلّة",
+  "cart.each": "للحبّة",
+  "cart.orderError": "تعذّر إنشاء الطلب",
+  "cart.needPhoneTitle": "أدخل رقم هاتفك",
+  "cart.needPhoneMsg": "نحتاج رقمك للتواصل بشأن الطلب",
+  "cart.needAddressTitle": "أدخل عنوان التسليم",
+  "cart.needAddressMsg": "اكتب وصف مكان التسليم",
+  "cart.checkoutError": "تعذّر إتمام الطلب",
+  "cart.selectAddressTitle": "اختر عنوان التسليم",
+  "cart.selectAddressMsg": "لم تختر عنواناً بعد",
 
   // المفضّلة
   "fav.title": "المفضّلة",
@@ -382,6 +393,7 @@ const fr: Dict = {
   "common.cancel": "Annuler",
   "common.save": "Enregistrer",
   "common.ok": "OK",
+  "common.loading": "Chargement…",
 
   "tab.work": "Travail",
   "tab.driverEarnings": "Mes gains",
@@ -466,6 +478,16 @@ const fr: Dict = {
   "cart.computedLater": "Calculés à la confirmation",
   "cart.estimatedTotal": "Total estimé",
   "cart.confirm": "Confirmer la commande",
+  "cart.title": "Panier",
+  "cart.each": "l'unité",
+  "cart.orderError": "Échec de la commande",
+  "cart.needPhoneTitle": "Entrez votre numéro",
+  "cart.needPhoneMsg": "Nous avons besoin de votre numéro pour la commande",
+  "cart.needAddressTitle": "Entrez l'adresse de livraison",
+  "cart.needAddressMsg": "Décrivez le lieu de livraison",
+  "cart.checkoutError": "Échec de la commande",
+  "cart.selectAddressTitle": "Choisissez une adresse",
+  "cart.selectAddressMsg": "Vous n'avez pas encore choisi d'adresse",
 
   "fav.title": "Favoris",
   "fav.savedWord": "enregistrés",
