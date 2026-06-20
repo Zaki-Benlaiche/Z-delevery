@@ -47,7 +47,6 @@ export function AccountScreen({ navigation }: Props) {
 
   const isDriver = user?.role === "driver";
   const brand = isDriver ? colors.accent : colors.primary;
-  const brandSoft = isDriver ? colors.accent + "16" : colors.primarySoft;
 
   const driverMe = useQuery({ queryKey: ["driver", "me"], queryFn: driversApi.me, enabled: isDriver, retry: false });
   const d = driverMe.data;
@@ -112,63 +111,82 @@ export function AccountScreen({ navigation }: Props) {
   return (
     <Screen padded={false}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* رأس الملف الشخصي */}
-        <View style={styles.profile}>
-          <Pressable
-            onPress={user ? pickAvatar : undefined}
-            style={[styles.avatar, { backgroundColor: brandSoft }]}
-          >
-            {avatarPreview ? (
-              <Image source={{ uri: avatarPreview }} style={styles.avatarImg} resizeMode="cover" />
-            ) : (
-              <Text style={[styles.avatarText, { color: brand }]}>{displayName.charAt(0)}</Text>
-            )}
-            {uploading ? (
-              <View style={styles.avatarOverlay}>
-                <ActivityIndicator color="#fff" />
+        {/* ===== بطاقة الهوية ===== */}
+        <View style={[styles.hero, { backgroundColor: brand }, isDriver ? shadows.accent : shadows.primary]}>
+          <View style={styles.heroBlob1} />
+          <View style={styles.heroBlob2} />
+          <View style={styles.heroContent}>
+            <Pressable onPress={user ? pickAvatar : undefined} style={styles.avatarRing}>
+              <View style={styles.avatar}>
+                {avatarPreview ? (
+                  <Image source={{ uri: avatarPreview }} style={styles.avatarImg} resizeMode="cover" />
+                ) : (
+                  <Text style={[styles.avatarText, { color: brand }]}>{displayName.charAt(0)}</Text>
+                )}
+                {uploading ? (
+                  <View style={styles.avatarOverlay}>
+                    <ActivityIndicator color="#fff" />
+                  </View>
+                ) : null}
               </View>
-            ) : user ? (
-              <View style={[styles.camBadge, { backgroundColor: brand }]}>
-                <Icon name="camera" size={12} color="#fff" />
-              </View>
-            ) : null}
-          </Pressable>
-          <View style={{ flex: 1 }}>
-            <View style={styles.nameRow}>
-              <Text style={styles.profileName} numberOfLines={1}>{displayName}</Text>
-              {user ? (
-                <Pressable
-                  hitSlop={8}
-                  onPress={() => {
-                    setNameDraft(p?.name ?? "");
-                    setEditing(true);
-                  }}
-                >
-                  <Icon name="edit" size={16} color={colors.textFaint} />
-                </Pressable>
+              {!uploading && user ? (
+                <View style={styles.camBadge}>
+                  <Icon name="camera" size={12} color={brand} />
+                </View>
               ) : null}
-            </View>
-            {isDriver ? <Text style={[styles.roleTag, { color: brand }]}>{t("driver.roleTag")}</Text> : null}
-            {isDriver && d ? (
-              <View style={styles.driverMeta}>
-                <Icon name="scooter" size={13} color={colors.textMuted} />
-                <Text style={styles.profileSub}>{VEHICLE_KEY[d.vehicle_type] ? t(VEHICLE_KEY[d.vehicle_type]) : d.vehicle_type}</Text>
-                <View style={styles.metaSep} />
-                <Icon name="star" size={13} color={colors.warning} />
-                <Text style={styles.profileSub}>{Number(d.rating || 0).toFixed(1)}</Text>
-                <View style={[styles.verifyChip, { backgroundColor: d.is_verified ? colors.successSoft : colors.warningSoft }]}>
-                  <Text style={[styles.verifyText, { color: d.is_verified ? colors.success : colors.warning }]}>
-                    {d.is_verified ? t("driver.verified") : t("driver.pendingShort")}
+            </Pressable>
+            <View style={{ flex: 1 }}>
+              <View style={styles.nameRow}>
+                <Text style={styles.heroName} numberOfLines={1}>{displayName}</Text>
+                {user ? (
+                  <Pressable
+                    hitSlop={8}
+                    style={styles.editBtn}
+                    onPress={() => {
+                      setNameDraft(p?.name ?? "");
+                      setEditing(true);
+                    }}
+                  >
+                    <Icon name="edit" size={13} color="#fff" />
+                  </Pressable>
+                ) : null}
+              </View>
+              {isDriver ? <Text style={styles.heroRoleTag}>{t("driver.roleTag")}</Text> : null}
+              {isDriver && d ? (
+                <View style={styles.driverMeta}>
+                  <View style={styles.heroChip}>
+                    <Icon name="scooter" size={12} color="#fff" />
+                    <Text style={styles.heroChipText}>{VEHICLE_KEY[d.vehicle_type] ? t(VEHICLE_KEY[d.vehicle_type]) : d.vehicle_type}</Text>
+                  </View>
+                  <View style={styles.heroChip}>
+                    <Icon name="star" size={12} color="#fff" />
+                    <Text style={styles.heroChipText}>{Number(d.rating || 0).toFixed(1)}</Text>
+                  </View>
+                  <View style={styles.heroChip}>
+                    <Icon name="shield" size={12} color="#fff" />
+                    <Text style={styles.heroChipText}>{d.is_verified ? t("driver.verified") : t("driver.pendingShort")}</Text>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.heroSubRow}>
+                  {user ? <Icon name="phone" size={12} color="rgba(255,255,255,0.85)" /> : null}
+                  <Text style={styles.heroSub} numberOfLines={1}>
+                    {user ? (p?.phone ?? t("account.memberTag")) : t("account.loginPrompt")}
                   </Text>
                 </View>
-              </View>
-            ) : (
-              <Text style={styles.profileSub}>
-                {user ? (p?.phone ?? `#${user.user_id.slice(0, 8)}`) : t("account.loginPrompt")}
-              </Text>
-            )}
+              )}
+            </View>
           </View>
         </View>
+
+        {/* ===== إجراءات سريعة (الزبون) ===== */}
+        {isCustomerOrGuest ? (
+          <View style={styles.quickRow}>
+            <QuickTile icon="receiptFill" tint={colors.primarySoft} color={colors.primary} label={t("tab.orders")} onPress={() => navigation.navigate("OrdersTab")} />
+            <QuickTile icon="heartFill" tint={colors.dangerSoft} color={colors.danger} label={t("tab.favorites")} onPress={() => navigation.navigate("FavoritesTab")} />
+            <QuickTile icon="location" tint={colors.infoSoft} color={colors.info} label={t("account.myAddresses")} onPress={() => navigation.navigate("Addresses")} />
+          </View>
+        ) : null}
 
         {/* تعديل الاسم */}
         <Modal visible={editing} transparent animationType="fade" onRequestClose={() => setEditing(false)}>
@@ -208,12 +226,6 @@ export function AccountScreen({ navigation }: Props) {
         {/* ===== الإعدادات ===== */}
         <Text style={styles.groupTitle}>{t("account.settings")}</Text>
         <View style={styles.group}>
-          {isCustomerOrGuest ? (
-            <>
-              <Row icon="location" tint={colors.infoSoft} color={colors.info} label={t("account.myAddresses")} onPress={() => navigation.navigate("Addresses")} />
-              <Divider />
-            </>
-          ) : null}
           <Row
             icon="bell"
             tint={colors.warningSoft}
@@ -232,25 +244,29 @@ export function AccountScreen({ navigation }: Props) {
           />
         </View>
 
+        {/* ===== كن شريكاً (الزبون) ===== */}
+        {isCustomerOrGuest ? (
+          <>
+            <Text style={styles.groupTitle}>{t("account.partnerSection")}</Text>
+            <View style={styles.group}>
+              <Row icon="store" tint={colors.primarySoft} color={colors.primary} label={t("partner.addStore")} sub={t("partner.addStoreSub")} onPress={() => navigation.navigate("Partner", { mode: "store" })} />
+              <Divider />
+              <Row icon="scooter" tint={colors.infoSoft} color={colors.info} label={t("partner.becomeDriver")} sub={t("partner.becomeDriverSub")} onPress={() => navigation.navigate("Partner", { mode: "driver" })} />
+            </View>
+          </>
+        ) : null}
+
         {/* ===== حول الخدمة ===== */}
         <Text style={styles.groupTitle}>{t("account.more")}</Text>
         <View style={styles.group}>
           <Row icon="info" tint={colors.surface} color={colors.textMuted} label={t("account.about")} onPress={() => Alert.alert(t("app.name"), t("account.aboutText"))} />
-          {isCustomerOrGuest ? (
-            <>
-              <Divider />
-              <Row icon="store" tint={colors.primarySoft} color={colors.primary} label={t("partner.addStore")} onPress={() => navigation.navigate("Partner", { mode: "store" })} />
-              <Divider />
-              <Row icon="scooter" tint="#EFF6FF" color={colors.info} label={t("partner.becomeDriver")} onPress={() => navigation.navigate("Partner", { mode: "driver" })} />
-            </>
-          ) : null}
           <Divider />
           <Row icon="feedback" tint={colors.surface} color={colors.textMuted} label={t("account.feedback")} onPress={() => Alert.alert(t("account.feedback"), t("account.feedbackText"))} />
         </View>
 
         {/* ===== الدخول/الخروج ===== */}
         {user ? (
-          <Pressable style={styles.logout} onPress={signOut}>
+          <Pressable style={({ pressed }) => [styles.logout, pressed && { opacity: 0.7 }]} onPress={signOut}>
             <Icon name="logout" size={18} color={colors.danger} />
             <Text style={styles.logoutText}>{t("account.signOut")}</Text>
           </Pressable>
@@ -269,8 +285,37 @@ export function AccountScreen({ navigation }: Props) {
             <Icon name="chevronLeft" size={20} color="rgba(255,255,255,0.9)" />
           </Pressable>
         )}
+
+        {/* تذييل */}
+        <View style={styles.footer}>
+          <Text style={styles.footerBrand}>{t("app.name")}</Text>
+          <Text style={styles.footerVersion}>{t("account.version")}</Text>
+        </View>
       </ScrollView>
     </Screen>
+  );
+}
+
+function QuickTile({
+  icon,
+  tint,
+  color,
+  label,
+  onPress,
+}: {
+  icon: IconName;
+  tint: string;
+  color: string;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable style={({ pressed }) => [styles.quickTile, pressed && { backgroundColor: colors.surfaceAlt }]} onPress={onPress}>
+      <View style={[styles.quickIcon, { backgroundColor: tint }]}>
+        <Icon name={icon} size={20} color={color} />
+      </View>
+      <Text style={styles.quickLabel} numberOfLines={1}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -279,6 +324,7 @@ function Row({
   tint,
   color,
   label,
+  sub,
   value,
   onPress,
   right,
@@ -287,6 +333,7 @@ function Row({
   tint: string;
   color: string;
   label: string;
+  sub?: string;
   value?: string;
   onPress?: () => void;
   right?: React.ReactNode;
@@ -300,7 +347,10 @@ function Row({
       <View style={[styles.rowIcon, { backgroundColor: tint }]}>
         <Icon name={icon} size={19} color={color} />
       </View>
-      <Text style={styles.rowLabel}>{label}</Text>
+      <View style={styles.rowTextWrap}>
+        <Text style={styles.rowLabel}>{label}</Text>
+        {sub ? <Text style={styles.rowSub}>{sub}</Text> : null}
+      </View>
       {value ? <Text style={styles.rowValue}>{value}</Text> : null}
       {right ?? (onPress ? <Icon name="chevronLeft" size={18} color={colors.textFaint} /> : null)}
     </Pressable>
@@ -314,12 +364,45 @@ function Divider() {
 const styles = StyleSheet.create({
   scroll: { padding: spacing.lg, paddingBottom: spacing.xxxl },
 
-  profile: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.md, marginBottom: spacing.xl },
-  avatar: {
-    width: 64,
-    height: 64,
+  // بطاقة الهوية
+  hero: {
+    borderRadius: radii.xxl,
+    padding: spacing.lg,
+    overflow: "hidden",
+  },
+  heroBlob1: {
+    position: "absolute",
+    top: -55,
+    insetInlineEnd: -30,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: "rgba(255,255,255,0.10)",
+  },
+  heroBlob2: {
+    position: "absolute",
+    bottom: -45,
+    insetInlineStart: -25,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "rgba(255,255,255,0.07)",
+  },
+  heroContent: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.md },
+  avatarRing: {
+    width: 74,
+    height: 74,
     borderRadius: radii.pill,
-    backgroundColor: colors.primarySoft,
+    borderWidth: 3,
+    borderColor: "rgba(255,255,255,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatar: {
+    width: 62,
+    height: 62,
+    borderRadius: radii.pill,
+    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -337,25 +420,57 @@ const styles = StyleSheet.create({
   },
   camBadge: {
     position: "absolute",
-    bottom: 0,
-    insetInlineStart: 0,
-    width: 22,
-    height: 22,
+    bottom: -2,
+    insetInlineStart: -2,
+    width: 24,
+    height: 24,
     borderRadius: radii.pill,
+    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
-    borderColor: colors.canvas,
+    ...shadows.sm,
   },
-  avatarText: { fontSize: 26, fontWeight: fontWeight.extrabold, color: colors.primary },
+  avatarText: { fontSize: 26, fontWeight: fontWeight.extrabold },
   nameRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.sm },
-  profileName: { fontSize: fontSize.h2, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right", flexShrink: 1 },
-  roleTag: { fontSize: fontSize.caption + 1, fontWeight: fontWeight.extrabold, letterSpacing: 1.5, textAlign: "right", marginTop: 1 },
-  profileSub: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2 },
-  driverMeta: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.xs, marginTop: spacing.xs },
-  metaSep: { width: 1, height: 11, backgroundColor: colors.border, marginHorizontal: 2 },
-  verifyChip: { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radii.pill, marginInlineStart: spacing.xs },
-  verifyText: { fontSize: fontSize.caption, fontWeight: fontWeight.bold },
+  heroName: { fontSize: fontSize.h2, fontWeight: fontWeight.extrabold, color: "#fff", textAlign: "right", flexShrink: 1 },
+  editBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: radii.pill,
+    backgroundColor: "rgba(255,255,255,0.22)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroRoleTag: { fontSize: fontSize.caption + 1, fontWeight: fontWeight.extrabold, letterSpacing: 1.5, color: "rgba(255,255,255,0.92)", textAlign: "right", marginTop: 2 },
+  heroSubRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.xs, marginTop: 4 },
+  heroSub: { fontSize: fontSize.small, color: "rgba(255,255,255,0.9)", textAlign: "right", flexShrink: 1 },
+  driverMeta: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.xs, marginTop: spacing.sm },
+  heroChip: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radii.pill,
+  },
+  heroChipText: { fontSize: fontSize.caption, fontWeight: fontWeight.bold, color: "#fff" },
+
+  // إجراءات سريعة
+  quickRow: { flexDirection: "row-reverse", gap: spacing.sm, marginTop: spacing.md },
+  quickTile: {
+    flex: 1,
+    backgroundColor: colors.background,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    paddingVertical: spacing.md,
+    alignItems: "center",
+    gap: spacing.xs,
+    ...shadows.sm,
+  },
+  quickIcon: { width: 40, height: 40, borderRadius: radii.md, alignItems: "center", justifyContent: "center" },
+  quickLabel: { fontSize: fontSize.small, fontWeight: fontWeight.semibold, color: colors.text },
 
   groupTitle: {
     fontSize: fontSize.small,
@@ -380,7 +495,9 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   rowIcon: { width: 40, height: 40, borderRadius: radii.md, alignItems: "center", justifyContent: "center" },
-  rowLabel: { flex: 1, fontSize: fontSize.bodyLg, fontWeight: fontWeight.semibold, color: colors.text, textAlign: "right" },
+  rowTextWrap: { flex: 1 },
+  rowLabel: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.semibold, color: colors.text, textAlign: "right" },
+  rowSub: { fontSize: fontSize.caption + 1, color: colors.textMuted, textAlign: "right", marginTop: 2 },
   rowValue: { fontSize: fontSize.small, color: colors.textMuted, marginInlineEnd: spacing.xs },
   divider: { height: 1, backgroundColor: colors.divider, marginInlineStart: 68 },
 
@@ -395,6 +512,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dangerSoft,
   },
   logoutText: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.bold, color: colors.danger },
+
+  footer: { alignItems: "center", marginTop: spacing.xl, gap: 2 },
+  footerBrand: { fontSize: fontSize.body, fontWeight: fontWeight.extrabold, color: colors.textFaint, letterSpacing: 0.5 },
+  footerVersion: { fontSize: fontSize.caption, color: colors.textFaint },
 
   loginCta: {
     flexDirection: "row-reverse",

@@ -135,6 +135,9 @@ const ar: Dict = {
   "account.merchant": "تاجر",
   "account.permTitle": "الإذن مطلوب",
   "account.permMsg": "اسمح بالوصول إلى الصور لاختيار صورة الملف.",
+  "account.memberTag": "عضو Z-delivry",
+  "account.version": "الإصدار 1.0.0",
+  "account.partnerSection": "كن شريكاً",
 
   // تتبّع الطلب
   "track.live": "● بثّ مباشر",
@@ -411,6 +414,9 @@ const fr: Dict = {
   "account.merchant": "Commerçant",
   "account.permTitle": "Autorisation requise",
   "account.permMsg": "Autorisez l'accès aux photos pour choisir une image de profil.",
+  "account.memberTag": "Membre Z-delivry",
+  "account.version": "Version 1.0.0",
+  "account.partnerSection": "Devenir partenaire",
 
   "track.live": "● En direct",
   "track.offline": "○ Hors ligne",
