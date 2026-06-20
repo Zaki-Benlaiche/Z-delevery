@@ -27,6 +27,7 @@ export function Input({ label, error, icon, iconName, hint, tint = colors.primar
       <View
         style={[
           styles.shell,
+          prefix ? styles.shellLtr : null,
           focused && styles.shellFocused,
           focused && !error ? { borderColor: tint } : null,
           error ? styles.shellError : null,
@@ -91,6 +92,7 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   shellError: { borderColor: colors.danger, backgroundColor: colors.dangerSoft },
+  shellLtr: { direction: "ltr" },
   icon: { fontSize: 18, color: colors.textMuted },
   prefixWrap: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   prefixText: { fontSize: 15, color: colors.text, fontWeight: fontWeight.bold },
