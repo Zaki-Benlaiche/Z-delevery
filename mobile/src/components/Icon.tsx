@@ -54,7 +54,8 @@ export type IconName =
   | "car"
   | "bike"
   | "wallet"
-  | "clockFast";
+  | "clockFast"
+  | "mail";
 
 const MAP: Record<IconName, { family: Family; glyph: string }> = {
   search: { family: "ion", glyph: "search" },
@@ -106,6 +107,7 @@ const MAP: Record<IconName, { family: Family; glyph: string }> = {
   bike: { family: "mci", glyph: "bike" },
   wallet: { family: "ion", glyph: "wallet-outline" },
   clockFast: { family: "mci", glyph: "clock-fast" },
+  mail: { family: "ion", glyph: "mail-outline" },
 };
 
 interface Props {

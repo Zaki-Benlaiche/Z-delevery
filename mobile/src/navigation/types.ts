@@ -21,6 +21,7 @@ export type AppStackParamList = {
   OrderTracking: { orderId: string };
   Partner: { mode?: "store" | "driver" } | undefined;
   Connexion: undefined;
+  About: undefined;
 };
 
 export type MerchantTabParamList = {

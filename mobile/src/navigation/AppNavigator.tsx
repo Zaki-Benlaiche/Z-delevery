@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon, type IconName } from "../components/Icon";
 import { useT } from "../i18n";
+import { AboutScreen } from "../screens/AboutScreen";
 import { AccountScreen } from "../screens/AccountScreen";
 import { AddAddressScreen } from "../screens/AddAddressScreen";
 import { AddressesScreen } from "../screens/AddressesScreen";
@@ -90,6 +91,7 @@ export function AppNavigator() {
         options={{ title: "تتبّع الطلب" }}
       />
       <Stack.Screen name="Partner" component={PartnerScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="About" component={AboutScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="Connexion"
         component={ConnexionScreen}

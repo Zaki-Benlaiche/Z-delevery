@@ -294,7 +294,7 @@ export function AccountScreen({ navigation }: Props) {
         {/* ===== حول الخدمة ===== */}
         <Text style={styles.groupTitle}>{t("account.more")}</Text>
         <View style={styles.group}>
-          <Row icon="info" tint={colors.surface} color={colors.textMuted} label={t("account.about")} onPress={() => Alert.alert(t("app.name"), t("account.aboutText"))} />
+          <Row icon="info" tint={colors.surface} color={colors.textMuted} label={t("account.about")} onPress={() => navigation.navigate("About")} />
           <Divider />
           <Row icon="feedback" tint={colors.surface} color={colors.textMuted} label={t("account.feedback")} onPress={() => Alert.alert(t("account.feedback"), t("account.feedbackText"))} />
         </View>
