@@ -169,3 +169,35 @@ async def root():
 @app.get("/health", tags=["النظام"])
 async def health():
     return {"status": "healthy"}
+
+
+# نقطة تشخيص مؤقّتة — تُزال بعد فحص صيغ أرقام الهواتف (تتطلّب مفتاحاً سرّياً)
+@app.get("/api/_debug/phones", include_in_schema=False)
+async def _debug_phones(key: str = ""):
+    from fastapi import HTTPException
+    from sqlalchemy import select
+    from app.core.database import AsyncSessionLocal
+    from app.models.user import User
+    from app.models.merchant import Merchant
+
+    if key != "zdbg2026":
+        raise HTTPException(status_code=404, detail="Not Found")
+
+    def _mask(p: str | None) -> str:
+        p = p or ""
+        return (p[:5] + "…" + p[-3:]) if len(p) > 8 else p
+
+    out: dict = {"users": [], "merchants": []}
+    async with AsyncSessionLocal() as s:
+        users = (await s.execute(select(User))).scalars().all()
+        for u in users:
+            out["users"].append({"phone": _mask(u.phone), "role": u.role.value})
+        merchants = (await s.execute(select(Merchant))).scalars().all()
+        for m in merchants:
+            owner = await s.get(User, m.user_id)
+            out["merchants"].append({
+                "name": m.name,
+                "owner_phone": _mask(owner.phone if owner else None),
+                "owner_role": owner.role.value if owner else None,
+            })
+    return out
