@@ -12,9 +12,11 @@ interface Props extends TextInputProps {
   /** أيقونة فيكتور احترافية — لها الأولوية على icon */
   iconName?: IconName;
   hint?: string;
+  /** لون التركيز (الحدّ + الأيقونة) — افتراضياً البرتقالي */
+  tint?: string;
 }
 
-export function Input({ label, error, icon, iconName, hint, style, onFocus, onBlur, ...rest }: Props) {
+export function Input({ label, error, icon, iconName, hint, tint = colors.primary, style, onFocus, onBlur, ...rest }: Props) {
   const [focused, setFocused] = useState(false);
 
   return (
@@ -24,11 +26,12 @@ export function Input({ label, error, icon, iconName, hint, style, onFocus, onBl
         style={[
           styles.shell,
           focused && styles.shellFocused,
+          focused && !error ? { borderColor: tint } : null,
           error ? styles.shellError : null,
         ]}
       >
         {iconName ? (
-          <Icon name={iconName} size={18} color={error ? colors.danger : focused ? colors.primary : colors.textMuted} />
+          <Icon name={iconName} size={18} color={error ? colors.danger : focused ? tint : colors.textMuted} />
         ) : icon ? (
           <Text style={styles.icon}>{icon}</Text>
         ) : null}

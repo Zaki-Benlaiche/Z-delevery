@@ -10,7 +10,7 @@ import {
 
 import { colors, fontWeight, radii, shadows, spacing } from "../theme/colors";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger";
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "accent";
 type Size = "sm" | "md" | "lg";
 
 interface Props extends Omit<PressableProps, "style" | "children"> {
@@ -36,7 +36,7 @@ export function Button({
 }: Props) {
   const v = variantStyles[variant];
   const s = sizeStyles[size];
-  const isPrimary = variant === "primary" || variant === "danger";
+  const isPrimary = variant === "primary" || variant === "danger" || variant === "accent";
 
   return (
     <Pressable
@@ -47,6 +47,7 @@ export function Button({
         s.base,
         v.container,
         variant === "primary" && shadows.primary,
+        variant === "accent" && shadows.accent,
         !fullWidth && styles.shrink,
         (disabled || loading) && styles.disabled,
         pressed && styles.pressed,
@@ -115,6 +116,10 @@ const variantStyles = {
   }),
   danger: StyleSheet.create({
     container: { backgroundColor: colors.danger },
+    text: { color: "#FFFFFF" },
+  }),
+  accent: StyleSheet.create({
+    container: { backgroundColor: colors.accent },
     text: { color: "#FFFFFF" },
   }),
 };

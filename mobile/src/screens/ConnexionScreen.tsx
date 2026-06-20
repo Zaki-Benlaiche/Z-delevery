@@ -116,6 +116,7 @@ export function ConnexionScreen({ navigation }: Props) {
                 placeholder="0555 12 34 56"
                 autoComplete="tel"
                 iconName="phone"
+                tint={colors.accent}
                 error={error}
                 hint={!error ? t("connexion.phoneHint") : undefined}
                 maxLength={15}
@@ -129,11 +130,12 @@ export function ConnexionScreen({ navigation }: Props) {
                 onChangeText={setName}
                 placeholder={t("account.nameExample")}
                 iconName="person"
+                tint={colors.accent}
               />
             </View>
 
             <View style={styles.cta}>
-              <Button label={t("connexion.cta")} onPress={submit} loading={loading} size="lg" />
+              <Button label={t("connexion.cta")} onPress={submit} loading={loading} size="lg" variant="accent" />
             </View>
 
             <View style={styles.secureRow}>
@@ -179,7 +181,7 @@ function RoleCard({
         </View>
       ) : null}
       <View style={[styles.roleIcon, active && styles.roleIconActive]}>
-        <Icon name={icon} size={22} color={active ? colors.primary : colors.textMuted} />
+        <Icon name={icon} size={22} color={active ? colors.accent : colors.textMuted} />
       </View>
       <Text style={[styles.roleLabel, active && styles.roleLabelActive]}>{label}</Text>
       <Text style={styles.roleSub} numberOfLines={2}>{sub}</Text>
@@ -191,7 +193,7 @@ function Perk({ icon, label }: { icon: IconName; label: string }) {
   return (
     <View style={styles.perk}>
       <View style={styles.perkIconWrap}>
-        <Icon name={icon} size={18} color={colors.primary} />
+        <Icon name={icon} size={18} color={colors.accent} />
       </View>
       <Text style={styles.perkLabel}>{label}</Text>
     </View>
@@ -199,6 +201,7 @@ function Perk({ icon, label }: { icon: IconName; label: string }) {
 }
 
 const BADGE = 88;
+const ACCENT_SOFT = colors.accent + "16";
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
@@ -234,7 +237,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: radii.pill,
-    backgroundColor: colors.primarySoft,
+    backgroundColor: ACCENT_SOFT,
   },
   blobTwo: {
     position: "absolute",
@@ -249,16 +252,16 @@ const styles = StyleSheet.create({
     width: BADGE,
     height: BADGE,
     borderRadius: radii.xxl + 6,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accent,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.lg,
-    ...shadows.primary,
+    ...shadows.accent,
   },
   brand: {
     fontSize: fontSize.display,
     fontWeight: fontWeight.extrabold,
-    color: colors.primary,
+    color: colors.accent,
     letterSpacing: 0.3,
   },
   tag: { fontSize: fontSize.body, color: colors.textMuted, marginTop: spacing.xs },
@@ -307,8 +310,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   roleCardActive: {
-    backgroundColor: colors.primarySoft,
-    borderColor: colors.primary,
+    backgroundColor: ACCENT_SOFT,
+    borderColor: colors.accent,
   },
   roleCheck: {
     position: "absolute",
@@ -317,7 +320,7 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: radii.pill,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accent,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -363,7 +366,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: radii.pill,
-    backgroundColor: colors.primarySoft,
+    backgroundColor: ACCENT_SOFT,
     alignItems: "center",
     justifyContent: "center",
   },
