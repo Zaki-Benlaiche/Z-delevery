@@ -144,6 +144,8 @@ const ar: Dict = {
   "account.memberTag": "عضو Z-delivry",
   "account.version": "الإصدار 1.0.0",
   "account.partnerSection": "كن شريكاً",
+  "account.guestHeroTitle": "مرحباً بك!",
+  "account.guestHeroSub": "اضغط هنا لإضافة رقم هاتفك",
 
   // تتبّع الطلب
   "track.live": "● بثّ مباشر",
@@ -429,6 +431,8 @@ const fr: Dict = {
   "account.memberTag": "Membre Z-delivry",
   "account.version": "Version 1.0.0",
   "account.partnerSection": "Devenir partenaire",
+  "account.guestHeroTitle": "Bienvenue !",
+  "account.guestHeroSub": "Appuyez ici pour ajouter votre numéro de téléphone",
 
   "track.live": "● En direct",
   "track.offline": "○ Hors ligne",

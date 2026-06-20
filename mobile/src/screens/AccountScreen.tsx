@@ -46,7 +46,9 @@ export function AccountScreen({ navigation }: Props) {
   const [nameDraft, setNameDraft] = useState("");
 
   const isDriver = user?.role === "driver";
-  const brand = isDriver ? colors.accent : colors.primary;
+  // هويّة شاشة "حسابي" تركوازية موحّدة (للزبون والسائق) — باقي تطبيق الزبون يبقى برتقالياً
+  const brand = colors.accent;
+  const brandSoft = colors.accent + "16";
 
   const driverMe = useQuery({ queryKey: ["driver", "me"], queryFn: driversApi.me, enabled: isDriver, retry: false });
   const d = driverMe.data;
@@ -112,33 +114,33 @@ export function AccountScreen({ navigation }: Props) {
     <Screen padded={false}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* ===== بطاقة الهوية ===== */}
-        <View style={[styles.hero, { backgroundColor: brand }, isDriver ? shadows.accent : shadows.primary]}>
-          <View style={styles.heroBlob1} />
-          <View style={styles.heroBlob2} />
-          <View style={styles.heroContent}>
-            <Pressable onPress={user ? pickAvatar : undefined} style={styles.avatarRing}>
-              <View style={styles.avatar}>
-                {avatarPreview ? (
-                  <Image source={{ uri: avatarPreview }} style={styles.avatarImg} resizeMode="cover" />
-                ) : (
-                  <Text style={[styles.avatarText, { color: brand }]}>{displayName.charAt(0)}</Text>
-                )}
-                {uploading ? (
-                  <View style={styles.avatarOverlay}>
-                    <ActivityIndicator color="#fff" />
+        {user ? (
+          <View style={[styles.hero, { backgroundColor: brand }, shadows.accent]}>
+            <View style={styles.heroBlob1} />
+            <View style={styles.heroBlob2} />
+            <View style={styles.heroContent}>
+              <Pressable onPress={pickAvatar} style={styles.avatarRing}>
+                <View style={styles.avatar}>
+                  {avatarPreview ? (
+                    <Image source={{ uri: avatarPreview }} style={styles.avatarImg} resizeMode="cover" />
+                  ) : (
+                    <Text style={[styles.avatarText, { color: brand }]}>{displayName.charAt(0)}</Text>
+                  )}
+                  {uploading ? (
+                    <View style={styles.avatarOverlay}>
+                      <ActivityIndicator color="#fff" />
+                    </View>
+                  ) : null}
+                </View>
+                {!uploading ? (
+                  <View style={styles.camBadge}>
+                    <Icon name="camera" size={12} color={brand} />
                   </View>
                 ) : null}
-              </View>
-              {!uploading && user ? (
-                <View style={styles.camBadge}>
-                  <Icon name="camera" size={12} color={brand} />
-                </View>
-              ) : null}
-            </Pressable>
-            <View style={{ flex: 1 }}>
-              <View style={styles.nameRow}>
-                <Text style={styles.heroName} numberOfLines={1}>{displayName}</Text>
-                {user ? (
+              </Pressable>
+              <View style={{ flex: 1 }}>
+                <View style={styles.nameRow}>
+                  <Text style={styles.heroName} numberOfLines={1}>{displayName}</Text>
                   <Pressable
                     hitSlop={8}
                     style={styles.editBtn}
@@ -149,40 +151,68 @@ export function AccountScreen({ navigation }: Props) {
                   >
                     <Icon name="edit" size={13} color="#fff" />
                   </Pressable>
-                ) : null}
+                </View>
+                {isDriver ? <Text style={styles.heroRoleTag}>{t("driver.roleTag")}</Text> : null}
+                {isDriver && d ? (
+                  <View style={styles.driverMeta}>
+                    <View style={styles.heroChip}>
+                      <Icon name="scooter" size={12} color="#fff" />
+                      <Text style={styles.heroChipText}>{VEHICLE_KEY[d.vehicle_type] ? t(VEHICLE_KEY[d.vehicle_type]) : d.vehicle_type}</Text>
+                    </View>
+                    <View style={styles.heroChip}>
+                      <Icon name="star" size={12} color="#fff" />
+                      <Text style={styles.heroChipText}>{Number(d.rating || 0).toFixed(1)}</Text>
+                    </View>
+                    <View style={styles.heroChip}>
+                      <Icon name="shield" size={12} color="#fff" />
+                      <Text style={styles.heroChipText}>{d.is_verified ? t("driver.verified") : t("driver.pendingShort")}</Text>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.heroSubRow}>
+                    <Icon name="phone" size={12} color="rgba(255,255,255,0.85)" />
+                    <Text style={styles.heroSub} numberOfLines={1}>
+                      {p?.phone ?? t("account.memberTag")}
+                    </Text>
+                  </View>
+                )}
               </View>
-              {isDriver ? <Text style={styles.heroRoleTag}>{t("driver.roleTag")}</Text> : null}
-              {isDriver && d ? (
-                <View style={styles.driverMeta}>
-                  <View style={styles.heroChip}>
-                    <Icon name="scooter" size={12} color="#fff" />
-                    <Text style={styles.heroChipText}>{VEHICLE_KEY[d.vehicle_type] ? t(VEHICLE_KEY[d.vehicle_type]) : d.vehicle_type}</Text>
-                  </View>
-                  <View style={styles.heroChip}>
-                    <Icon name="star" size={12} color="#fff" />
-                    <Text style={styles.heroChipText}>{Number(d.rating || 0).toFixed(1)}</Text>
-                  </View>
-                  <View style={styles.heroChip}>
-                    <Icon name="shield" size={12} color="#fff" />
-                    <Text style={styles.heroChipText}>{d.is_verified ? t("driver.verified") : t("driver.pendingShort")}</Text>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.heroSubRow}>
-                  {user ? <Icon name="phone" size={12} color="rgba(255,255,255,0.85)" /> : null}
-                  <Text style={styles.heroSub} numberOfLines={1}>
-                    {user ? (p?.phone ?? t("account.memberTag")) : t("account.loginPrompt")}
-                  </Text>
-                </View>
-              )}
             </View>
           </View>
-        </View>
+        ) : (
+          <Pressable
+            onPress={() => navigation.navigate("Connexion")}
+            style={({ pressed }) => [
+              styles.hero,
+              { backgroundColor: brand },
+              shadows.accent,
+              pressed && styles.heroPressed,
+            ]}
+          >
+            <View style={styles.heroBlob1} />
+            <View style={styles.heroBlob2} />
+            <View style={styles.heroContent}>
+              <View style={styles.avatarRing}>
+                <View style={styles.avatar}>
+                  <Icon name="person" size={30} color={brand} />
+                </View>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.heroName} numberOfLines={1}>{t("account.guestHeroTitle")}</Text>
+                <View style={styles.heroSubRow}>
+                  <Icon name="phone" size={13} color="rgba(255,255,255,0.9)" />
+                  <Text style={styles.heroSub}>{t("account.guestHeroSub")}</Text>
+                </View>
+              </View>
+              <Icon name="chevronLeft" size={22} color="rgba(255,255,255,0.95)" />
+            </View>
+          </Pressable>
+        )}
 
         {/* ===== إجراءات سريعة (الزبون) ===== */}
         {isCustomerOrGuest ? (
           <View style={styles.quickRow}>
-            <QuickTile icon="receiptFill" tint={colors.primarySoft} color={colors.primary} label={t("tab.orders")} onPress={() => navigation.navigate("OrdersTab")} />
+            <QuickTile icon="receiptFill" tint={brandSoft} color={brand} label={t("tab.orders")} onPress={() => navigation.navigate("OrdersTab")} />
             <QuickTile icon="heartFill" tint={colors.dangerSoft} color={colors.danger} label={t("tab.favorites")} onPress={() => navigation.navigate("FavoritesTab")} />
             <QuickTile icon="location" tint={colors.infoSoft} color={colors.info} label={t("account.myAddresses")} onPress={() => navigation.navigate("Addresses")} />
           </View>
@@ -249,7 +279,7 @@ export function AccountScreen({ navigation }: Props) {
           <>
             <Text style={styles.groupTitle}>{t("account.partnerSection")}</Text>
             <View style={styles.group}>
-              <Row icon="store" tint={colors.primarySoft} color={colors.primary} label={t("partner.addStore")} sub={t("partner.addStoreSub")} onPress={() => navigation.navigate("Partner", { mode: "store" })} />
+              <Row icon="store" tint={brandSoft} color={brand} label={t("partner.addStore")} sub={t("partner.addStoreSub")} onPress={() => navigation.navigate("Partner", { mode: "store" })} />
               <Divider />
               <Row icon="scooter" tint={colors.infoSoft} color={colors.info} label={t("partner.becomeDriver")} sub={t("partner.becomeDriverSub")} onPress={() => navigation.navigate("Partner", { mode: "driver" })} />
             </View>
@@ -264,27 +294,13 @@ export function AccountScreen({ navigation }: Props) {
           <Row icon="feedback" tint={colors.surface} color={colors.textMuted} label={t("account.feedback")} onPress={() => Alert.alert(t("account.feedback"), t("account.feedbackText"))} />
         </View>
 
-        {/* ===== الدخول/الخروج ===== */}
+        {/* ===== تسجيل الخروج ===== */}
         {user ? (
           <Pressable style={({ pressed }) => [styles.logout, pressed && { opacity: 0.7 }]} onPress={signOut}>
             <Icon name="logout" size={18} color={colors.danger} />
             <Text style={styles.logoutText}>{t("account.signOut")}</Text>
           </Pressable>
-        ) : (
-          <Pressable
-            style={({ pressed }) => [styles.loginCta, pressed && styles.loginCtaPressed]}
-            onPress={() => navigation.navigate("Connexion")}
-          >
-            <View style={styles.loginCtaIcon}>
-              <Icon name="person" size={22} color="#fff" />
-            </View>
-            <View style={styles.loginCtaTextWrap}>
-              <Text style={styles.loginCtaTitle}>{t("account.loginCtaTitle")}</Text>
-              <Text style={styles.loginCtaSub}>{t("account.loginPrompt")}</Text>
-            </View>
-            <Icon name="chevronLeft" size={20} color="rgba(255,255,255,0.9)" />
-          </Pressable>
-        )}
+        ) : null}
 
         {/* تذييل */}
         <View style={styles.footer}>
@@ -370,6 +386,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     overflow: "hidden",
   },
+  heroPressed: { opacity: 0.92, transform: [{ scale: 0.99 }] },
   heroBlob1: {
     position: "absolute",
     top: -55,
@@ -516,39 +533,6 @@ const styles = StyleSheet.create({
   footer: { alignItems: "center", marginTop: spacing.xl, gap: 2 },
   footerBrand: { fontSize: fontSize.body, fontWeight: fontWeight.extrabold, color: colors.textFaint, letterSpacing: 0.5 },
   footerVersion: { fontSize: fontSize.caption, color: colors.textFaint },
-
-  loginCta: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    gap: spacing.md,
-    marginTop: spacing.xl,
-    padding: spacing.lg,
-    borderRadius: radii.xl,
-    backgroundColor: colors.primary,
-    ...shadows.primary,
-  },
-  loginCtaPressed: { opacity: 0.9, transform: [{ scale: 0.985 }] },
-  loginCtaIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: radii.pill,
-    backgroundColor: "rgba(255,255,255,0.22)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  loginCtaTextWrap: { flex: 1 },
-  loginCtaTitle: {
-    fontSize: fontSize.bodyLg,
-    fontWeight: fontWeight.extrabold,
-    color: "#fff",
-    textAlign: "right",
-  },
-  loginCtaSub: {
-    fontSize: fontSize.small,
-    color: "rgba(255,255,255,0.85)",
-    textAlign: "right",
-    marginTop: 2,
-  },
 
   modalBackdrop: {
     flex: 1,
