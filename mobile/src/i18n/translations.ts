@@ -187,6 +187,21 @@ const ar: Dict = {
   "about.rights": "جميع الحقوق محفوظة",
   "about.madeIn": "صُنع في الجزائر 🇩🇿",
 
+  // رأيك
+  "feedback.prompt": "كيف تقيّم تجربتك مع Z-delivry؟",
+  "feedback.rate1": "سيّئ",
+  "feedback.rate2": "مقبول",
+  "feedback.rate3": "جيّد",
+  "feedback.rate4": "جيّد جداً",
+  "feedback.rate5": "ممتاز",
+  "feedback.commentLabel": "أخبرنا المزيد (اختياري)",
+  "feedback.commentPlaceholder": "ما الذي أعجبك أو يمكن تحسينه؟",
+  "feedback.send": "إرسال التقييم",
+  "feedback.thanksTitle": "شكراً لك! 🙏",
+  "feedback.thanksMsg": "رأيك يساعدنا على تحسين الخدمة باستمرار.",
+  "feedback.done": "تمّ",
+  "feedback.emailSubject": "تقييم تطبيق Z-delivry",
+
   // تتبّع الطلب
   "track.live": "● بثّ مباشر",
   "track.offline": "○ غير متّصل",
@@ -523,6 +538,20 @@ const fr: Dict = {
   "about.email": "support@zdelivry.dz",
   "about.rights": "Tous droits réservés",
   "about.madeIn": "Conçu en Algérie 🇩🇿",
+
+  "feedback.prompt": "Comment évaluez-vous votre expérience avec Z-delivry ?",
+  "feedback.rate1": "Mauvais",
+  "feedback.rate2": "Passable",
+  "feedback.rate3": "Bien",
+  "feedback.rate4": "Très bien",
+  "feedback.rate5": "Excellent",
+  "feedback.commentLabel": "Dites-nous en plus (facultatif)",
+  "feedback.commentPlaceholder": "Qu'avez-vous aimé ou que pourrait-on améliorer ?",
+  "feedback.send": "Envoyer l'avis",
+  "feedback.thanksTitle": "Merci ! 🙏",
+  "feedback.thanksMsg": "Votre avis nous aide à améliorer le service.",
+  "feedback.done": "Terminé",
+  "feedback.emailSubject": "Avis sur l'app Z-delivry",
 
   "track.live": "● En direct",
   "track.offline": "○ Hors ligne",

@@ -22,6 +22,7 @@ export type AppStackParamList = {
   Partner: { mode?: "store" | "driver" } | undefined;
   Connexion: undefined;
   About: undefined;
+  Feedback: undefined;
 };
 
 export type MerchantTabParamList = {

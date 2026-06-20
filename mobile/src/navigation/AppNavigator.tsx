@@ -7,6 +7,7 @@ import { Icon, type IconName } from "../components/Icon";
 import { useT } from "../i18n";
 import { AboutScreen } from "../screens/AboutScreen";
 import { AccountScreen } from "../screens/AccountScreen";
+import { FeedbackScreen } from "../screens/FeedbackScreen";
 import { AddAddressScreen } from "../screens/AddAddressScreen";
 import { AddressesScreen } from "../screens/AddressesScreen";
 import { CartScreen } from "../screens/CartScreen";
@@ -92,6 +93,7 @@ export function AppNavigator() {
       />
       <Stack.Screen name="Partner" component={PartnerScreen} options={{ headerShown: false }} />
       <Stack.Screen name="About" component={AboutScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Feedback" component={FeedbackScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="Connexion"
         component={ConnexionScreen}
