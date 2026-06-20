@@ -94,30 +94,32 @@ async def lifespan(app: FastAPI):
             for u in users:
                 groups.setdefault(normalize_phone(u.phone), []).append(u)
 
-            changed = False
+            # حدّد الأساسي (صاحب البيانات) لكل مجموعة
+            primary_by_norm: dict[str, object] = {}
             for norm, group in groups.items():
                 if len(group) == 1:
-                    u = group[0]
-                    if u.phone != norm:
-                        u.phone = norm
-                        changed = True
+                    primary_by_norm[norm] = group[0]
                     continue
-                # تعارض: اختر الأساسي (صاحب بيانات) ليأخذ الرقم المعياري
                 primary = None
                 for u in group:
                     if await _has_data(session, u.id):
                         primary = u
                         break
-                if primary is None:
-                    primary = group[0]
+                primary_by_norm[norm] = primary or group[0]
+
+            # المرحلة 1: اركن غير-الأساسي برقم فريد غير معياري ثمّ احفظ — لتحرير الرقم المعياري
+            parked_any = False
+            for norm, group in groups.items():
                 for u in group:
-                    if u is primary:
-                        continue
-                    # نركن المكرّر برقم فريد غير معياري حتى يتحرّر الرقم المعياري
-                    parked = f"x{str(u.id).replace('-', '')[:18]}"
-                    if u.phone != parked:
-                        u.phone = parked
-                        changed = True
+                    if u is not primary_by_norm[norm]:
+                        u.phone = f"x{str(u.id).replace('-', '')[:18]}"
+                        parked_any = True
+            if parked_any:
+                await session.flush()
+
+            # المرحلة 2: طبّع الأساسي لكل مجموعة (الرقم المعياري صار متاحاً)
+            changed = parked_any
+            for norm, primary in primary_by_norm.items():
                 if primary.phone != norm:
                     primary.phone = norm
                     changed = True
