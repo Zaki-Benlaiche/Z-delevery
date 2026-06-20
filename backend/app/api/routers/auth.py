@@ -9,6 +9,8 @@ from app.core.security import create_access_token, create_refresh_token
 from app.core.database import get_db
 from app.models.enums import UserRole
 from app.models.user import User
+from app.models.merchant import Merchant
+from app.models.driver import Driver
 from app.schemas.auth import (
     SendOTPRequest,
     SendOTPResponse,
@@ -55,6 +57,22 @@ async def verify_otp_and_login(payload: VerifyOTPRequest, db: AsyncSession = Dep
     elif phone not in admins and user.role == UserRole.ADMIN:
         user.role = UserRole.CUSTOMER
         await db.flush()
+    # مصالحة ذاتية عند الدخول: من يملك متجراً أو حساب سائق لكن دوره ما زال customer
+    # (سجلّ قديم سابق لترقية الدور التلقائية) يُرقَّى لدوره الصحيح فوراً — لا ننتظر ترحيل الإقلاع.
+    elif user.role == UserRole.CUSTOMER:
+        owns_merchant = await db.scalar(
+            select(Merchant.id).where(Merchant.user_id == user.id).limit(1)
+        )
+        if owns_merchant is not None:
+            user.role = UserRole.MERCHANT
+            await db.flush()
+        else:
+            is_driver = await db.scalar(
+                select(Driver.id).where(Driver.user_id == user.id).limit(1)
+            )
+            if is_driver is not None:
+                user.role = UserRole.DRIVER
+                await db.flush()
 
     return TokenResponse(
         access_token=create_access_token(str(user.id), user.role.value),
