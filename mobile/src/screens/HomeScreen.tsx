@@ -385,8 +385,15 @@ export function MerchantCard({ merchant, onPress }: { merchant: Merchant; onPres
 
         {!merchant.is_open ? <View style={styles.coverDim} /> : null}
 
+        <View style={styles.coverShade} />
+
         <View style={styles.favFloat}>
           <FavoriteButton merchantId={merchant.id} size={18} floating />
+        </View>
+
+        <View style={styles.ratingFloat}>
+          <Icon name="star" size={12} color={colors.warning} />
+          <Text style={styles.ratingFloatText}>{Number(merchant.rating || 0).toFixed(1)}</Text>
         </View>
 
         {merchant.is_open ? (
@@ -405,17 +412,14 @@ export function MerchantCard({ merchant, onPress }: { merchant: Merchant; onPres
       <View style={styles.body}>
         <Text style={styles.name} numberOfLines={1}>{merchant.name}</Text>
         <View style={styles.metaRow}>
-          <View style={styles.ratingPill}>
-            <Icon name="star" size={12} color={colors.success} />
-            <Text style={styles.ratingText}>{Number(merchant.rating || 0).toFixed(1)}</Text>
+          <View style={[styles.typeChip, { backgroundColor: meta.tint }]}>
+            <Text style={styles.typeText}>{t(meta.labelKey)}</Text>
           </View>
-          <Text style={styles.dot}>·</Text>
-          <Text style={styles.typeText}>{t(meta.labelKey)}</Text>
           {merchant.distance_km != null ? (
-            <>
-              <Text style={styles.dot}>·</Text>
+            <View style={styles.distChip}>
+              <Icon name="location" size={11} color={colors.textMuted} />
               <Text style={styles.metaText}>{merchant.distance_km} {t("common.km")}</Text>
-            </>
+            </View>
           ) : null}
         </View>
         {merchant.description ? (
@@ -663,10 +667,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderRadius: radii.xl,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
     ...shadows.md,
   },
   cover: {
-    height: 132,
+    height: 142,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -674,7 +680,23 @@ const styles = StyleSheet.create({
   coverImg: { width: "100%", height: "100%" },
   coverEmoji: { fontSize: 54 },
   coverDim: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: "rgba(15,23,42,0.35)" },
+  // تظليل سفلي خفيف لإبراز الشارات (تدرّج تقريبي ببندين)
+  coverShade: { position: "absolute", left: 0, right: 0, bottom: 0, height: 56, backgroundColor: "rgba(15,23,42,0.16)" },
   favFloat: { position: "absolute", top: spacing.sm, left: spacing.sm },
+  ratingFloat: {
+    position: "absolute",
+    top: spacing.sm,
+    right: spacing.sm,
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "rgba(255,255,255,0.95)",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radii.pill,
+    ...shadows.sm,
+  },
+  ratingFloatText: { fontSize: fontSize.caption + 1, fontWeight: fontWeight.extrabold, color: colors.text },
   etaBadge: {
     position: "absolute",
     bottom: spacing.sm,
@@ -700,21 +722,16 @@ const styles = StyleSheet.create({
   },
   closedBadgeText: { fontSize: fontSize.small, fontWeight: fontWeight.bold, color: "#fff" },
 
-  body: { padding: spacing.lg, gap: spacing.xs },
-  name: { fontSize: fontSize.h4, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
+  body: { padding: spacing.lg, gap: spacing.sm },
+  name: { fontSize: fontSize.h4, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
   metaRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.sm },
-  ratingPill: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    gap: 3,
-    backgroundColor: colors.successSoft,
-    paddingHorizontal: spacing.sm,
+  typeChip: {
+    paddingHorizontal: spacing.sm + 2,
     paddingVertical: 3,
     borderRadius: radii.pill,
   },
-  ratingText: { fontSize: fontSize.caption + 1, color: colors.success, fontWeight: fontWeight.bold },
-  dot: { color: colors.textFaint, fontSize: fontSize.body },
-  typeText: { fontSize: fontSize.small, color: colors.textMuted, fontWeight: fontWeight.medium },
-  metaText: { fontSize: fontSize.small, color: colors.textMuted },
+  typeText: { fontSize: fontSize.caption + 1, color: colors.text, fontWeight: fontWeight.bold },
+  distChip: { flexDirection: "row-reverse", alignItems: "center", gap: 3 },
+  metaText: { fontSize: fontSize.small, color: colors.textMuted, fontWeight: fontWeight.medium },
   desc: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right" },
 });
