@@ -312,7 +312,12 @@ export function HomeScreen({ navigation }: Props) {
 }
 
 function SectionTitle({ title }: { title: string }) {
-  return <Text style={styles.sectionTitle}>{title}</Text>;
+  return (
+    <View style={styles.sectionRow}>
+      <View style={styles.sectionBar} />
+      <Text style={styles.sectionTitle}>{title}</Text>
+    </View>
+  );
 }
 
 /** بطاقة "الأكثر طلباً" — مدمجة للصفّ الأفقي */
@@ -560,14 +565,25 @@ const styles = StyleSheet.create({
   catSub: { fontSize: fontSize.caption, color: colors.textMuted },
   catSubActive: { color: "rgba(255,255,255,0.9)" },
 
+  sectionRow: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
+  },
+  sectionBar: {
+    width: 4,
+    height: 20,
+    borderRadius: radii.pill,
+    backgroundColor: colors.accent,
+  },
   sectionTitle: {
     fontSize: fontSize.h3,
     fontWeight: fontWeight.extrabold,
     color: colors.text,
     textAlign: "right",
-    paddingHorizontal: spacing.lg,
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
   },
 
   // الصفّ الأفقي
