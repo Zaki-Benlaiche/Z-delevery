@@ -31,7 +31,7 @@ export function PartnerScreen({ route, navigation }: Props) {
   const loc = useCurrentLocation();
   const insets = useSafeAreaInsets();
 
-  const [mode, setMode] = useState<Mode>(route.params?.mode ?? "store");
+  const mode: Mode = route.params?.mode ?? "store";
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [storeName, setStoreName] = useState("");
@@ -93,12 +93,6 @@ export function PartnerScreen({ route, navigation }: Props) {
           </View>
           <Text style={styles.title}>{isStore ? t("partner.addStore") : t("partner.becomeDriver")}</Text>
           <Text style={styles.subtitle}>{isStore ? t("partner.addStoreSub") : t("partner.becomeDriverSub")}</Text>
-        </View>
-
-        {/* مبدّل الوضع */}
-        <View style={styles.toggle}>
-          <ModeTab icon="store" label={t("partner.tabStore")} active={isStore} brand={colors.primary} onPress={() => setMode("store")} />
-          <ModeTab icon="scooter" label={t("partner.tabDriver")} active={!isStore} brand={colors.accent} onPress={() => setMode("driver")} />
         </View>
 
         {/* مزايا (المتجر) */}
@@ -194,27 +188,6 @@ export function PartnerScreen({ route, navigation }: Props) {
   );
 }
 
-function ModeTab({
-  icon,
-  label,
-  active,
-  brand,
-  onPress,
-}: {
-  icon: IconName;
-  label: string;
-  active: boolean;
-  brand: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable style={[styles.modeTab, active && styles.modeTabActive]} onPress={onPress}>
-      <Icon name={icon} size={17} color={active ? brand : colors.textMuted} />
-      <Text style={[styles.modeLabel, active && { color: colors.text, fontWeight: fontWeight.bold }]}>{label}</Text>
-    </Pressable>
-  );
-}
-
 function Perk({ icon, label, tint, color }: { icon: IconName; label: string; tint: string; color: string }) {
   return (
     <View style={styles.perk}>
@@ -251,19 +224,6 @@ const styles = StyleSheet.create({
   heroBadge: { width: 72, height: 72, borderRadius: radii.xxl, alignItems: "center", justifyContent: "center" },
   title: { fontSize: fontSize.h1, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "center" },
   subtitle: { fontSize: fontSize.body, color: colors.textMuted, textAlign: "center", maxWidth: 300 },
-
-  toggle: { flexDirection: "row", backgroundColor: colors.surface, borderRadius: radii.lg, padding: 4, gap: 2 },
-  modeTab: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
-    paddingVertical: spacing.md,
-    borderRadius: radii.md,
-  },
-  modeTabActive: { backgroundColor: colors.background, ...shadows.sm },
-  modeLabel: { fontSize: fontSize.small, color: colors.textMuted, fontWeight: fontWeight.semibold },
 
   perks: {
     flexDirection: "row",
