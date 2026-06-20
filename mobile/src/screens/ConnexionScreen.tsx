@@ -18,7 +18,6 @@ import { Input } from "../components/Input";
 import { Screen } from "../components/Screen";
 import { useT } from "../i18n";
 import { isValidDzPhone, normalizeDzPhone } from "../utils/phone";
-import type { UserRole } from "../api/types";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/colors";
 import type { AppStackParamList } from "../navigation/types";
 
@@ -29,7 +28,6 @@ export function ConnexionScreen({ navigation }: Props) {
   const { t } = useT();
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState<UserRole>("customer");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +39,7 @@ export function ConnexionScreen({ navigation }: Props) {
     setError(null);
     try {
       setLoading(true);
-      await quickSignIn(normalizeDzPhone(phone), name.trim() || undefined, role);
+      await quickSignIn(normalizeDzPhone(phone), name.trim() || undefined, "customer");
       navigation.goBack();
     } catch (e) {
       Alert.alert("⚠️", (e as Error).message);
@@ -83,33 +81,8 @@ export function ConnexionScreen({ navigation }: Props) {
 
           {/* ===== بطاقة النموذج ===== */}
           <View style={styles.card}>
-            <Text style={styles.title}>{role === "customer" ? t("connexion.titleCustomer") : t("connexion.title")}</Text>
-            <Text style={styles.subtitle}>{role === "customer" ? t("connexion.subtitleCustomer") : t("connexion.subtitle")}</Text>
-
-            <Text style={styles.fieldLabel}>{t("connexion.roleHint")}</Text>
-            <View style={styles.roleRow}>
-              <RoleCard
-                icon="person"
-                label={t("account.customer")}
-                sub={t("connexion.customerSub")}
-                active={role === "customer"}
-                onPress={() => setRole("customer")}
-              />
-              <RoleCard
-                icon="store"
-                label={t("account.merchant")}
-                sub={t("connexion.merchantSub")}
-                active={role === "merchant"}
-                onPress={() => setRole("merchant")}
-              />
-              <RoleCard
-                icon="scooter"
-                label={t("account.driver")}
-                sub={t("connexion.driverSub")}
-                active={role === "driver"}
-                onPress={() => setRole("driver")}
-              />
-            </View>
+            <Text style={styles.title}>{t("connexion.titleCustomer")}</Text>
+            <Text style={styles.subtitle}>{t("connexion.subtitleCustomer")}</Text>
 
             <View style={styles.field}>
               <Input
@@ -166,35 +139,6 @@ export function ConnexionScreen({ navigation }: Props) {
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
-  );
-}
-
-function RoleCard({
-  icon,
-  label,
-  sub,
-  active,
-  onPress,
-}: {
-  icon: IconName;
-  label: string;
-  sub: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable style={[styles.roleCard, active && styles.roleCardActive]} onPress={onPress}>
-      {active ? (
-        <View style={styles.roleCheck}>
-          <Icon name="check" size={11} color="#fff" />
-        </View>
-      ) : null}
-      <View style={[styles.roleIcon, active && styles.roleIconActive]}>
-        <Icon name={icon} size={22} color={active ? colors.accent : colors.textMuted} />
-      </View>
-      <Text style={[styles.roleLabel, active && styles.roleLabelActive]} numberOfLines={1}>{label}</Text>
-      <Text style={styles.roleSub} numberOfLines={2}>{sub}</Text>
-    </Pressable>
   );
 }
 
@@ -298,56 +242,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
     lineHeight: 22,
   },
-  fieldLabel: {
-    fontSize: fontSize.small,
-    color: colors.text,
-    fontWeight: fontWeight.semibold,
-    textAlign: "right",
-    marginBottom: spacing.sm,
-  },
-
-  // Role cards
-  roleRow: { flexDirection: "row-reverse", gap: spacing.sm },
-  roleCard: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    borderWidth: 1.5,
-    borderColor: "transparent",
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xs,
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  roleCardActive: {
-    backgroundColor: ACCENT_SOFT,
-    borderColor: colors.accent,
-  },
-  roleCheck: {
-    position: "absolute",
-    top: spacing.sm,
-    insetInlineStart: spacing.sm,
-    width: 18,
-    height: 18,
-    borderRadius: radii.pill,
-    backgroundColor: colors.accent,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  roleIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: radii.pill,
-    backgroundColor: colors.background,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: spacing.xs,
-  },
-  roleIconActive: { backgroundColor: "#fff" },
-  roleLabel: { fontSize: fontSize.small, fontWeight: fontWeight.bold, color: colors.textMuted },
-  roleLabelActive: { color: colors.text },
-  roleSub: { fontSize: fontSize.caption, color: colors.textFaint, textAlign: "center", lineHeight: 15 },
-
   field: { marginTop: spacing.lg },
   phoneInput: { textAlign: "left", writingDirection: "ltr" },
   cta: { marginTop: spacing.xl },
