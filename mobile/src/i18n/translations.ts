@@ -106,6 +106,12 @@ const ar: Dict = {
   "orders.empty": "لا توجد طلبات بعد",
   "orders.emptyHintGuest": "اطلب من أي متجر وستظهر طلباتك هنا تلقائياً — سنحفظ رقمك عند أوّل طلب",
   "orders.emptyHint": "طلباتك ستظهر هنا بعد أوّل طلب",
+  "orders.count": "{n} طلب",
+  "orders.filterActive": "الجارية",
+  "orders.filterDone": "المكتملة",
+  "orders.track": "تتبّع الطلب",
+  "orders.itemCount": "{n} منتجات",
+  "orders.noneFilter": "لا طلبات في هذه الحالة",
 
   // الحساب
   "account.welcome": "مرحباً بك في Z-delivry",
@@ -386,6 +392,12 @@ const fr: Dict = {
   "orders.empty": "Aucune commande",
   "orders.emptyHintGuest": "Commandez et vos commandes apparaîtront ici — nous enregistrerons votre numéro",
   "orders.emptyHint": "Vos commandes apparaîtront ici après la première commande",
+  "orders.count": "{n} commande(s)",
+  "orders.filterActive": "En cours",
+  "orders.filterDone": "Terminées",
+  "orders.track": "Suivre la commande",
+  "orders.itemCount": "{n} articles",
+  "orders.noneFilter": "Aucune commande dans cette catégorie",
 
   "account.welcome": "Bienvenue sur Z-delivry",
   "account.guestHint": "Vous naviguez en invité — explorez librement, nous enregistrerons votre numéro à la première commande.",
