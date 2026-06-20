@@ -344,6 +344,7 @@ const ar: Dict = {
   "connexion.perkTrack": "تتبّع مباشر",
   "connexion.customerSub": "اطلب من متاجرك المفضّلة",
   "connexion.driverSub": "وصّل الطلبات واربح",
+  "connexion.merchantSub": "أدر متجرك وطلباتك",
   "connexion.cta": "متابعة",
   "connexion.phoneHint": "سنرسل لك رمز تأكيد عبر هذا الرقم",
 
@@ -702,6 +703,7 @@ const fr: Dict = {
   "connexion.perkTrack": "Suivi en direct",
   "connexion.customerSub": "Commandez de vos magasins préférés",
   "connexion.driverSub": "Livrez et gagnez de l'argent",
+  "connexion.merchantSub": "Gérez votre magasin et vos commandes",
   "connexion.cta": "Continuer",
   "connexion.phoneHint": "Un code de confirmation vous sera envoyé",
 

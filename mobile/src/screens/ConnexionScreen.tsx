@@ -96,6 +96,13 @@ export function ConnexionScreen({ navigation }: Props) {
                 onPress={() => setRole("customer")}
               />
               <RoleCard
+                icon="store"
+                label={t("account.merchant")}
+                sub={t("connexion.merchantSub")}
+                active={role === "merchant"}
+                onPress={() => setRole("merchant")}
+              />
+              <RoleCard
                 icon="scooter"
                 label={t("account.driver")}
                 sub={t("connexion.driverSub")}
@@ -185,7 +192,7 @@ function RoleCard({
       <View style={[styles.roleIcon, active && styles.roleIconActive]}>
         <Icon name={icon} size={22} color={active ? colors.accent : colors.textMuted} />
       </View>
-      <Text style={[styles.roleLabel, active && styles.roleLabelActive]}>{label}</Text>
+      <Text style={[styles.roleLabel, active && styles.roleLabelActive]} numberOfLines={1}>{label}</Text>
       <Text style={styles.roleSub} numberOfLines={2}>{sub}</Text>
     </Pressable>
   );
@@ -307,7 +314,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1.5,
     borderColor: "transparent",
-    padding: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xs,
     alignItems: "center",
     gap: spacing.xs,
   },
@@ -327,8 +335,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   roleIcon: {
-    width: 44,
-    height: 44,
+    width: 42,
+    height: 42,
     borderRadius: radii.pill,
     backgroundColor: colors.background,
     alignItems: "center",
@@ -336,7 +344,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   roleIconActive: { backgroundColor: "#fff" },
-  roleLabel: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.bold, color: colors.textMuted },
+  roleLabel: { fontSize: fontSize.small, fontWeight: fontWeight.bold, color: colors.textMuted },
   roleLabelActive: { color: colors.text },
   roleSub: { fontSize: fontSize.caption, color: colors.textFaint, textAlign: "center", lineHeight: 15 },
 
