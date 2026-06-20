@@ -8,7 +8,7 @@ import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { ordersApi } from "../api/orders";
 import type { Order, OrderStatus } from "../api/types";
 import { Screen } from "../components/Screen";
-import { EmptyState } from "../components/EmptyState";
+import { Button } from "../components/Button";
 import { Icon } from "../components/Icon";
 import { PriceTag } from "../components/PriceTag";
 import { StatusBadge } from "../components/StatusBadge";
@@ -50,12 +50,11 @@ export function OrdersScreen({ navigation }: Props) {
 
   if (!user) {
     return (
-      <Screen>
+      <Screen padded={false}>
         <View style={styles.header}>
           <Text style={styles.title}>{t("orders.title")}</Text>
         </View>
-        <EmptyState
-          icon="🧾"
+        <OrdersEmpty
           title={t("orders.empty")}
           hint={t("orders.emptyHintGuest")}
           ctaLabel={t("account.loginCtaTitle")}
@@ -97,8 +96,7 @@ export function OrdersScreen({ navigation }: Props) {
         }
         ListEmptyComponent={
           !query.isLoading ? (
-            <EmptyState
-              icon="🧾"
+            <OrdersEmpty
               title={all.length === 0 ? t("orders.empty") : t("orders.noneFilter")}
               hint={all.length === 0 ? t("orders.emptyHint") : undefined}
               ctaLabel={all.length === 0 ? t("cart.browse") : undefined}
@@ -115,6 +113,33 @@ export function OrdersScreen({ navigation }: Props) {
         )}
       />
     </Screen>
+  );
+}
+
+function OrdersEmpty({
+  title,
+  hint,
+  ctaLabel,
+  onCta,
+}: {
+  title: string;
+  hint?: string;
+  ctaLabel?: string;
+  onCta?: () => void;
+}) {
+  return (
+    <View style={styles.empty}>
+      <View style={styles.emptyIconOuter}>
+        <View style={styles.emptyIconInner}>
+          <Icon name="receiptFill" size={32} color={colors.primary} />
+        </View>
+      </View>
+      <Text style={styles.emptyTitle}>{title}</Text>
+      {hint ? <Text style={styles.emptyHint}>{hint}</Text> : null}
+      {ctaLabel && onCta ? (
+        <Button label={ctaLabel} variant="accent" fullWidth={false} style={styles.emptyCta} onPress={onCta} />
+      ) : null}
+    </View>
   );
 }
 
@@ -148,7 +173,7 @@ function OrderCard({ order, t, onPress }: { order: Order; t: (k: string) => stri
       <View style={styles.cardBody}>
         <View style={styles.cardHeader}>
           <StatusBadge status={order.status} size="sm" />
-          <Text style={styles.time}>{timeAgo(order.created_at, t)}</Text>
+          <Text style={styles.time}>#{order.id.slice(0, 6).toUpperCase()} · {timeAgo(order.created_at, t)}</Text>
         </View>
 
         <Text style={styles.items} numberOfLines={2}>{itemsSummary}{extra}</Text>
@@ -231,4 +256,27 @@ const styles = StyleSheet.create({
     borderTopColor: colors.divider,
   },
   trackText: { flex: 1, fontSize: fontSize.small, fontWeight: fontWeight.bold, color: colors.primary, textAlign: "right" },
+
+  empty: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.xl, paddingBottom: spacing.huge },
+  emptyIconOuter: {
+    width: 112,
+    height: 112,
+    borderRadius: radii.pill,
+    backgroundColor: colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.lg,
+  },
+  emptyIconInner: {
+    width: 72,
+    height: 72,
+    borderRadius: radii.pill,
+    backgroundColor: colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadows.sm,
+  },
+  emptyTitle: { fontSize: fontSize.h4, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "center" },
+  emptyHint: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs, lineHeight: 20, maxWidth: 280 },
+  emptyCta: { marginTop: spacing.xl, paddingHorizontal: spacing.xxl },
 });
