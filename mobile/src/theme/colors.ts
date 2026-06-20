@@ -2,10 +2,10 @@
 import { Platform } from "react-native";
 
 export const colors = {
-  // أساسي
-  primary: "#FF6B1A",        // برتقالي أكثر حيويّة (الطعام/التوصيل)
-  primaryDark: "#E5530A",
-  primarySoft: "#FFF1E6",    // خلفية تظليل بسيطة
+  // أساسي — هوية تركوازية موحّدة لكامل التطبيق
+  primary: "#0A9396",        // تركوازي (الهوية الأساسية)
+  primaryDark: "#077E80",
+  primarySoft: "#E6F4F4",    // خلفية تظليل تركوازية فاتحة
   accent: "#0A9396",
 
   // أسطح
@@ -110,9 +110,9 @@ export const shadows = {
     android: { elevation: 8 },
     default: {},
   })!,
-  // ظلّ ملوّن للعناصر البرتقالية البارزة (CTA رئيسي)
+  // ظلّ ملوّن للعناصر البارزة (CTA رئيسي) — تركوازي
   primary: Platform.select({
-    ios: { shadowColor: "#FF6B1A", shadowOpacity: 0.35, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } },
+    ios: { shadowColor: "#0A9396", shadowOpacity: 0.35, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } },
     android: { elevation: 6 },
     default: {},
   })!,
