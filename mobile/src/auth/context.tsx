@@ -1,5 +1,5 @@
 /** سياق المصادقة — يحفظ حالة الجلسة ويعيد توجيه التنقّل */
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { authApi } from "../api/auth";
@@ -24,20 +24,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<StoredUser | null>(null);
   const queryClient = useQueryClient();
+  // مرجع يعكس المستخدم الحالي دائماً — يتجنّب الإغلاق القديم في الدوالّ غير المتزامنة
+  const userRef = useRef<StoredUser | null>(null);
+  const setUserBoth = (u: StoredUser | null) => {
+    userRef.current = u;
+    setUser(u);
+  };
 
   // إعادة بناء الجلسة عند الإقلاع
   useEffect(() => {
     tokenStorage.getUser().then((u) => {
-      setUser(u);
+      setUserBoth(u);
       setLoading(false);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const value = useMemo<AuthState>(() => {
     const applyTokens = async (tokens: Awaited<ReturnType<typeof authApi.verifyOtp>>) => {
       const u: StoredUser = { user_id: tokens.user_id, role: tokens.role };
       await tokenStorage.save(tokens.access_token, tokens.refresh_token, u);
-      setUser(u);
+      setUserBoth(u);
     };
     return {
       loading,
@@ -51,10 +58,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await applyTokens(await authApi.verifyOtp(phone, dev_otp, name, role));
       },
       async setRole(role) {
-        if (!user) return;
-        const u: StoredUser = { ...user, role };
+        // نقرأ المستخدم الحالي من المرجع (لا من الإغلاق) حتى يعمل بعد quickSignIn مباشرةً
+        const current = userRef.current;
+        if (!current) return;
+        const u: StoredUser = { ...current, role };
         await tokenStorage.setUser(u);
-        setUser(u);
+        setUserBoth(u);
       },
       async signOut() {
         // نمسح توكن الـ push من الخادم قبل إفراغ التوكنات (الـ DELETE يحتاج auth)
@@ -64,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // إن فشل الاتصال نتابع — لا نمنع المستخدم من الخروج
         }
         await tokenStorage.clear();
-        setUser(null);
+        setUserBoth(null);
         // نفرغ كاش الاستعلامات حتى لا تبقى بيانات المستخدم السابق (الاسم/الأفاتار/الملف) معروضة
         queryClient.clear();
       },
