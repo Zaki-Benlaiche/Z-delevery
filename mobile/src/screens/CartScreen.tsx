@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -127,6 +127,10 @@ export function CartScreen({ navigation }: Props) {
   return (
     <Screen padded={false} background="canvas">
       <CartHeader title={t("cart.title")} onBack={() => navigation.goBack()} />
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 130 }]}
         showsVerticalScrollIndicator={false}
@@ -249,6 +253,7 @@ export function CartScreen({ navigation }: Props) {
           </View>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* ===== شريط التأكيد ===== */}
       <View style={[styles.footer, { paddingBottom: (insets.bottom || spacing.sm) + spacing.sm }]}>
@@ -346,6 +351,7 @@ function CartRow({ line, cur, t }: { line: CartLine; cur: string; t: (k: string)
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   header: {
     flexDirection: "row-reverse",
     alignItems: "center",

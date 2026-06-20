@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
@@ -75,6 +75,7 @@ export function PartnerScreen({ route, navigation }: Props) {
 
   return (
     <Screen padded={false} background="canvas">
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingTop: insets.top + spacing.sm }]}
         showsVerticalScrollIndicator={false}
@@ -173,6 +174,7 @@ export function PartnerScreen({ route, navigation }: Props) {
           )}
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* زرّ التأكيد السفلي */}
       <View style={[styles.footer, { paddingBottom: (insets.bottom || spacing.md) + spacing.sm }]}>
@@ -200,6 +202,7 @@ function Perk({ icon, label, tint, color }: { icon: IconName; label: string; tin
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   scroll: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, gap: spacing.lg },
   back: {
     alignSelf: "flex-start",

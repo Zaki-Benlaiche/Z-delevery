@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import MapView, { type Region } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -68,7 +68,7 @@ export function AddAddressScreen({ navigation }: Props) {
   ];
 
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.mapWrap}>
@@ -144,7 +144,7 @@ export function AddAddressScreen({ navigation }: Props) {
         />
         <Button label={t("address.save")} variant="accent" onPress={() => create.mutate()} loading={create.isPending} />
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
