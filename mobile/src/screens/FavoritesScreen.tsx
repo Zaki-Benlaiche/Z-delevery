@@ -40,7 +40,7 @@ export function FavoritesScreen({ navigation }: Props) {
       {/* رأس أنيق */}
       <View style={styles.hero}>
         <View style={styles.heroIcon}>
-          <Icon name="heartFill" size={24} color={colors.danger} />
+          <Icon name="heartOutline" size={24} color={colors.accent} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.heroTitle}>{t("fav.title")}</Text>
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: radii.pill,
-    backgroundColor: colors.dangerSoft,
+    backgroundColor: colors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
     ...shadows.sm,
