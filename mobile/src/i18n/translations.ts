@@ -328,6 +328,11 @@ const ar: Dict = {
   "partner.needPhone": "أدخل رقم هاتف صحيح",
   "partner.needStoreName": "أدخل اسم المتجر",
   "partner.needLocation": "حدّد موقع المتجر أولاً",
+  "partner.perkOrders": "طلبات أكثر",
+  "partner.perkDashboard": "لوحة تحكّم",
+  "partner.perkFree": "تسجيل مجّاني",
+  "partner.storeNamePlaceholder": "مثال: سوبيريت عبّود",
+  "partner.driverNote": "ستختار نوع مركبتك في الخطوة التالية بعد الدخول.",
 };
 
 const fr: Dict = {
@@ -635,6 +640,11 @@ const fr: Dict = {
   "partner.needPhone": "Entrez un numéro valide",
   "partner.needStoreName": "Entrez le nom du magasin",
   "partner.needLocation": "Définissez d'abord la position",
+  "partner.perkOrders": "Plus de commandes",
+  "partner.perkDashboard": "Tableau de bord",
+  "partner.perkFree": "Inscription gratuite",
+  "partner.storeNamePlaceholder": "Ex : Supérette Aboud",
+  "partner.driverNote": "Vous choisirez votre véhicule à l'étape suivante après la connexion.",
 };
 
 export const dictionaries: Record<Lang, Dict> = { ar, fr };

@@ -8,7 +8,6 @@ import type { MerchantType } from "../api/types";
 import { Button } from "../components/Button";
 import { Screen } from "../components/Screen";
 import { Input } from "../components/Input";
-import { Segmented } from "../components/Segmented";
 import { Icon, type IconName } from "../components/Icon";
 import { useAuth } from "../auth/context";
 import { useCurrentLocation } from "../hooks/useLocation";
@@ -18,6 +17,7 @@ import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/
 import type { AppStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Partner">;
+type Mode = "store" | "driver";
 
 const CATS: { value: MerchantType; icon: IconName; key: string }[] = [
   { value: "food", icon: "restaurant", key: "home.catFood" },
@@ -31,19 +31,23 @@ export function PartnerScreen({ route, navigation }: Props) {
   const loc = useCurrentLocation();
   const insets = useSafeAreaInsets();
 
-  const [mode, setMode] = useState<"store" | "driver">(route.params?.mode ?? "store");
+  const [mode, setMode] = useState<Mode>(route.params?.mode ?? "store");
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [storeName, setStoreName] = useState("");
   const [type, setType] = useState<MerchantType>("food");
   const [busy, setBusy] = useState(false);
 
+  const isStore = mode === "store";
+  const brand = isStore ? colors.primary : colors.accent;
+  const brandSoft = isStore ? colors.primarySoft : colors.accent + "16";
+
   const submit = async () => {
     if (!isValidDzPhone(phone)) {
       Alert.alert("✋", t("partner.needPhone"));
       return;
     }
-    if (mode === "store") {
+    if (isStore) {
       if (!storeName.trim()) {
         Alert.alert("✋", t("partner.needStoreName"));
         return;
@@ -55,24 +59,13 @@ export function PartnerScreen({ route, navigation }: Props) {
     }
     setBusy(true);
     try {
-      // تسجيل دخول سريع دائماً → توكن جديد بالدور المطلوب (يتجاوز انتهاء الصلاحية)
-      await quickSignIn(
-        normalizeDzPhone(phone),
-        name.trim() || undefined,
-        mode === "store" ? "merchant" : "driver",
-      );
-      if (mode === "store") {
-        await merchantsApi.create({
-          name: storeName.trim(),
-          type,
-          lat: loc.location!.lat,
-          lng: loc.location!.lng,
-        });
+      await quickSignIn(normalizeDzPhone(phone), name.trim() || undefined, isStore ? "merchant" : "driver");
+      if (isStore) {
+        await merchantsApi.create({ name: storeName.trim(), type, lat: loc.location!.lat, lng: loc.location!.lng });
         Alert.alert("🎉", t("partner.storeSuccess"));
-        await setRole("merchant"); // التطبيق يتحوّل لواجهة إدارة المتجر
+        await setRole("merchant");
         return;
       }
-      // وضع السائق: التحوّل لواجهة السائق (تُكمل اختيار المركبة في DriverHomeScreen)
       await setRole("driver");
     } catch (e) {
       Alert.alert("⚠️", (e as Error).message);
@@ -83,30 +76,43 @@ export function PartnerScreen({ route, navigation }: Props) {
   return (
     <Screen padded={false} background="canvas">
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.xl }]}
+        contentContainerStyle={[styles.scroll, { paddingTop: insets.top + spacing.sm }]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <Pressable onPress={() => navigation.goBack()} style={styles.back}>
+        <Pressable onPress={() => navigation.goBack()} style={styles.back} hitSlop={8}>
           <Icon name="back" size={22} color={colors.text} />
         </Pressable>
 
+        {/* Hero */}
         <View style={styles.hero}>
-          <View style={styles.heroBadge}>
-            <Icon name={mode === "store" ? "store" : "scooter"} size={34} color="#fff" />
+          <View style={[styles.heroRing, { backgroundColor: brandSoft }]}>
+            <View style={[styles.heroBadge, { backgroundColor: brand }, isStore ? shadows.primary : shadows.accent]}>
+              <Icon name={isStore ? "store" : "scooter"} size={32} color="#fff" />
+            </View>
           </View>
-          <Text style={styles.title}>{t("partner.title")}</Text>
-          <Text style={styles.subtitle}>{t("partner.subtitle")}</Text>
+          <Text style={styles.title}>{isStore ? t("partner.addStore") : t("partner.becomeDriver")}</Text>
+          <Text style={styles.subtitle}>{isStore ? t("partner.addStoreSub") : t("partner.becomeDriverSub")}</Text>
         </View>
 
-        <Segmented
-          value={mode}
-          onChange={(v) => setMode(v as "store" | "driver")}
-          options={[
-            { value: "store", label: `🏪 ${t("partner.tabStore")}` },
-            { value: "driver", label: `🛵 ${t("partner.tabDriver")}` },
-          ]}
-        />
+        {/* مبدّل الوضع */}
+        <View style={styles.toggle}>
+          <ModeTab icon="store" label={t("partner.tabStore")} active={isStore} brand={colors.primary} onPress={() => setMode("store")} />
+          <ModeTab icon="scooter" label={t("partner.tabDriver")} active={!isStore} brand={colors.accent} onPress={() => setMode("driver")} />
+        </View>
 
+        {/* مزايا (المتجر) */}
+        {isStore ? (
+          <View style={styles.perks}>
+            <Perk icon="receiptFill" label={t("partner.perkOrders")} tint={brandSoft} color={brand} />
+            <View style={styles.perkDivider} />
+            <Perk icon="store" label={t("partner.perkDashboard")} tint={brandSoft} color={brand} />
+            <View style={styles.perkDivider} />
+            <Perk icon="check" label={t("partner.perkFree")} tint={brandSoft} color={brand} />
+          </View>
+        ) : null}
+
+        {/* النموذج */}
         <View style={styles.card}>
           <Input
             label={t("partner.yourPhone")}
@@ -116,6 +122,7 @@ export function PartnerScreen({ route, navigation }: Props) {
             placeholder="555 12 34 56"
             iconName="phone"
             prefix="+213"
+            tint={brand}
             style={styles.phoneInput}
             maxLength={12}
           />
@@ -124,17 +131,19 @@ export function PartnerScreen({ route, navigation }: Props) {
             value={name}
             onChangeText={setName}
             placeholder={t("account.nameExample")}
-            icon="🙂"
+            iconName="person"
+            tint={brand}
           />
 
-          {mode === "store" ? (
+          {isStore ? (
             <>
               <Input
                 label={t("partner.storeName")}
                 value={storeName}
                 onChangeText={setStoreName}
-                placeholder="مثال: سوبيريت عبود"
-                icon="🏪"
+                placeholder={t("partner.storeNamePlaceholder")}
+                iconName="store"
+                tint={brand}
               />
 
               <Text style={styles.label}>{t("partner.storeType")}</Text>
@@ -145,10 +154,10 @@ export function PartnerScreen({ route, navigation }: Props) {
                     <Pressable
                       key={c.value}
                       onPress={() => setType(c.value)}
-                      style={[styles.catCard, active && styles.catCardActive]}
+                      style={[styles.catCard, active && { borderColor: brand, backgroundColor: brandSoft }]}
                     >
-                      <Icon name={c.icon} size={24} color={active ? colors.primary : colors.textMuted} />
-                      <Text style={[styles.catLabel, active && styles.catLabelActive]}>{t(c.key)}</Text>
+                      <Icon name={c.icon} size={24} color={active ? brand : colors.textMuted} />
+                      <Text style={[styles.catLabel, active && { color: brand, fontWeight: fontWeight.bold }]}>{t(c.key)}</Text>
                     </Pressable>
                   );
                 })}
@@ -163,48 +172,123 @@ export function PartnerScreen({ route, navigation }: Props) {
               </View>
             </>
           ) : (
-            <View style={styles.driverNote}>
-              <Text style={styles.driverNoteText}>
-                🛵 ستختار نوع مركبتك في الخطوة التالية بعد الدخول.
-              </Text>
+            <View style={[styles.driverNote, { backgroundColor: brandSoft }]}>
+              <Icon name="info" size={16} color={brand} />
+              <Text style={[styles.driverNoteText, { color: brand }]}>{t("partner.driverNote")}</Text>
             </View>
           )}
         </View>
+      </ScrollView>
 
+      {/* زرّ التأكيد السفلي */}
+      <View style={[styles.footer, { paddingBottom: (insets.bottom || spacing.md) + spacing.sm }]}>
         <Button
-          label={mode === "store" ? t("partner.submitStore") : t("partner.submitDriver")}
+          label={isStore ? t("partner.submitStore") : t("partner.submitDriver")}
           onPress={submit}
           loading={busy}
           size="lg"
-          style={{ marginHorizontal: spacing.lg }}
+          variant={isStore ? "primary" : "accent"}
         />
-      </ScrollView>
+      </View>
     </Screen>
   );
 }
 
+function ModeTab({
+  icon,
+  label,
+  active,
+  brand,
+  onPress,
+}: {
+  icon: IconName;
+  label: string;
+  active: boolean;
+  brand: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable style={[styles.modeTab, active && styles.modeTabActive]} onPress={onPress}>
+      <Icon name={icon} size={17} color={active ? brand : colors.textMuted} />
+      <Text style={[styles.modeLabel, active && { color: colors.text, fontWeight: fontWeight.bold }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function Perk({ icon, label, tint, color }: { icon: IconName; label: string; tint: string; color: string }) {
+  return (
+    <View style={styles.perk}>
+      <View style={[styles.perkIcon, { backgroundColor: tint }]}>
+        <Icon name={icon} size={17} color={color} />
+      </View>
+      <Text style={styles.perkLabel} numberOfLines={1}>{label}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  scroll: { paddingHorizontal: spacing.lg, gap: spacing.lg },
-  back: { alignSelf: "flex-end", padding: spacing.xs },
-  hero: { alignItems: "center", gap: spacing.xs, marginBottom: spacing.sm },
-  heroBadge: {
-    width: 80,
-    height: 80,
-    borderRadius: radii.xxl,
-    backgroundColor: colors.primary,
+  scroll: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, gap: spacing.lg },
+  back: {
+    alignSelf: "flex-start",
+    width: 40,
+    height: 40,
+    borderRadius: radii.pill,
+    backgroundColor: colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadows.sm,
+  },
+
+  hero: { alignItems: "center", gap: spacing.xs },
+  heroRing: {
+    width: 96,
+    height: 96,
+    borderRadius: radii.pill,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.sm,
-    ...shadows.primary,
   },
-  title: { fontSize: fontSize.h1, fontWeight: fontWeight.extrabold, color: colors.text },
-  subtitle: { fontSize: fontSize.body, color: colors.textMuted, textAlign: "center" },
+  heroBadge: { width: 72, height: 72, borderRadius: radii.xxl, alignItems: "center", justifyContent: "center" },
+  title: { fontSize: fontSize.h1, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "center" },
+  subtitle: { fontSize: fontSize.body, color: colors.textMuted, textAlign: "center", maxWidth: 300 },
+
+  toggle: { flexDirection: "row", backgroundColor: colors.surface, borderRadius: radii.lg, padding: 4, gap: 2 },
+  modeTab: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
+    borderRadius: radii.md,
+  },
+  modeTabActive: { backgroundColor: colors.background, ...shadows.sm },
+  modeLabel: { fontSize: fontSize.small, color: colors.textMuted, fontWeight: fontWeight.semibold },
+
+  perks: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: colors.background,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.sm,
+    ...shadows.sm,
+  },
+  perk: { flex: 1, alignItems: "center", gap: spacing.xs },
+  perkIcon: { width: 38, height: 38, borderRadius: radii.pill, alignItems: "center", justifyContent: "center" },
+  perkLabel: { fontSize: fontSize.caption, color: colors.textMuted, fontWeight: fontWeight.semibold, textAlign: "center" },
+  perkDivider: { width: 1, height: 34, backgroundColor: colors.border },
 
   card: {
     backgroundColor: colors.background,
     borderRadius: radii.xxl,
     padding: spacing.xl,
     gap: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
     ...shadows.sm,
   },
   phoneInput: { textAlign: "left", writingDirection: "ltr" },
@@ -221,9 +305,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "transparent",
   },
-  catCardActive: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
   catLabel: { fontSize: fontSize.small, color: colors.textMuted, fontWeight: fontWeight.semibold },
-  catLabelActive: { color: colors.primary, fontWeight: fontWeight.bold },
 
   locBox: {
     flexDirection: "row-reverse",
@@ -236,6 +318,14 @@ const styles = StyleSheet.create({
   locBoxOk: { backgroundColor: colors.successSoft },
   locText: { fontSize: fontSize.small, color: colors.textMuted, fontWeight: fontWeight.semibold, textAlign: "right" },
 
-  driverNote: { padding: spacing.md, borderRadius: radii.lg, backgroundColor: colors.primarySoft },
-  driverNoteText: { fontSize: fontSize.body, color: colors.primaryDark, textAlign: "right", lineHeight: 22 },
+  driverNote: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.sm, padding: spacing.md, borderRadius: radii.lg },
+  driverNoteText: { flex: 1, fontSize: fontSize.small, textAlign: "right", lineHeight: 21, fontWeight: fontWeight.medium },
+
+  footer: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    backgroundColor: colors.canvas,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSoft,
+  },
 });
