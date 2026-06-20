@@ -26,7 +26,7 @@ import { EmptyState } from "../components/EmptyState";
 import { MerchantCardSkeleton } from "../components/Skeleton";
 import { FavoriteButton } from "../components/FavoriteButton";
 import { OffersCarousel } from "../components/OffersCarousel";
-import { Icon } from "../components/Icon";
+import { Icon, type IconName } from "../components/Icon";
 import { useCurrentLocation } from "../hooks/useLocation";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { useT } from "../i18n";
@@ -185,7 +185,7 @@ export function HomeScreen({ navigation }: Props) {
       {/* العروض */}
       {(offers.isLoading || (offers.data?.length ?? 0) > 0) && isBrowsing ? (
         <>
-          <SectionTitle title={t("home.offers")} />
+          <SectionTitle title={t("home.offers")} icon="tag" />
           <OffersCarousel
             offers={offers.data ?? []}
             loading={offers.isLoading}
@@ -311,10 +311,16 @@ export function HomeScreen({ navigation }: Props) {
   );
 }
 
-function SectionTitle({ title }: { title: string }) {
+function SectionTitle({ title, icon }: { title: string; icon?: IconName }) {
   return (
     <View style={styles.sectionRow}>
-      <View style={styles.sectionBar} />
+      {icon ? (
+        <View style={styles.sectionIcon}>
+          <Icon name={icon} size={15} color={colors.accent} />
+        </View>
+      ) : (
+        <View style={styles.sectionBar} />
+      )}
       <Text style={styles.sectionTitle}>{title}</Text>
     </View>
   );
@@ -578,6 +584,14 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: radii.pill,
     backgroundColor: colors.accent,
+  },
+  sectionIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: radii.md,
+    backgroundColor: colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
   },
   sectionTitle: {
     fontSize: fontSize.h3,
