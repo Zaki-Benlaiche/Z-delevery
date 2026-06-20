@@ -209,13 +209,18 @@ export function AccountScreen({ navigation }: Props) {
           </Pressable>
         )}
 
-        {/* ===== إجراءات سريعة (الزبون) ===== */}
+        {/* ===== عناويني (الزبون) ===== */}
         {isCustomerOrGuest ? (
-          <View style={styles.quickRow}>
-            <QuickTile icon="receiptFill" tint={brandSoft} color={brand} label={t("tab.orders")} onPress={() => navigation.navigate("OrdersTab")} />
-            <QuickTile icon="heartFill" tint={colors.dangerSoft} color={colors.danger} label={t("tab.favorites")} onPress={() => navigation.navigate("FavoritesTab")} />
-            <QuickTile icon="location" tint={colors.infoSoft} color={colors.info} label={t("account.myAddresses")} onPress={() => navigation.navigate("Addresses")} />
-          </View>
+          <Pressable
+            style={({ pressed }) => [styles.addressCard, pressed && { backgroundColor: colors.surfaceAlt }]}
+            onPress={() => (user ? navigation.navigate("Addresses") : navigation.navigate("Connexion"))}
+          >
+            <View style={[styles.addressIcon, { backgroundColor: brandSoft }]}>
+              <Icon name="location" size={20} color={brand} />
+            </View>
+            <Text style={styles.addressLabel}>{t("account.myAddresses")}</Text>
+            <Icon name="chevronLeft" size={18} color={colors.textFaint} />
+          </Pressable>
         ) : null}
 
         {/* تعديل الاسم */}
@@ -309,29 +314,6 @@ export function AccountScreen({ navigation }: Props) {
         </View>
       </ScrollView>
     </Screen>
-  );
-}
-
-function QuickTile({
-  icon,
-  tint,
-  color,
-  label,
-  onPress,
-}: {
-  icon: IconName;
-  tint: string;
-  color: string;
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable style={({ pressed }) => [styles.quickTile, pressed && { backgroundColor: colors.surfaceAlt }]} onPress={onPress}>
-      <View style={[styles.quickIcon, { backgroundColor: tint }]}>
-        <Icon name={icon} size={20} color={color} />
-      </View>
-      <Text style={styles.quickLabel} numberOfLines={1}>{label}</Text>
-    </Pressable>
   );
 }
 
@@ -473,21 +455,21 @@ const styles = StyleSheet.create({
   },
   heroChipText: { fontSize: fontSize.caption, fontWeight: fontWeight.bold, color: "#fff" },
 
-  // إجراءات سريعة
-  quickRow: { flexDirection: "row-reverse", gap: spacing.sm, marginTop: spacing.md },
-  quickTile: {
-    flex: 1,
+  // عناويني
+  addressCard: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: spacing.md,
     backgroundColor: colors.background,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.borderSoft,
-    paddingVertical: spacing.md,
-    alignItems: "center",
-    gap: spacing.xs,
+    padding: spacing.md,
+    marginTop: spacing.md,
     ...shadows.sm,
   },
-  quickIcon: { width: 40, height: 40, borderRadius: radii.md, alignItems: "center", justifyContent: "center" },
-  quickLabel: { fontSize: fontSize.small, fontWeight: fontWeight.semibold, color: colors.text },
+  addressIcon: { width: 40, height: 40, borderRadius: radii.md, alignItems: "center", justifyContent: "center" },
+  addressLabel: { flex: 1, fontSize: fontSize.bodyLg, fontWeight: fontWeight.semibold, color: colors.text, textAlign: "right" },
 
   groupTitle: {
     fontSize: fontSize.small,
