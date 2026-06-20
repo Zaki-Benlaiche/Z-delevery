@@ -6,7 +6,6 @@ import { addressesApi } from "../api/addresses";
 import type { Address } from "../api/types";
 import { Button } from "../components/Button";
 import { Screen } from "../components/Screen";
-import { EmptyState } from "../components/EmptyState";
 import { Icon } from "../components/Icon";
 import { useT } from "../i18n";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/colors";
@@ -57,13 +56,23 @@ export function AddressesScreen({ navigation }: Props) {
         ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
         ListEmptyComponent={
           !query.isLoading ? (
-            <EmptyState
-              icon="📍"
-              title={t("cart.noAddresses")}
-              hint={t("address.emptyHint")}
-              ctaLabel={t("cart.addAddress")}
-              onCta={() => navigation.navigate("AddAddress")}
-            />
+            <View style={styles.empty}>
+              <View style={styles.emptyIconOuter}>
+                <View style={styles.emptyIconInner}>
+                  <Icon name="locationFill" size={34} color={colors.accent} />
+                </View>
+              </View>
+              <Text style={styles.emptyTitle}>{t("cart.noAddresses")}</Text>
+              <Text style={styles.emptyHint}>{t("address.emptyHint")}</Text>
+              <Button
+                label={t("cart.addAddress")}
+                variant="accent"
+                icon="＋"
+                fullWidth={false}
+                style={styles.emptyCta}
+                onPress={() => navigation.navigate("AddAddress")}
+              />
+            </View>
           ) : null
         }
         renderItem={({ item }) => (
@@ -129,9 +138,9 @@ const styles = StyleSheet.create({
     ...shadows.sm,
   },
   pin: {
-    width: 44,
-    height: 44,
-    borderRadius: radii.md,
+    width: 46,
+    height: 46,
+    borderRadius: radii.pill,
     backgroundColor: ACCENT_SOFT,
     alignItems: "center",
     justifyContent: "center",
@@ -148,4 +157,27 @@ const styles = StyleSheet.create({
   },
 
   footer: { padding: spacing.lg },
+
+  empty: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.xl, paddingBottom: spacing.huge },
+  emptyIconOuter: {
+    width: 112,
+    height: 112,
+    borderRadius: radii.pill,
+    backgroundColor: ACCENT_SOFT,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.lg,
+  },
+  emptyIconInner: {
+    width: 72,
+    height: 72,
+    borderRadius: radii.pill,
+    backgroundColor: colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadows.sm,
+  },
+  emptyTitle: { fontSize: fontSize.h4, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "center" },
+  emptyHint: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs, lineHeight: 20, maxWidth: 280 },
+  emptyCta: { marginTop: spacing.xl, paddingHorizontal: spacing.xxl },
 });
