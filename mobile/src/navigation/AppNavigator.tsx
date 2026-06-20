@@ -82,12 +82,8 @@ export function AppNavigator() {
       <Stack.Screen name="Tabs" component={Tabs} options={{ headerShown: false }} />
       <Stack.Screen name="Merchant" component={MerchantScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Cart" component={CartScreen} options={{ title: "السلّة" }} />
-      <Stack.Screen name="Addresses" component={AddressesScreen} options={{ title: "عناويني" }} />
-      <Stack.Screen
-        name="AddAddress"
-        component={AddAddressScreen}
-        options={{ title: "إضافة عنوان" }}
-      />
+      <Stack.Screen name="Addresses" component={AddressesScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AddAddress" component={AddAddressScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="OrderTracking"
         component={OrderTrackingScreen}

@@ -38,10 +38,15 @@ export function AddressesScreen({ navigation }: Props) {
   return (
     <Screen padded={false}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("address.title")}</Text>
-        {list.length > 0 ? (
-          <Text style={styles.subtitle}>{t("address.count").replace("{n}", String(list.length))}</Text>
-        ) : null}
+        <Pressable hitSlop={8} style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Icon name="back" size={22} color={colors.text} />
+        </Pressable>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>{t("address.title")}</Text>
+          {list.length > 0 ? (
+            <Text style={styles.subtitle}>{t("address.count").replace("{n}", String(list.length))}</Text>
+          ) : null}
+        </View>
       </View>
 
       <FlatList
@@ -105,7 +110,8 @@ function AddressCard({
 }
 
 const styles = StyleSheet.create({
-  header: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.sm },
+  header: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.sm, paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.sm },
+  backBtn: { width: 40, height: 40, borderRadius: radii.pill, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
   title: { fontSize: fontSize.h2, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
   subtitle: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2 },
 
