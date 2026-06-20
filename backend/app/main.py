@@ -128,6 +128,40 @@ async def lifespan(app: FastAPI):
     except Exception:
         pass
 
+    # مصالحة دور أصحاب المتاجر والسائقين: سجلّات قديمة أُنشئت قبل ترقية الدور التلقائية
+    # قد يكون دورها ما زال "customer" رغم امتلاكها متجراً أو حساب سائق → نرقّيها.
+    # (لا نمسّ الأدمن — مصالحته تمّت أعلاه من ADMIN_PHONES.)
+    try:
+        from sqlalchemy import select
+        from app.core.database import AsyncSessionLocal
+        from app.models.enums import UserRole
+        from app.models.user import User
+        from app.models.merchant import Merchant
+        from app.models.driver import Driver
+
+        async with AsyncSessionLocal() as session:
+            merchant_owner_ids = set(
+                (await session.execute(select(Merchant.user_id))).scalars().all()
+            )
+            driver_user_ids = set(
+                (await session.execute(select(Driver.user_id))).scalars().all()
+            )
+            changed = False
+            for uid in merchant_owner_ids:
+                u = await session.get(User, uid)
+                if u is not None and u.role == UserRole.CUSTOMER:
+                    u.role = UserRole.MERCHANT
+                    changed = True
+            for uid in driver_user_ids:
+                u = await session.get(User, uid)
+                if u is not None and u.role == UserRole.CUSTOMER:
+                    u.role = UserRole.DRIVER
+                    changed = True
+            if changed:
+                await session.commit()
+    except Exception:
+        pass
+
     yield
     await engine.dispose()
 
@@ -169,35 +203,3 @@ async def root():
 @app.get("/health", tags=["النظام"])
 async def health():
     return {"status": "healthy"}
-
-
-# نقطة تشخيص مؤقّتة — تُزال بعد فحص صيغ أرقام الهواتف (تتطلّب مفتاحاً سرّياً)
-@app.get("/api/_debug/phones", include_in_schema=False)
-async def _debug_phones(key: str = ""):
-    from fastapi import HTTPException
-    from sqlalchemy import select
-    from app.core.database import AsyncSessionLocal
-    from app.models.user import User
-    from app.models.merchant import Merchant
-
-    if key != "zdbg2026":
-        raise HTTPException(status_code=404, detail="Not Found")
-
-    def _mask(p: str | None) -> str:
-        p = p or ""
-        return (p[:5] + "…" + p[-3:]) if len(p) > 8 else p
-
-    out: dict = {"users": [], "merchants": []}
-    async with AsyncSessionLocal() as s:
-        users = (await s.execute(select(User))).scalars().all()
-        for u in users:
-            out["users"].append({"phone": _mask(u.phone), "role": u.role.value})
-        merchants = (await s.execute(select(Merchant))).scalars().all()
-        for m in merchants:
-            owner = await s.get(User, m.user_id)
-            out["merchants"].append({
-                "name": m.name,
-                "owner_phone": _mask(owner.phone if owner else None),
-                "owner_role": owner.role.value if owner else None,
-            })
-    return out
