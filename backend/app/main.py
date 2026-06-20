@@ -67,6 +67,65 @@ async def lifespan(app: FastAPI):
                 await session.commit()
     except Exception:
         pass
+
+    # تطبيع أرقام الهواتف إلى صيغة +213 (أثر تحويل الموبايل للصيغة الدولية).
+    # عند تعارض رقمين على نفس الصيغة المعيارية (حساب قديم بمتجر + حساب فارغ مكرّر)،
+    # نُبقي صاحب البيانات (متجر/طلبات/سائق) على الرقم المعياري و"نركن" الفارغ برقم غير معياري.
+    try:
+        from sqlalchemy import select, func
+        from app.core.database import AsyncSessionLocal
+        from app.core.phone import normalize_phone
+        from app.models.user import User
+        from app.models.merchant import Merchant
+        from app.models.order import Order
+        from app.models.driver import Driver
+
+        async def _has_data(session, uid) -> bool:
+            m = await session.scalar(select(func.count()).select_from(Merchant).where(Merchant.user_id == uid))
+            d = await session.scalar(select(func.count()).select_from(Driver).where(Driver.user_id == uid))
+            o = await session.scalar(
+                select(func.count()).select_from(Order).where((Order.customer_id == uid) | (Order.driver_id == uid))
+            )
+            return bool((m or 0) or (d or 0) or (o or 0))
+
+        async with AsyncSessionLocal() as session:
+            users = (await session.execute(select(User))).scalars().all()
+            groups: dict[str, list] = {}
+            for u in users:
+                groups.setdefault(normalize_phone(u.phone), []).append(u)
+
+            changed = False
+            for norm, group in groups.items():
+                if len(group) == 1:
+                    u = group[0]
+                    if u.phone != norm:
+                        u.phone = norm
+                        changed = True
+                    continue
+                # تعارض: اختر الأساسي (صاحب بيانات) ليأخذ الرقم المعياري
+                primary = None
+                for u in group:
+                    if await _has_data(session, u.id):
+                        primary = u
+                        break
+                if primary is None:
+                    primary = group[0]
+                for u in group:
+                    if u is primary:
+                        continue
+                    # نركن المكرّر برقم فريد غير معياري حتى يتحرّر الرقم المعياري
+                    parked = f"x{str(u.id).replace('-', '')[:18]}"
+                    if u.phone != parked:
+                        u.phone = parked
+                        changed = True
+                if primary.phone != norm:
+                    primary.phone = norm
+                    changed = True
+            if changed:
+                await session.commit()
+    except Exception:
+        pass
+
     yield
     await engine.dispose()
 
