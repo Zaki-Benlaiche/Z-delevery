@@ -6,8 +6,8 @@ import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 
 import { merchantsApi } from "../api/merchants";
 import { Screen } from "../components/Screen";
-import { EmptyState } from "../components/EmptyState";
-import { Icon } from "../components/Icon";
+import { Button } from "../components/Button";
+import { Icon, type IconName } from "../components/Icon";
 import { MerchantCardSkeleton } from "../components/Skeleton";
 import { MerchantCard } from "./HomeScreen";
 import { useFavorites } from "../store/favorites";
@@ -53,15 +53,15 @@ export function FavoritesScreen({ navigation }: Props) {
       </View>
 
       {favIds.length === 0 ? (
-        <View style={styles.center}>
-          <EmptyState
-            icon="🤍"
-            title={t("fav.empty")}
-            hint={t("fav.emptyHint")}
-            ctaLabel={t("fav.browse")}
-            onCta={() => navigation.navigate("HomeTab")}
-          />
-        </View>
+        <FavEmpty
+          icon="heartFill"
+          tint={colors.dangerSoft}
+          color={colors.danger}
+          title={t("fav.empty")}
+          hint={t("fav.emptyHint")}
+          ctaLabel={t("fav.browse")}
+          onCta={() => navigation.navigate("HomeTab")}
+        />
       ) : query.isLoading ? (
         <View style={styles.list}>
           {[0, 1, 2].map((i) => (
@@ -78,8 +78,10 @@ export function FavoritesScreen({ navigation }: Props) {
           showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
           ListEmptyComponent={
-            <EmptyState
-              icon="🔍"
+            <FavEmpty
+              icon="store"
+              tint={colors.surface}
+              color={colors.textMuted}
               title={t("fav.unavailable")}
               hint={t("fav.unavailableHint")}
             />
@@ -93,6 +95,39 @@ export function FavoritesScreen({ navigation }: Props) {
         />
       )}
     </Screen>
+  );
+}
+
+function FavEmpty({
+  icon,
+  tint,
+  color,
+  title,
+  hint,
+  ctaLabel,
+  onCta,
+}: {
+  icon: IconName;
+  tint: string;
+  color: string;
+  title: string;
+  hint?: string;
+  ctaLabel?: string;
+  onCta?: () => void;
+}) {
+  return (
+    <View style={styles.empty}>
+      <View style={[styles.emptyIconOuter, { backgroundColor: tint }]}>
+        <View style={styles.emptyIconInner}>
+          <Icon name={icon} size={32} color={color} />
+        </View>
+      </View>
+      <Text style={styles.emptyTitle}>{title}</Text>
+      {hint ? <Text style={styles.emptyHint}>{hint}</Text> : null}
+      {ctaLabel && onCta ? (
+        <Button label={ctaLabel} variant="accent" fullWidth={false} style={styles.emptyCta} onPress={onCta} />
+      ) : null}
+    </View>
   );
 }
 
@@ -126,6 +161,27 @@ const styles = StyleSheet.create({
     textAlign: "right",
     marginTop: 1,
   },
-  center: { flex: 1, justifyContent: "center" },
   list: { padding: spacing.lg, paddingTop: spacing.sm },
+
+  empty: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.xl, paddingBottom: spacing.huge },
+  emptyIconOuter: {
+    width: 112,
+    height: 112,
+    borderRadius: radii.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.lg,
+  },
+  emptyIconInner: {
+    width: 72,
+    height: 72,
+    borderRadius: radii.pill,
+    backgroundColor: colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadows.sm,
+  },
+  emptyTitle: { fontSize: fontSize.h4, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "center" },
+  emptyHint: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs, lineHeight: 20, maxWidth: 280 },
+  emptyCta: { marginTop: spacing.xl, paddingHorizontal: spacing.xxl },
 });
