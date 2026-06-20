@@ -20,7 +20,7 @@ export type AppStackParamList = {
   AddAddress: undefined;
   OrderTracking: { orderId: string };
   Partner: { mode?: "store" | "driver" } | undefined;
-  Connexion: undefined;
+  Connexion: { role?: "customer" | "merchant" | "driver" } | undefined;
   About: undefined;
   Feedback: undefined;
 };

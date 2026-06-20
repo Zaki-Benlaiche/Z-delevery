@@ -279,7 +279,7 @@ export function AccountScreen({ navigation }: Props) {
           />
         </View>
 
-        {/* ===== كن شريكاً (الزبون) ===== */}
+        {/* ===== كن شريكاً (تسجيل جديد) ===== */}
         {isCustomerOrGuest ? (
           <>
             <Text style={styles.groupTitle}>{t("account.partnerSection")}</Text>
@@ -287,6 +287,18 @@ export function AccountScreen({ navigation }: Props) {
               <Row icon="store" tint={brandSoft} color={brand} label={t("partner.addStore")} sub={t("partner.addStoreSub")} onPress={() => navigation.navigate("Partner", { mode: "store" })} />
               <Divider />
               <Row icon="scooter" tint={colors.infoSoft} color={colors.info} label={t("partner.becomeDriver")} sub={t("partner.becomeDriverSub")} onPress={() => navigation.navigate("Partner", { mode: "driver" })} />
+            </View>
+          </>
+        ) : null}
+
+        {/* ===== دخول الشركاء (للضيف فقط) ===== */}
+        {!user ? (
+          <>
+            <Text style={styles.groupTitle}>{t("account.partnerLogin")}</Text>
+            <View style={styles.group}>
+              <Row icon="store" tint={brandSoft} color={brand} label={t("account.loginStore")} sub={t("account.loginStoreSub")} onPress={() => navigation.navigate("Connexion", { role: "merchant" })} />
+              <Divider />
+              <Row icon="scooter" tint={colors.infoSoft} color={colors.info} label={t("account.loginDriver")} sub={t("account.loginDriverSub")} onPress={() => navigation.navigate("Connexion", { role: "driver" })} />
             </View>
           </>
         ) : null}

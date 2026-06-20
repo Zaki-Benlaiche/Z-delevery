@@ -23,9 +23,14 @@ import type { AppStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<AppStackParamList, "Connexion">;
 
-export function ConnexionScreen({ navigation }: Props) {
+export function ConnexionScreen({ navigation, route }: Props) {
   const { quickSignIn } = useAuth();
   const { t } = useT();
+  const role = route.params?.role ?? "customer";
+  const isCustomer = role === "customer";
+  const heroIcon: IconName = role === "merchant" ? "store" : "scooter";
+  const title = role === "merchant" ? t("connexion.titleStore") : role === "driver" ? t("connexion.titleDriver") : t("connexion.titleCustomer");
+  const subtitle = isCustomer ? t("connexion.subtitleCustomer") : t("connexion.subtitleLogin");
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,7 +44,7 @@ export function ConnexionScreen({ navigation }: Props) {
     setError(null);
     try {
       setLoading(true);
-      await quickSignIn(normalizeDzPhone(phone), name.trim() || undefined, "customer");
+      await quickSignIn(normalizeDzPhone(phone), name.trim() || undefined, role);
       navigation.goBack();
     } catch (e) {
       Alert.alert("⚠️", (e as Error).message);
@@ -73,7 +78,7 @@ export function ConnexionScreen({ navigation }: Props) {
             <View style={styles.blobOne} />
             <View style={styles.blobTwo} />
             <View style={styles.logoBadge}>
-              <Icon name="scooter" size={40} color="#fff" />
+              <Icon name={heroIcon} size={40} color="#fff" />
             </View>
             <Text style={styles.brand}>Z-delivry</Text>
             <Text style={styles.tag}>{t("app.tagline")}</Text>
@@ -81,8 +86,8 @@ export function ConnexionScreen({ navigation }: Props) {
 
           {/* ===== بطاقة النموذج ===== */}
           <View style={styles.card}>
-            <Text style={styles.title}>{t("connexion.titleCustomer")}</Text>
-            <Text style={styles.subtitle}>{t("connexion.subtitleCustomer")}</Text>
+            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.subtitle}>{subtitle}</Text>
 
             <View style={styles.field}>
               <Input
