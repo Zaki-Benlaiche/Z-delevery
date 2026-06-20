@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from "react";
+import { useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -40,10 +40,6 @@ export function CartScreen({ navigation }: Props) {
   const [guestAddress, setGuestAddress] = useState("");
   const [registering, setRegistering] = useState(false);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({ title: t("cart.title") });
-  }, [navigation, t]);
-
   const addresses = useQuery({
     queryKey: ["addresses"],
     queryFn: addressesApi.list,
@@ -62,7 +58,8 @@ export function CartScreen({ navigation }: Props) {
 
   if (cart.lines.length === 0) {
     return (
-      <Screen background="white">
+      <Screen padded={false} background="white">
+        <CartHeader title={t("cart.title")} onBack={() => navigation.goBack()} />
         <View style={styles.empty}>
           <View style={styles.emptyIconOuter}>
             <View style={styles.emptyIconInner}>
@@ -129,6 +126,7 @@ export function CartScreen({ navigation }: Props) {
 
   return (
     <Screen padded={false} background="canvas">
+      <CartHeader title={t("cart.title")} onBack={() => navigation.goBack()} />
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 130 }]}
         showsVerticalScrollIndicator={false}
@@ -270,6 +268,18 @@ export function CartScreen({ navigation }: Props) {
   );
 }
 
+function CartHeader({ title, onBack }: { title: string; onBack: () => void }) {
+  return (
+    <View style={styles.header}>
+      <Pressable hitSlop={8} style={styles.backBtn} onPress={onBack}>
+        <Icon name="back" size={22} color={colors.text} />
+      </Pressable>
+      <Text style={styles.headerTitle}>{title}</Text>
+      <View style={styles.backBtn} />
+    </View>
+  );
+}
+
 function SectionHeader({ title, badge }: { title: string; badge?: string }) {
   return (
     <View style={styles.sectionRow}>
@@ -336,7 +346,18 @@ function CartRow({ line, cur, t }: { line: CartLine; cur: string; t: (k: string)
 }
 
 const styles = StyleSheet.create({
-  scroll: { padding: spacing.lg },
+  header: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
+  },
+  backBtn: { width: 40, height: 40, borderRadius: radii.pill, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
+  headerTitle: { fontSize: fontSize.h4, fontWeight: fontWeight.extrabold, color: colors.text },
+
+  scroll: { padding: spacing.lg, paddingTop: spacing.xs },
 
   // فارغة
   empty: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.xl, paddingBottom: spacing.huge },
