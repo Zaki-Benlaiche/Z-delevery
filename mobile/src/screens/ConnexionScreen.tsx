@@ -83,8 +83,8 @@ export function ConnexionScreen({ navigation }: Props) {
 
           {/* ===== بطاقة النموذج ===== */}
           <View style={styles.card}>
-            <Text style={styles.title}>{t("connexion.title")}</Text>
-            <Text style={styles.subtitle}>{t("connexion.subtitle")}</Text>
+            <Text style={styles.title}>{role === "customer" ? t("connexion.titleCustomer") : t("connexion.title")}</Text>
+            <Text style={styles.subtitle}>{role === "customer" ? t("connexion.subtitleCustomer") : t("connexion.subtitle")}</Text>
 
             <Text style={styles.fieldLabel}>{t("connexion.roleHint")}</Text>
             <View style={styles.roleRow}>

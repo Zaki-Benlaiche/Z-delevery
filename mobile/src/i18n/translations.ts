@@ -268,6 +268,8 @@ const ar: Dict = {
   // تسجيل الدخول
   "connexion.title": "أهلاً بعودتك 👋",
   "connexion.subtitle": "سجّل الدخول للوصول إلى طلباتك وعناوينك المحفوظة",
+  "connexion.titleCustomer": "إنشاء حساب",
+  "connexion.subtitleCustomer": "لاستخدام الخدمة عليك إنشاء حساب برقم هاتف محمول مُفعَّل",
   "connexion.roleHint": "أدخل بصفتك",
   "connexion.secure": "بياناتك آمنة معنا ولن تُشارَك مع أيّ طرف",
   "connexion.terms": "بالمتابعة، أنت توافق على شروط الاستخدام وسياسة الخصوصية",
@@ -555,6 +557,8 @@ const fr: Dict = {
 
   "connexion.title": "Bon retour 👋",
   "connexion.subtitle": "Connectez-vous pour accéder à vos commandes et adresses",
+  "connexion.titleCustomer": "Créer un compte",
+  "connexion.subtitleCustomer": "Pour utiliser le service, vous devez créer un compte avec un numéro de téléphone mobile validé",
   "connexion.roleHint": "Connectez-vous en tant que",
   "connexion.secure": "Vos données sont protégées et jamais partagées",
   "connexion.terms": "En continuant, vous acceptez les conditions d'utilisation et la politique de confidentialité",
