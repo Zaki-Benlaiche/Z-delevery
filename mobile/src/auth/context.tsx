@@ -1,5 +1,6 @@
 /** سياق المصادقة — يحفظ حالة الجلسة ويعيد توجيه التنقّل */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { authApi } from "../api/auth";
 import { pushApi } from "../api/push";
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<StoredUser | null>(null);
+  const queryClient = useQueryClient();
 
   // إعادة بناء الجلسة عند الإقلاع
   useEffect(() => {
@@ -63,9 +65,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         await tokenStorage.clear();
         setUser(null);
+        // نفرغ كاش الاستعلامات حتى لا تبقى بيانات المستخدم السابق (الاسم/الأفاتار/الملف) معروضة
+        queryClient.clear();
       },
     };
-  }, [loading, user]);
+  }, [loading, user, queryClient]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
