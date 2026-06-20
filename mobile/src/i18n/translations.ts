@@ -274,6 +274,10 @@ const ar: Dict = {
   "connexion.perkFast": "توصيل سريع",
   "connexion.perkSecure": "دفع آمن",
   "connexion.perkTrack": "تتبّع مباشر",
+  "connexion.customerSub": "اطلب من متاجرك المفضّلة",
+  "connexion.driverSub": "وصّل الطلبات واربح",
+  "connexion.cta": "متابعة",
+  "connexion.phoneHint": "سنرسل لك رمز تأكيد عبر هذا الرقم",
 
   // الانضمام كشريك
   "partner.section": "انضمّ إلى Z-delivry",
@@ -557,6 +561,10 @@ const fr: Dict = {
   "connexion.perkFast": "Livraison rapide",
   "connexion.perkSecure": "Paiement sûr",
   "connexion.perkTrack": "Suivi en direct",
+  "connexion.customerSub": "Commandez de vos magasins préférés",
+  "connexion.driverSub": "Livrez et gagnez de l'argent",
+  "connexion.cta": "Continuer",
+  "connexion.phoneHint": "Un code de confirmation vous sera envoyé",
 
   "partner.section": "Rejoignez Z-delivry",
   "partner.addStore": "Ajoutez votre magasin",

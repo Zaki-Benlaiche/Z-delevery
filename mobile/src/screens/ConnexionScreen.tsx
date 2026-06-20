@@ -13,10 +13,9 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 import { useAuth } from "../auth/context";
 import { Button } from "../components/Button";
-import { Icon } from "../components/Icon";
+import { Icon, type IconName } from "../components/Icon";
 import { Input } from "../components/Input";
 import { Screen } from "../components/Screen";
-import { Segmented } from "../components/Segmented";
 import { useT } from "../i18n";
 import type { UserRole } from "../api/types";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../theme/colors";
@@ -76,7 +75,7 @@ export function ConnexionScreen({ navigation }: Props) {
             <View style={styles.blobOne} />
             <View style={styles.blobTwo} />
             <View style={styles.logoBadge}>
-              <Text style={styles.logoEmoji}>🛵</Text>
+              <Icon name="scooter" size={40} color="#fff" />
             </View>
             <Text style={styles.brand}>Z-delivry</Text>
             <Text style={styles.tag}>{t("app.tagline")}</Text>
@@ -88,14 +87,22 @@ export function ConnexionScreen({ navigation }: Props) {
             <Text style={styles.subtitle}>{t("connexion.subtitle")}</Text>
 
             <Text style={styles.fieldLabel}>{t("connexion.roleHint")}</Text>
-            <Segmented
-              value={role}
-              onChange={setRole}
-              options={[
-                { value: "customer", label: t("account.customer"), icon: "👤" },
-                { value: "driver", label: t("account.driver"), icon: "🛵" },
-              ]}
-            />
+            <View style={styles.roleRow}>
+              <RoleCard
+                icon="person"
+                label={t("account.customer")}
+                sub={t("connexion.customerSub")}
+                active={role === "customer"}
+                onPress={() => setRole("customer")}
+              />
+              <RoleCard
+                icon="scooter"
+                label={t("account.driver")}
+                sub={t("connexion.driverSub")}
+                active={role === "driver"}
+                onPress={() => setRole("driver")}
+              />
+            </View>
 
             <View style={styles.field}>
               <Input
@@ -108,22 +115,25 @@ export function ConnexionScreen({ navigation }: Props) {
                 keyboardType="phone-pad"
                 placeholder="0555 12 34 56"
                 autoComplete="tel"
-                icon="📱"
+                iconName="phone"
                 error={error}
+                hint={!error ? t("connexion.phoneHint") : undefined}
                 maxLength={15}
               />
             </View>
 
-            <Input
-              label={t("cart.nameOptional")}
-              value={name}
-              onChangeText={setName}
-              placeholder={t("account.nameExample")}
-              icon="🙂"
-            />
+            <View style={styles.field}>
+              <Input
+                label={t("cart.nameOptional")}
+                value={name}
+                onChangeText={setName}
+                placeholder={t("account.nameExample")}
+                iconName="person"
+              />
+            </View>
 
             <View style={styles.cta}>
-              <Button label={t("account.login")} onPress={submit} loading={loading} size="lg" />
+              <Button label={t("connexion.cta")} onPress={submit} loading={loading} size="lg" />
             </View>
 
             <View style={styles.secureRow}>
@@ -134,11 +144,11 @@ export function ConnexionScreen({ navigation }: Props) {
 
           {/* ===== مزايا ===== */}
           <View style={styles.perks}>
-            <Perk icon="⚡" label={t("connexion.perkFast")} />
+            <Perk icon="clockFast" label={t("connexion.perkFast")} />
             <View style={styles.perkDivider} />
-            <Perk icon="🛡️" label={t("connexion.perkSecure")} />
+            <Perk icon="shield" label={t("connexion.perkSecure")} />
             <View style={styles.perkDivider} />
-            <Perk icon="📍" label={t("connexion.perkTrack")} />
+            <Perk icon="navigation" label={t("connexion.perkTrack")} />
           </View>
 
           <Text style={styles.footer}>{t("connexion.terms")}</Text>
@@ -148,10 +158,41 @@ export function ConnexionScreen({ navigation }: Props) {
   );
 }
 
-function Perk({ icon, label }: { icon: string; label: string }) {
+function RoleCard({
+  icon,
+  label,
+  sub,
+  active,
+  onPress,
+}: {
+  icon: IconName;
+  label: string;
+  sub: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable style={[styles.roleCard, active && styles.roleCardActive]} onPress={onPress}>
+      {active ? (
+        <View style={styles.roleCheck}>
+          <Icon name="check" size={11} color="#fff" />
+        </View>
+      ) : null}
+      <View style={[styles.roleIcon, active && styles.roleIconActive]}>
+        <Icon name={icon} size={22} color={active ? colors.primary : colors.textMuted} />
+      </View>
+      <Text style={[styles.roleLabel, active && styles.roleLabelActive]}>{label}</Text>
+      <Text style={styles.roleSub} numberOfLines={2}>{sub}</Text>
+    </Pressable>
+  );
+}
+
+function Perk({ icon, label }: { icon: IconName; label: string }) {
   return (
     <View style={styles.perk}>
-      <Text style={styles.perkIcon}>{icon}</Text>
+      <View style={styles.perkIconWrap}>
+        <Icon name={icon} size={18} color={colors.primary} />
+      </View>
       <Text style={styles.perkLabel}>{label}</Text>
     </View>
   );
@@ -214,7 +255,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     ...shadows.primary,
   },
-  logoEmoji: { fontSize: 42 },
   brand: {
     fontSize: fontSize.display,
     fontWeight: fontWeight.extrabold,
@@ -253,6 +293,48 @@ const styles = StyleSheet.create({
     textAlign: "right",
     marginBottom: spacing.sm,
   },
+
+  // Role cards
+  roleRow: { flexDirection: "row-reverse", gap: spacing.sm },
+  roleCard: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+    padding: spacing.md,
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  roleCardActive: {
+    backgroundColor: colors.primarySoft,
+    borderColor: colors.primary,
+  },
+  roleCheck: {
+    position: "absolute",
+    top: spacing.sm,
+    insetInlineStart: spacing.sm,
+    width: 18,
+    height: 18,
+    borderRadius: radii.pill,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  roleIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.pill,
+    backgroundColor: colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: spacing.xs,
+  },
+  roleIconActive: { backgroundColor: "#fff" },
+  roleLabel: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.bold, color: colors.textMuted },
+  roleLabelActive: { color: colors.text },
+  roleSub: { fontSize: fontSize.caption, color: colors.textFaint, textAlign: "center", lineHeight: 15 },
+
   field: { marginTop: spacing.lg },
   cta: { marginTop: spacing.xl },
 
@@ -277,7 +359,14 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
   },
   perk: { flex: 1, alignItems: "center", gap: spacing.xs },
-  perkIcon: { fontSize: 22 },
+  perkIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: radii.pill,
+    backgroundColor: colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   perkLabel: {
     fontSize: fontSize.caption,
     color: colors.textMuted,

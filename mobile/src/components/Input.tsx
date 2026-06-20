@@ -1,16 +1,20 @@
 import { useState } from "react";
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from "react-native";
 
+import { Icon, type IconName } from "./Icon";
 import { colors, fontWeight, radii, spacing } from "../theme/colors";
 
 interface Props extends TextInputProps {
   label?: string;
   error?: string | null;
+  /** أيقونة إيموجي (قديمة) */
   icon?: string;
+  /** أيقونة فيكتور احترافية — لها الأولوية على icon */
+  iconName?: IconName;
   hint?: string;
 }
 
-export function Input({ label, error, icon, hint, style, onFocus, onBlur, ...rest }: Props) {
+export function Input({ label, error, icon, iconName, hint, style, onFocus, onBlur, ...rest }: Props) {
   const [focused, setFocused] = useState(false);
 
   return (
@@ -23,7 +27,11 @@ export function Input({ label, error, icon, hint, style, onFocus, onBlur, ...res
           error ? styles.shellError : null,
         ]}
       >
-        {icon ? <Text style={styles.icon}>{icon}</Text> : null}
+        {iconName ? (
+          <Icon name={iconName} size={18} color={error ? colors.danger : focused ? colors.primary : colors.textMuted} />
+        ) : icon ? (
+          <Text style={styles.icon}>{icon}</Text>
+        ) : null}
         <TextInput
           placeholderTextColor={colors.textFaint}
           {...rest}
