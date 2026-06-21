@@ -18,7 +18,7 @@ export type AppStackParamList = {
   Cart: undefined;
   Addresses: { picking?: boolean } | undefined;
   AddAddress: undefined;
-  OrderTracking: { orderId: string };
+  OrderTracking: { orderId: string; justPlaced?: boolean };
   Partner: { mode?: "store" | "driver" } | undefined;
   Connexion: { role?: "customer" | "merchant" | "driver" } | undefined;
   About: undefined;

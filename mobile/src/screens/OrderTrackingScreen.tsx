@@ -40,7 +40,7 @@ function callPhone(phone: string, errLabel: string) {
 }
 
 export function OrderTrackingScreen({ route }: Props) {
-  const { orderId } = route.params;
+  const { orderId, justPlaced } = route.params;
   const { t } = useT();
   const live = useOrderTracking(orderId);
 
@@ -77,6 +77,17 @@ export function OrderTrackingScreen({ route }: Props) {
   return (
     <Screen padded={false}>
       <ScrollView contentContainerStyle={styles.scroll}>
+        {justPlaced && status !== "cancelled" ? (
+          <View style={styles.successBanner}>
+            <View style={styles.successIcon}>
+              <Icon name="check" size={20} color="#fff" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.successTitle}>{t("track.placedTitle")}</Text>
+              <Text style={styles.successSub}>{t("track.placedSub")}</Text>
+            </View>
+          </View>
+        ) : null}
         <Card variant="soft" padding="md" style={styles.headerCard}>
           <Text style={styles.orderId}>#{order.id.slice(0, 8)}</Text>
           <StatusBadge status={status} />
@@ -212,6 +223,26 @@ function SumRow({ label, amount, bold }: { label: string; amount: number; bold?:
 
 const styles = StyleSheet.create({
   scroll: { paddingBottom: spacing.xxl },
+  successBanner: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: colors.successSoft,
+    borderRadius: radii.xl,
+    padding: spacing.md,
+    margin: spacing.lg,
+    marginBottom: 0,
+  },
+  successIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.pill,
+    backgroundColor: colors.success,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  successTitle: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.extrabold, color: colors.success, textAlign: "right" },
+  successSub: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2, lineHeight: 19 },
   headerCard: {
     flexDirection: "row",
     alignItems: "center",

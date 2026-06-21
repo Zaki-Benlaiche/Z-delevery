@@ -39,7 +39,7 @@ export function OtpScreen({ route }: Props) {
       await signIn(phone, code, name || undefined, role);
       // التنقّل يُعاد توجيهه تلقائياً عبر AppNavigator عند تغيّر حالة المستخدم
     } catch (e) {
-      Alert.alert("رمز غير صحيح", (e as Error).message);
+      Alert.alert("تعذّر الدخول", (e as Error).message);
     } finally {
       setLoading(false);
     }

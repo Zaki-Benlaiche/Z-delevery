@@ -279,8 +279,8 @@ export function AccountScreen({ navigation }: Props) {
           />
         </View>
 
-        {/* ===== كن شريكاً (تسجيل جديد) ===== */}
-        {isCustomerOrGuest ? (
+        {/* ===== كن شريكاً (تسجيل جديد) — للضيف فقط، يُخفى بعد دخول الزبون ===== */}
+        {!user ? (
           <>
             <Text style={styles.groupTitle}>{t("account.partnerSection")}</Text>
             <View style={styles.group}>

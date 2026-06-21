@@ -40,16 +40,36 @@ async def test_returning_user_keeps_role(app_client):
     )
     assert r2.json()["role"] == "merchant"
 
-    # العودة لاحقاً — الدور يجب أن يبقى merchant حتى لو مرّر العميل customer
+    # العودة لاحقاً عبر «دخول الشركاء» (role=merchant) — يبقى تاجراً
     r3 = await app_client.post("/api/auth/send-otp", json={"phone": "0555999000"})
-    code2 = r3.json()["dev_otp"]
+    code3 = r3.json()["dev_otp"]
     r4 = await app_client.post(
         "/api/auth/verify-otp",
-        json={"phone": "0555999000", "code": code2, "role": "customer"},
+        json={"phone": "0555999000", "code": code3, "role": "merchant"},
     )
     assert r4.status_code == 200
     assert r4.json()["role"] == "merchant"
     assert r4.json()["is_new_user"] is False
+
+
+async def test_partner_phone_rejected_on_customer_entrance(app_client):
+    # رقم مسجَّل كتاجر لا يُسمح له بالدخول عبر بوابة الزبون — يُطلب رقم آخر
+    r1 = await app_client.post("/api/auth/send-otp", json={"phone": "0555888111"})
+    code1 = r1.json()["dev_otp"]
+    r2 = await app_client.post(
+        "/api/auth/verify-otp",
+        json={"phone": "0555888111", "code": code1, "name": "تاجر", "role": "merchant"},
+    )
+    assert r2.json()["role"] == "merchant"
+
+    # محاولة الدخول كزبون بنفس الرقم — مرفوضة (409)
+    r3 = await app_client.post("/api/auth/send-otp", json={"phone": "0555888111"})
+    code3 = r3.json()["dev_otp"]
+    r4 = await app_client.post(
+        "/api/auth/verify-otp",
+        json={"phone": "0555888111", "code": code3, "role": "customer"},
+    )
+    assert r4.status_code == 409
 
 
 async def test_invalid_phone_returns_422(app_client):

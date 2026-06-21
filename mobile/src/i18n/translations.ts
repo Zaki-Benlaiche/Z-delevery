@@ -221,6 +221,8 @@ const ar: Dict = {
   // تتبّع الطلب
   "track.live": "● بثّ مباشر",
   "track.offline": "○ غير متّصل",
+  "track.placedTitle": "تمّ استلام طلبك بنجاح ✅",
+  "track.placedSub": "سيبدأ المتجر بتحضيره وسنُعيّن سائقاً للتوصيل — تابع الحالة هنا.",
   "track.destination": "وجهة التسليم",
   "track.driverMarker": "السائق",
   "track.progress": "تقدّم الطلب",
@@ -591,6 +593,8 @@ const fr: Dict = {
 
   "track.live": "● En direct",
   "track.offline": "○ Hors ligne",
+  "track.placedTitle": "Commande reçue avec succès ✅",
+  "track.placedSub": "Le magasin va la préparer et un livreur sera assigné — suivez l'état ici.",
   "track.destination": "Destination",
   "track.driverMarker": "Livreur",
   "track.progress": "Progression",

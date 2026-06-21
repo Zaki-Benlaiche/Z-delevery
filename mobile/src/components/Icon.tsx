@@ -48,6 +48,7 @@ export type IconName =
   | "trash"
   | "tag"
   | "edit"
+  | "settings"
   | "camera"
   | "image"
   | "navigation"
@@ -100,6 +101,7 @@ const MAP: Record<IconName, { family: Family; glyph: string }> = {
   trash: { family: "ion", glyph: "trash-outline" },
   tag: { family: "ion", glyph: "pricetag-outline" },
   edit: { family: "ion", glyph: "create-outline" },
+  settings: { family: "ion", glyph: "settings-outline" },
   camera: { family: "ion", glyph: "camera" },
   image: { family: "ion", glyph: "image-outline" },
   navigation: { family: "ion", glyph: "navigate" },

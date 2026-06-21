@@ -43,6 +43,20 @@ async def verify_otp_and_login(payload: VerifyOTPRequest, db: AsyncSession = Dep
     user = result.scalar_one_or_none()
     is_new = False
 
+    # منع دخول رقم شريك (متجر/سائق) عبر بوابة الزبون — يجب استخدام «دخول الشركاء»
+    if user is not None and payload.role == UserRole.CUSTOMER:
+        owns_merchant = await db.scalar(
+            select(Merchant.id).where(Merchant.user_id == user.id).limit(1)
+        )
+        has_driver = await db.scalar(
+            select(Driver.id).where(Driver.user_id == user.id).limit(1)
+        )
+        if user.role in (UserRole.MERCHANT, UserRole.DRIVER) or owns_merchant or has_driver:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                "هذا الرقم مسجَّل كحساب متجر أو سائق. استخدم «دخول الشركاء» أو رقماً آخر لحساب الزبون.",
+            )
+
     if user is None:
         user = User(phone=phone, name=payload.name, role=payload.role)
         db.add(user)

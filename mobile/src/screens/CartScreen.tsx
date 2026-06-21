@@ -51,7 +51,7 @@ export function CartScreen({ navigation }: Props) {
     onSuccess: async (order) => {
       cart.clear();
       await queryClient.invalidateQueries({ queryKey: ["orders"] });
-      navigation.replace("OrderTracking", { orderId: order.id });
+      navigation.replace("OrderTracking", { orderId: order.id, justPlaced: true });
     },
     onError: (e) => Alert.alert(t("cart.orderError"), (e as Error).message),
   });
