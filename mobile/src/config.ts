@@ -35,3 +35,13 @@ export const CLOUDINARY = {
 
 /** هل إعداد Cloudinary مكتمل؟ (نخفي أزرار الرفع إن لم يكن) */
 export const CLOUDINARY_ENABLED = Boolean(CLOUDINARY.cloudName && CLOUDINARY.uploadPreset);
+
+/**
+ * مفتاح خرائط Google لأندرويد — يُضبط في app.json → android.config.googleMaps.apiKey.
+ * إن كان نائباً (YOUR_...) أو غائباً نعتبر الخرائط غير مفعّلة، فنُظهر بطاقة وجهة بديلة
+ * بدل خريطة سوداء معطوبة.
+ */
+const mapsKey = (Constants.expoConfig as { android?: { config?: { googleMaps?: { apiKey?: string } } } } | undefined)
+  ?.android?.config?.googleMaps?.apiKey;
+
+export const MAPS_ENABLED = Boolean(mapsKey && !mapsKey.startsWith("YOUR_"));

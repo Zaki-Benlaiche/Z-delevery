@@ -17,7 +17,7 @@
     "android": {
       "package": "com.zdelivry.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -66,9 +66,7 @@
       }
     },
     "owner": "benlaiche_zakaria",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "0.1.0",
     "updates": {
       "url": "https://u.expo.dev/ebe4d59a-88dc-48ba-9a8d-91b110159f6b"
     }

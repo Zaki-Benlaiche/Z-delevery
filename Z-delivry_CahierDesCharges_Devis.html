@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>Z-delivry — Cahier des Charges & Devis</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  @page { size:A4; margin:15mm 13mm; }
+  body { font-family:"Segoe UI","Tahoma","Arial",sans-serif; color:#1f2937; font-size:10.5pt; line-height:1.55; direction:rtl; }
+  /* إصلاح اتجاه الأرقام: عزلها كوحدة LTR حتى لا تنعكس مجموعات الآلاف */
+  .n { unicode-bidi:isolate; direction:ltr; white-space:nowrap; }
+  .cover { height:250mm; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; page-break-after:always; background:linear-gradient(135deg,#0f766e,#14b8a6); color:#fff; border-radius:6px; }
+  .cover .logo { font-size:46pt; font-weight:800; }
+  .cover .tag { font-size:15pt; opacity:.9; margin-top:6px; }
+  .cover .doctype { margin-top:40px; font-size:21pt; font-weight:700; border-top:2px solid rgba(255,255,255,.5); border-bottom:2px solid rgba(255,255,255,.5); padding:14px 28px; }
+  .cover .sub { margin-top:22px; font-size:12pt; opacity:.85; }
+  .cover .meta { margin-top:55px; font-size:10pt; opacity:.8; }
+  h1 { font-size:15pt; color:#0f766e; margin:22px 0 9px; padding-bottom:6px; border-bottom:3px solid #14b8a6; page-break-after:avoid; }
+  h2 { font-size:12.5pt; color:#0f766e; margin:14px 0 6px; page-break-after:avoid; }
+  h3 { font-size:11pt; color:#115e59; margin:10px 0 5px; }
+  p { margin:5px 0; text-align:justify; }
+  ul { margin:5px 21px; } li { margin:3px 0; }
+  table { width:100%; border-collapse:collapse; margin:9px 0; font-size:9.8pt; page-break-inside:avoid; }
+  th,td { border:1px solid #d1d5db; padding:6px 9px; text-align:right; vertical-align:top; }
+  th { background:#0f766e; color:#fff; }
+  tr:nth-child(even) td { background:#f0fdfa; }
+  .price { font-weight:800; color:#0f766e; }
+  .tot td { background:#ccfbf1!important; font-weight:800; color:#0f766e; }
+  .ok { color:#15803d; font-weight:700; } .no { color:#b91c1c; font-weight:700; } .wip { color:#b45309; font-weight:700; }
+  .box { background:#f0fdfa; border:1px solid #99f6e4; border-radius:6px; padding:9px 13px; margin:9px 0; }
+  .warn { background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:9px 13px; margin:9px 0; font-size:9.6pt; }
+  .note { font-size:8.7pt; color:#6b7280; font-style:italic; margin-top:5px; }
+  .pagebreak { page-break-before:always; }
+  .section { page-break-inside:avoid; }
+  .parties { display:flex; gap:12px; margin:10px 0; }
+  .parties > div { flex:1; background:#f0fdfa; border:1px solid #99f6e4; border-radius:6px; padding:9px 12px; font-size:9.5pt; }
+  .parties h4 { color:#0f766e; font-size:9pt; margin-bottom:4px; }
+  .dot { color:#9ca3af; }
+  .formules { display:flex; gap:10px; margin:10px 0; }
+  .f { flex:1; border:1.5px solid #d1d5db; border-radius:8px; padding:12px; text-align:center; }
+  .f.reco { border-color:#0f766e; border-width:2.5px; box-shadow:0 2px 8px rgba(15,118,110,.18); position:relative; }
+  .f.reco::before { content:"الأنسب"; position:absolute; top:-11px; right:50%; transform:translateX(50%); background:#0f766e; color:#fff; font-size:8pt; font-weight:700; padding:2px 12px; border-radius:10px; }
+  .f .name { font-weight:800; color:#0f766e; font-size:11pt; }
+  .f .amt { font-size:16pt; font-weight:800; color:#111827; margin:8px 0; }
+  .f .amt small { font-size:9pt; color:#6b7280; font-weight:600; }
+  .f ul { text-align:right; font-size:8.8pt; margin:8px 13px 0; color:#374151; }
+  .sign { display:flex; justify-content:space-between; margin-top:26px; gap:30px; }
+  .sign > div { flex:1; border-top:1px solid #9ca3af; padding-top:6px; font-size:9pt; color:#6b7280; text-align:center; }
+  .big { font-size:13pt; font-weight:800; color:#0f766e; }
+  footer { text-align:center; font-size:8.3pt; color:#9ca3af; margin-top:22px; border-top:1px solid #e5e7eb; padding-top:7px; }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="logo">Z-delivry</div>
+  <div class="tag">منصّة التوصيل — Plateforme de livraison</div>
+  <div class="doctype">Cahier des Charges &amp; Devis</div>
+  <div class="sub">دفتر الشروط التقني + عرض الأسعار التجاري</div>
+  <div class="meta">تطبيق زبون (أندرويد) + لوحة تاجر (ويب/موبايل) + تطبيق سائق + لوحة إدارة<br>وثيقة فنّية وتجارية — نسخة <span class="n">1.0</span></div>
+</div>
+
+<!-- 1 -->
+<div class="section">
+<h1>1. نظرة عامة — Présentation</h1>
+<p><strong>Z-delivry</strong> منصّة توصيل متكاملة تربط <strong>الزبائن</strong> بـ<strong>المتاجر</strong> (مطاعم، خضار وفواكه، بقالة، ورود…) عبر شبكة <strong>سائقين</strong>، مع <strong>لوحة إدارة</strong> مركزية. تدعم العربية والفرنسية، وتتبّعاً حيّاً للطلبات، ودفعاً نقدياً عند الاستلام.</p>
+<table>
+  <tr><th>التطبيق</th><th>المستخدم</th><th>المنصّة</th></tr>
+  <tr><td>تطبيق الزبون</td><td>الزبائن</td><td>أندرويد (React Native/Expo)</td></tr>
+  <tr><td>لوحة التاجر</td><td>أصحاب المتاجر</td><td>أندرويد + ويب</td></tr>
+  <tr><td>تطبيق السائق</td><td>عمّال التوصيل</td><td>أندرويد</td></tr>
+  <tr><td>لوحة الإدارة</td><td>مدير المنصّة</td><td>ويب</td></tr>
+</table>
+</div>
+
+<!-- 2 -->
+<div class="section pagebreak">
+<h1>2. دفتر الشروط الوظيفي — Cahier des Charges</h1>
+<h2>2.1 تطبيق الزبون</h2>
+<ul>
+  <li>تسجيل ودخول عبر رمز SMS (OTP) — رقم جزائري موحّد على ‎+213.</li>
+  <li>رئيسية: الموقع، بحث، فئات، كاروسيل عروض ترويجية.</li>
+  <li>تصفّح المتاجر والمنتجات حسب القرب.</li>
+  <li>سلّة + إتمام طلب (نقدي) + طلب كضيف.</li>
+  <li>إدارة العناوين المتعدّدة.</li>
+  <li><strong>تتبّع حيّ:</strong> خطّ زمني بأيقونة لكل مرحلة + مسافة/وقت وصول السائق لحظياً.</li>
+  <li>المفضّلة، سجلّ الطلبات، تقييم بعد التسليم، إشعارات Push، عربي/فرنسي.</li>
+  <li>الانضمام كشريك (متجر/سائق) من داخل التطبيق.</li>
+</ul>
+<h2>2.2 لوحة التاجر (موبايل + ويب)</h2>
+<ul>
+  <li>إدارة الطلبات: قبول/رفض/تحضير/جاهز.</li>
+  <li>المنتجات: إضافة/تعديل/حذف، الفئة، السعر، الصورة، التوفّر.</li>
+  <li>إعدادات المتجر: الاسم، الوصف، ساعات العمل، الشعار، فتح/إغلاق.</li>
+  <li>إدارة العروض الترويجية.</li>
+</ul>
+<h2>2.3 تطبيق السائق</h2>
+<ul>
+  <li>تسجيل ونوع المركبة وانتظار التوثيق.</li>
+  <li>متّصل/غير متّصل، الطلبات القريبة، الاستلام، الملاحة، البثّ الحيّ، الأرباح.</li>
+</ul>
+<h2>2.4 لوحة الإدارة + الخادم</h2>
+<ul>
+  <li>إدارة المتاجر/السائقين/الطلبات + توثيق السائقين.</li>
+  <li>مصادقة JWT حسب الدور، محرّك تسعير (رسوم + لكل كم + عمولة)، تتبّع WebSocket، رفع صور.</li>
+</ul>
+</div>
+
+<!-- 3 -->
+<div class="section pagebreak">
+<h1>3. التقنيات — Stack Technique</h1>
+<table>
+  <tr><th>المكوّن</th><th>التقنية</th><th>الاستضافة</th></tr>
+  <tr><td>الخادم / API</td><td>FastAPI (Python) + Docker</td><td>Render</td></tr>
+  <tr><td>قاعدة البيانات</td><td>PostgreSQL <span class="n">16</span> + PostGIS</td><td>Render</td></tr>
+  <tr><td>مخزن OTP</td><td>Redis</td><td>Upstash / Render</td></tr>
+  <tr><td>تطبيقات الموبايل</td><td>React Native + Expo</td><td>EAS Build</td></tr>
+  <tr><td>لوحة التاجر (ويب)</td><td>React + Vite</td><td>Vercel</td></tr>
+  <tr><td>الصور</td><td>Cloudinary</td><td>Cloudinary</td></tr>
+  <tr><td>الإشعارات</td><td>Expo Push</td><td>Expo</td></tr>
+  <tr><td>الخرائط</td><td>Google Maps SDK</td><td>Google Cloud</td></tr>
+  <tr><td>الرسائل (OTP)</td><td>مزوّد SMS</td><td>Twilio / بوّابة محلّية</td></tr>
+</table>
+</div>
+
+<!-- 4 -->
+<div class="section">
+<h1>4. الحالة الحالية — État d'avancement</h1>
+<p>نسبة الإنجاز البرمجي ~<span class="n">90%</span>. التطبيقات الأربعة تعمل وتتكامل عبر الخادم.</p>
+<table>
+  <tr><th>الوحدة</th><th>الحالة</th></tr>
+  <tr><td>تطبيق الزبون (تصفّح، سلّة، طلب، تتبّع، تقييم)</td><td class="ok">منجز ✓</td></tr>
+  <tr><td>لوحة التاجر (طلبات، منتجات، إعدادات، عروض)</td><td class="ok">منجز ✓</td></tr>
+  <tr><td>تطبيق السائق (طلبات، استلام، تتبّع، أرباح)</td><td class="ok">منجز ✓</td></tr>
+  <tr><td>لوحة الإدارة + الدفع النقدي + الترجمة + الإشعارات</td><td class="ok">منجز ✓</td></tr>
+  <tr><td>إرسال رموز SMS الحقيقية</td><td class="no">ناقص ✗</td></tr>
+  <tr><td>خرائط Google (مفتاح حقيقي)</td><td class="no">ناقص ✗</td></tr>
+  <tr><td>الدفع بالبطاقة</td><td class="wip">اختياري — لاحقاً</td></tr>
+  <tr><td>بنية تحتية مدفوعة (إنتاج)</td><td class="no">ناقص ✗</td></tr>
+</table>
+</div>
+
+<!-- 5 -->
+<div class="section pagebreak">
+<h1>5. ما تبقّى حتى الإطلاق — Reste à faire</h1>
+<table>
+  <tr><th>#</th><th>المهمّة</th><th>الأهمية</th><th>المسؤول</th></tr>
+  <tr><td><span class="n">1</span></td><td>دمج مزوّد SMS لإرسال رموز التحقّق</td><td class="no">حرجة</td><td>المطوّر + العميل</td></tr>
+  <tr><td><span class="n">2</span></td><td>ترقية الاستضافة (خادم + قاعدة بيانات دائمة)</td><td class="no">حرجة</td><td>العميل</td></tr>
+  <tr><td><span class="n">3</span></td><td>مفتاح Google Maps + تفعيل الخريطة</td><td class="wip">مهمّة</td><td>المطوّر + العميل</td></tr>
+  <tr><td><span class="n">4</span></td><td>قرار الدفع (نقدي للبداية) + إخفاء البطاقة</td><td class="wip">مهمّة</td><td>المطوّر</td></tr>
+  <tr><td><span class="n">5</span></td><td>إدخال المحتوى (متاجر، منتجات، عروض)</td><td class="wip">مهمّة</td><td>العميل</td></tr>
+  <tr><td><span class="n">6</span></td><td>توثيق السائقين من لوحة الإدارة</td><td class="wip">مهمّة</td><td>العميل</td></tr>
+  <tr><td><span class="n">7</span></td><td>بناء نسخة الإنتاج (APK) والتوزيع</td><td class="wip">مهمّة</td><td>المطوّر + العميل</td></tr>
+  <tr><td><span class="n">8</span></td><td>شروط الاستخدام وسياسة الخصوصية</td><td class="wip">مهمّة</td><td>المطوّر + العميل</td></tr>
+  <tr><td><span class="n">9</span></td><td>اختبار الدورة الكاملة بأطراف حقيقية</td><td class="wip">مهمّة</td><td>الطرفان</td></tr>
+</table>
+</div>
+
+<!-- ====== DEVIS ====== -->
+<div class="section pagebreak">
+<h1>6. عرض الأسعار — Devis</h1>
+<div class="parties">
+  <div><h4>المورّد (Prestataire)</h4>الاسم: <span class="dot">………………</span><br>الهاتف: <span class="dot">…………</span><br>البريد: <span class="dot">…………</span></div>
+  <div><h4>العميل (Client)</h4>الاسم: <span class="dot">………………</span><br>الهاتف: <span class="dot">…………</span><br>المدينة/النشاط: <span class="dot">…………</span></div>
+</div>
+<p>رقم الـ Devis: <span class="dot">………</span> · التاريخ: <span class="n">……/……/2026</span> · صالح لـ <span class="n">30</span> يوماً.</p>
+
+<h2>6.1 الصيغ والأسعار (Formules)</h2>
+<div class="formules">
+  <div class="f">
+    <div class="name">Démarrage<br>أساسية</div>
+    <div class="amt"><span class="n">390 000</span> <small>دج</small></div>
+    <ul>
+      <li>المنصّة كاملة منشورة وجاهزة</li>
+      <li>الدفع نقداً عند الاستلام</li>
+      <li>إعداد + تدريب أوّلي</li>
+      <li>دعم شهر واحد</li>
+      <li>بدون الكود المصدري</li>
+    </ul>
+  </div>
+  <div class="f reco">
+    <div class="name">Professionnelle<br>احترافية</div>
+    <div class="amt"><span class="n">790 000</span> <small>دج</small></div>
+    <ul>
+      <li>كل ما في «أساسية»</li>
+      <li>+ تفعيل خرائط Google</li>
+      <li>+ تسليم الكود المصدري</li>
+      <li>+ تدريب موسّع (تاجر/سائق/أدمن)</li>
+      <li>+ دعم <span class="n">3</span> أشهر</li>
+    </ul>
+  </div>
+  <div class="f">
+    <div class="name">Premium<br>ملكية كاملة</div>
+    <div class="amt"><span class="n">1 490 000</span> <small>دج</small></div>
+    <ul>
+      <li>كل ما في «احترافية»</li>
+      <li>+ دمج الدفع بالبطاقة</li>
+      <li>+ تخصيص العلامة (شعار/ألوان/اسم)</li>
+      <li>+ نقل ملكية كامل</li>
+      <li>+ صيانة <span class="n">6</span> أشهر</li>
+    </ul>
+  </div>
+</div>
+<p class="note">الأسعار بالدينار الجزائري، صافية وقابلة للتفاوض. تُحدَّد الصيغة النهائية باتفاق الطرفين.</p>
+</div>
+
+<!-- 6.2 -->
+<div class="section">
+<h2>6.2 تفصيل قيمة التطوير (مبرّر السعر)</h2>
+<table>
+  <tr><th>المكوّن</th><th>القيمة التقديرية</th></tr>
+  <tr><td>التحليل والتصميم والبنية المعمارية</td><td class="price"><span class="n">70 000</span> دج</td></tr>
+  <tr><td>الخادم الخلفي + قاعدة البيانات + المصادقة + التسعير</td><td class="price"><span class="n">180 000</span> دج</td></tr>
+  <tr><td>تطبيق الزبون (كامل)</td><td class="price"><span class="n">200 000</span> دج</td></tr>
+  <tr><td>لوحة التاجر (موبايل + ويب)</td><td class="price"><span class="n">140 000</span> دج</td></tr>
+  <tr><td>تطبيق السائق + التتبّع الحيّ</td><td class="price"><span class="n">140 000</span> دج</td></tr>
+  <tr><td>لوحة الإدارة</td><td class="price"><span class="n">80 000</span> دج</td></tr>
+  <tr><td>دمج SMS + النشر للإنتاج + الاختبار</td><td class="price"><span class="n">80 000</span> دج</td></tr>
+  <tr class="tot"><td>إجمالي قيمة التطوير</td><td><span class="n">890 000</span> دج</td></tr>
+</table>
+<p class="note">القيمة الإجمالية للعمل المنجَز ~<span class="n">890 000</span> دج؛ صيغة «احترافية» (<span class="n">790 000</span> دج) سعر بيع تفضيلي لمنتج جاهز.</p>
+</div>
+
+<!-- 6.3 -->
+<div class="section pagebreak">
+<h2>6.3 التكاليف المتكرّرة (يدفعها العميل لمزوّدي الخدمات)</h2>
+<table>
+  <tr><th>الخدمة</th><th>الغرض</th><th>التكلفة</th></tr>
+  <tr><td>استضافة الخادم (Render)</td><td>تشغيل دائم بلا انقطاع</td><td class="price"><span class="n">~1 750</span> دج/شهر</td></tr>
+  <tr><td>قاعدة البيانات (PostgreSQL)</td><td>حفظ دائم للبيانات</td><td class="price"><span class="n">~1 750</span> دج/شهر</td></tr>
+  <tr><td>رسائل SMS</td><td>رموز الدخول</td><td class="price"><span class="n">~5–15</span> دج/رسالة</td></tr>
+  <tr><td>الخرائط + الصور</td><td>Google Maps + Cloudinary</td><td class="price">مجاني</td></tr>
+  <tr><td>حساب Google Play (اختياري)</td><td>النشر على المتجر</td><td class="price"><span class="n">~6 250</span> دج مرّة واحدة</td></tr>
+  <tr class="tot"><td colspan="2">الإجمالي الثابت الشهري (بدون SMS)</td><td><span class="n">~3 500</span> دج/شهر</td></tr>
+</table>
+<div class="warn"><strong>تنبيه:</strong> هذه التكاليف ضرورية لاستمرار عمل التطبيق ويدفعها العميل مباشرةً للمزوّدين؛ لا يعمل في الإنتاج بدونها.</div>
+
+<h2>6.4 الصيانة (اختياري — بعد فترة الدعم المجانية)</h2>
+<table>
+  <tr><th>الباقة</th><th>الخدمات</th><th>الاشتراك</th></tr>
+  <tr><td>صيانة أساسية</td><td>إصلاح الأعطال + تحديثات أمنية + إشراف</td><td class="price"><span class="n">15 000</span> دج/شهر</td></tr>
+  <tr><td>صيانة متقدّمة</td><td>+ تطويرات وميزات جديدة + دعم أولوية</td><td class="price"><span class="n">30 000</span> دج/شهر</td></tr>
+</table>
+
+<h2>6.5 شروط الدفع والتسليم</h2>
+<ul>
+  <li><strong>الدفع:</strong> <span class="n">50%</span> مقدّماً عند الطلب · <span class="n">30%</span> عند التسليم · <span class="n">20%</span> عند الإطلاق.</li>
+  <li><strong>المدّة:</strong> إطلاق تجريبي خلال ~<span class="n">1–2</span> أسبوع بعد توفير العميل لمتطلّباته.</li>
+  <li><strong>على العميل:</strong> اشتراك الاستضافة، حساب SMS، مفتاح الخرائط، محتوى المتاجر.</li>
+  <li><strong>صلاحية العرض:</strong> <span class="n">30</span> يوماً.</li>
+</ul>
+
+<div class="box"><span class="big">المبلغ المقترح (احترافية):</span> &nbsp; <span class="n">790 000</span> دج &nbsp;+&nbsp; ~<span class="n">3 500</span> دج/شهر تشغيل (يدفعها العميل للمزوّدين).</div>
+
+<div class="sign">
+  <div>توقيع المورّد</div>
+  <div>توقيع العميل («اطّلعتُ ووافقت»)</div>
+</div>
+</div>
+
+<footer>Z-delivry — Cahier des Charges &amp; Devis · الأسعار بالدينار الجزائري صافية وقابلة للتفاوض · نسخة <span class="n">1.0</span></footer>
+
+</body>
+</html>

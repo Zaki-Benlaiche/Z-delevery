@@ -89,7 +89,7 @@ export function AppNavigator() {
       <Stack.Screen
         name="OrderTracking"
         component={OrderTrackingScreen}
-        options={{ title: "تتبّع الطلب" }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen name="Partner" component={PartnerScreen} options={{ headerShown: false }} />
       <Stack.Screen name="About" component={AboutScreen} options={{ headerShown: false }} />
