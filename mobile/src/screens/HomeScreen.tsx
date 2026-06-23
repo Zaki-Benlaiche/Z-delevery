@@ -107,7 +107,6 @@ export function HomeScreen({ navigation }: Props) {
         q: debouncedSearch || undefined,
         type: debouncedSearch ? undefined : activeCat,
       }),
-    enabled: !loc.loading,
     placeholderData: (prev) => prev,
     staleTime: 60_000,
   });

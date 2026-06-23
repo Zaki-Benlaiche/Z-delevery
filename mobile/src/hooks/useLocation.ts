@@ -30,14 +30,18 @@ export function useCurrentLocation(): LocationState {
         return;
       }
       try {
-        const pos = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
+        // تحديد دقيق بمهلة 8ث كي لا تتعلّق الواجهة لو كان GPS بطيئاً/مغلقاً،
+        // ثم احتياطي بآخر موقع معروف.
+        let pos = await Promise.race([
+          Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
+        ]);
+        if (!pos) pos = await Location.getLastKnownPositionAsync();
         if (!cancelled)
           setState({
             loading: false,
-            location: { lat: pos.coords.latitude, lng: pos.coords.longitude },
-            error: null,
+            location: pos ? { lat: pos.coords.latitude, lng: pos.coords.longitude } : null,
+            error: pos ? null : "تعذّر تحديد الموقع",
           });
       } catch (e) {
         if (!cancelled)
