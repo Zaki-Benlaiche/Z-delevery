@@ -3,6 +3,7 @@ import { Alert, FlatList, Modal, Pressable, StyleSheet, Switch, Text, View } fro
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { merchantsApi } from "../../api/merchants";
+import { ApiError } from "../../api/client";
 import type { Product } from "../../api/types";
 import { Screen } from "../../components/Screen";
 import { Card } from "../../components/Card";
@@ -70,6 +71,17 @@ export function MerchantProductsScreen() {
   const remove = useMutation({
     mutationFn: (id: string) => merchantsApi.deleteProduct(merchantId!, id),
     onSuccess: invalidate,
+    onError: (e, id) => {
+      // 409 = منتج عليه طلبات سابقة لا يُحذف؛ نعرض خيار الإخفاء بدلاً منه
+      if (e instanceof ApiError && e.status === 409) {
+        Alert.alert("تعذّر الحذف", e.message, [
+          { text: "إلغاء", style: "cancel" },
+          { text: "إخفاء المنتج", onPress: () => toggle.mutate({ id, available: false }) },
+        ]);
+      } else {
+        Alert.alert("تعذّر الحذف", (e as Error).message);
+      }
+    },
   });
 
   const submit = () => {

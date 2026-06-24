@@ -1,17 +1,21 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { Icon, type IconName } from "../components/Icon";
 import { AccountScreen } from "../screens/AccountScreen";
+import { AboutScreen } from "../screens/AboutScreen";
+import { FeedbackScreen } from "../screens/FeedbackScreen";
 import { MerchantOrdersScreen } from "../screens/merchant/MerchantOrdersScreen";
 import { MerchantProductsScreen } from "../screens/merchant/MerchantProductsScreen";
 import { MerchantOffersScreen } from "../screens/merchant/MerchantOffersScreen";
 import { useT } from "../i18n";
 import { colors, fontSize, fontWeight, spacing } from "../theme/colors";
-import type { MerchantTabParamList } from "./types";
+import type { MerchantStackParamList, MerchantTabParamList } from "./types";
 import { StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Tab = createBottomTabNavigator<MerchantTabParamList>();
+const Stack = createNativeStackNavigator<MerchantStackParamList>();
 
 function tabIcon(name: IconName, focused: IconName) {
   return ({ focused: f, color }: { focused: boolean; color: string }) => (
@@ -19,7 +23,7 @@ function tabIcon(name: IconName, focused: IconName) {
   );
 }
 
-export function MerchantNavigator() {
+function MerchantTabs() {
   const { t } = useT();
   const bottomInset = useSafeAreaInsets().bottom;
   return (
@@ -60,6 +64,16 @@ export function MerchantNavigator() {
         options={{ tabBarLabel: t("tab.account"), tabBarIcon: tabIcon("person", "personFill") }}
       />
     </Tab.Navigator>
+  );
+}
+
+export function MerchantNavigator() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="MerchantTabs" component={MerchantTabs} options={{ headerShown: false }} />
+      <Stack.Screen name="About" component={AboutScreen as React.ComponentType} options={{ headerShown: false }} />
+      <Stack.Screen name="Feedback" component={FeedbackScreen as React.ComponentType} options={{ headerShown: false }} />
+    </Stack.Navigator>
   );
 }
 

@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, type IconName } from "../components/Icon";
 import { useT } from "../i18n";
 import { AccountScreen } from "../screens/AccountScreen";
+import { AboutScreen } from "../screens/AboutScreen";
+import { FeedbackScreen } from "../screens/FeedbackScreen";
 import { DriverHomeScreen } from "../screens/driver/DriverHomeScreen";
 import { DriverHistoryScreen } from "../screens/driver/DriverHistoryScreen";
 import { DriverOrderScreen } from "../screens/driver/DriverOrderScreen";
@@ -78,6 +80,8 @@ export function DriverNavigator() {
         component={DriverOrderScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen name="About" component={AboutScreen as React.ComponentType} options={{ headerShown: false }} />
+      <Stack.Screen name="Feedback" component={FeedbackScreen as React.ComponentType} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

@@ -20,7 +20,9 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 import { Screen } from "../components/Screen";
 import { Icon, type IconName } from "../components/Icon";
+import { MerchantSettingsScreen } from "./merchant/MerchantSettingsScreen";
 import { driversApi } from "../api/drivers";
+import { merchantsApi } from "../api/merchants";
 import { meApi } from "../api/me";
 import { uploadToCloudinary, cloudinaryThumb } from "../api/upload";
 import { useAuth } from "../auth/context";
@@ -44,6 +46,7 @@ export function AccountScreen({ navigation }: Props) {
   const [uploading, setUploading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
+  const [storeSettingsOpen, setStoreSettingsOpen] = useState(false);
 
   const isDriver = user?.role === "driver";
   // هويّة شاشة "حسابي" تركوازية موحّدة (للزبون والسائق) — باقي تطبيق الزبون يبقى برتقالياً
@@ -52,6 +55,10 @@ export function AccountScreen({ navigation }: Props) {
 
   const driverMe = useQuery({ queryKey: ["driver", "me"], queryFn: driversApi.me, enabled: isDriver, retry: false });
   const d = driverMe.data;
+
+  // ملكية متجر (مخزّنة مسبقاً من RootNavigator) — لإظهار إعدادات المتجر للتاجر
+  const myStore = useQuery({ queryKey: ["my-merchant"], queryFn: merchantsApi.mine, enabled: !!user && !isDriver, retry: false });
+  const ownsStore = !!myStore.data;
 
   const profile = useQuery({ queryKey: ["me", "profile"], queryFn: meApi.profile, enabled: !!user });
   const p = profile.data;
@@ -221,6 +228,24 @@ export function AccountScreen({ navigation }: Props) {
             <Text style={styles.addressLabel}>{t("account.myAddresses")}</Text>
             <Icon name="chevronLeft" size={18} color={colors.textFaint} />
           </Pressable>
+        ) : null}
+
+        {/* ===== إعدادات المتجر (التاجر) ===== */}
+        {ownsStore ? (
+          <>
+            <Text style={styles.groupTitle}>{t("account.storeSettings")}</Text>
+            <View style={styles.group}>
+              <Row
+                icon="store"
+                tint={brandSoft}
+                color={brand}
+                label={t("account.storeSettings")}
+                sub={t("account.storeSettingsSub")}
+                onPress={() => setStoreSettingsOpen(true)}
+              />
+            </View>
+            <MerchantSettingsScreen visible={storeSettingsOpen} onClose={() => setStoreSettingsOpen(false)} />
+          </>
         ) : null}
 
         {/* تعديل الاسم */}

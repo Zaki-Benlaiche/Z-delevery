@@ -1,4 +1,5 @@
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
@@ -17,6 +18,7 @@ const ACCENT_SOFT = colors.accent + "16";
 
 export function AddressesScreen({ navigation }: Props) {
   const { t } = useT();
+  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
 
   const query = useQuery({ queryKey: ["addresses"], queryFn: addressesApi.list });
@@ -85,7 +87,7 @@ export function AddressesScreen({ navigation }: Props) {
       />
 
       {list.length > 0 ? (
-        <View style={styles.footer}>
+        <View style={[styles.footer, { paddingBottom: (insets.bottom || 0) + spacing.lg }]}>
           <Button label={t("address.addNew")} variant="accent" icon="＋" onPress={() => navigation.navigate("AddAddress")} />
         </View>
       ) : null}

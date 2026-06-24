@@ -2,7 +2,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -11,6 +11,7 @@ from app.core.database import get_db
 from app.core.geo import haversine_km, make_point, read_point
 from app.models.enums import MerchantType, UserRole
 from app.models.merchant import Merchant, Product
+from app.models.order import OrderItem
 from app.models.user import User
 from app.schemas.common import LocationOut
 from app.schemas.merchant import (
@@ -243,4 +244,13 @@ async def delete_product(
     product = await db.get(Product, product_id)
     if product is None or product.merchant_id != merchant_id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "المنتج غير موجود")
+    # منتج عليه طلبات سابقة لا يُحذف نهائياً (يكسر سجلّ الطلبات) — يُخفى بدل ذلك
+    order_count = await db.scalar(
+        select(func.count()).select_from(OrderItem).where(OrderItem.product_id == product_id)
+    )
+    if order_count:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "هذا المنتج عليه طلبات سابقة فلا يمكن حذفه نهائياً. أخفِه من متجرك بدل الحذف.",
+        )
     await db.delete(product)

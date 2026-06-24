@@ -32,6 +32,12 @@ export type MerchantTabParamList = {
   MerchantAccountTab: undefined;
 };
 
+export type MerchantStackParamList = {
+  MerchantTabs: undefined;
+  About: undefined;
+  Feedback: undefined;
+};
+
 export type DriverTabParamList = {
   DriverHomeTab: undefined;
   DriverHistoryTab: undefined;
@@ -41,4 +47,6 @@ export type DriverTabParamList = {
 export type DriverStackParamList = {
   DriverTabs: undefined;
   DriverOrder: { orderId: string };
+  About: undefined;
+  Feedback: undefined;
 };
