@@ -23,6 +23,7 @@ const CATS: { value: MerchantType; icon: IconName; key: string }[] = [
   { value: "food", icon: "restaurant", key: "home.catFood" },
   { value: "fresh", icon: "leaf", key: "home.catFresh" },
   { value: "market", icon: "basket", key: "home.catMarket" },
+  { value: "clinic", icon: "stethoscope", key: "type.clinic" },
 ];
 
 export function PartnerScreen({ route, navigation }: Props) {

@@ -58,6 +58,7 @@ const TYPE_META: Record<MerchantType, { labelKey: string; emoji: string; tint: s
   food: { labelKey: "type.food", emoji: "🍔", tint: "#FEF3C7" },
   fresh: { labelKey: "type.fresh", emoji: "🥬", tint: "#ECFDF5" },
   market: { labelKey: "type.market", emoji: "🛒", tint: "#EFF6FF" },
+  clinic: { labelKey: "type.clinic", emoji: "🩺", tint: "#E6F4F4" },
 };
 
 /** تقدير وقت التوصيل من المسافة (كما تفعل تطبيقات التوصيل) — يُعيد المدى فقط */
@@ -227,6 +228,21 @@ export function HomeScreen({ navigation }: Props) {
           );
         })}
       </View>
+
+      {/* بانر الأطباء — قسم مستقل (حجز موعد بنظام طابور) */}
+      <Pressable
+        style={({ pressed }) => [styles.docBanner, pressed && styles.pressed]}
+        onPress={() => navigation.navigate("Doctors")}
+      >
+        <View style={styles.docIcon}>
+          <Icon name="stethoscope" size={24} color="#fff" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.docTitle}>الأطباء والعيادات</Text>
+          <Text style={styles.docSub}>احجز موعدك بنظام الطابور — اعرف رقمك وكم أمامك</Text>
+        </View>
+        <Icon name="chevronLeft" size={20} color={colors.accent} />
+      </Pressable>
 
       {/* الأكثر طلباً (صفّ أفقي) */}
       {featured.length >= 3 ? (
@@ -599,6 +615,28 @@ const styles = StyleSheet.create({
   catLabel: { fontSize: fontSize.body, color: colors.text, fontWeight: fontWeight.bold, marginTop: spacing.xs },
   catLabelActive: { color: colors.accent },
   catSub: { fontSize: fontSize.caption, color: colors.textMuted },
+
+  // بانر الأطباء
+  docBanner: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: spacing.md,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.lg,
+    padding: spacing.md,
+    borderRadius: radii.xl,
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1.5,
+    borderColor: colors.accent + "33",
+  },
+  docIcon: {
+    width: 48, height: 48, borderRadius: radii.pill,
+    backgroundColor: colors.accent,
+    alignItems: "center", justifyContent: "center",
+    ...shadows.accent,
+  },
+  docTitle: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
+  docSub: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2 },
 
   sectionRow: {
     flexDirection: "row-reverse",

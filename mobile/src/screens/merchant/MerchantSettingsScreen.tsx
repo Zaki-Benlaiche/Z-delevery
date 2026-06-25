@@ -15,6 +15,7 @@ const TYPE_LABEL: Record<MerchantType, string> = {
   food: "مطعم / طعام",
   fresh: "خضار وفواكه",
   market: "بقالة / سوق",
+  clinic: "عيادة / طبيب",
 };
 
 export function MerchantSettingsScreen({ visible, onClose }: { visible: boolean; onClose: () => void }) {

@@ -23,6 +23,9 @@ export type AppStackParamList = {
   Connexion: { role?: "customer" | "merchant" | "driver" } | undefined;
   About: undefined;
   Feedback: undefined;
+  Doctors: undefined;
+  ClinicBook: { clinicId: string };
+  MyTurn: { appointmentId?: string } | undefined;
 };
 
 export type MerchantTabParamList = {

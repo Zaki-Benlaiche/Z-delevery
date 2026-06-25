@@ -29,6 +29,7 @@ const TYPE_META: Record<MerchantType, { labelKey: string; emoji: string; tint: s
   food: { labelKey: "type.food", emoji: "🍔", tint: "#FEF3C7" },
   fresh: { labelKey: "type.fresh", emoji: "🥬", tint: "#ECFDF5" },
   market: { labelKey: "type.market", emoji: "🛒", tint: "#EFF6FF" },
+  clinic: { labelKey: "type.clinic", emoji: "🩺", tint: "#E6F4F4" },
 };
 
 function etaText(km: number | null): string {

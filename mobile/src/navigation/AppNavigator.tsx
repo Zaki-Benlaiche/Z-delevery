@@ -8,6 +8,9 @@ import { useT } from "../i18n";
 import { AboutScreen } from "../screens/AboutScreen";
 import { AccountScreen } from "../screens/AccountScreen";
 import { FeedbackScreen } from "../screens/FeedbackScreen";
+import { DoctorsScreen } from "../screens/DoctorsScreen";
+import { ClinicBookScreen } from "../screens/ClinicBookScreen";
+import { MyTurnScreen } from "../screens/MyTurnScreen";
 import { AddAddressScreen } from "../screens/AddAddressScreen";
 import { AddressesScreen } from "../screens/AddressesScreen";
 import { CartScreen } from "../screens/CartScreen";
@@ -94,6 +97,9 @@ export function AppNavigator() {
       <Stack.Screen name="Partner" component={PartnerScreen} options={{ headerShown: false }} />
       <Stack.Screen name="About" component={AboutScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Feedback" component={FeedbackScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Doctors" component={DoctorsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="ClinicBook" component={ClinicBookScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="MyTurn" component={MyTurnScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name="Connexion"
         component={ConnexionScreen}

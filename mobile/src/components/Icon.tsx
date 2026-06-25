@@ -64,7 +64,12 @@ export type IconName =
   | "closeCircle"
   | "mapPin"
   | "creditCard"
-  | "receiptText";
+  | "receiptText"
+  | "stethoscope"
+  | "doctor"
+  | "calendarClock"
+  | "ticket"
+  | "hospital";
 
 const MAP: Record<IconName, { family: Family; glyph: string }> = {
   search: { family: "ion", glyph: "search" },
@@ -126,6 +131,11 @@ const MAP: Record<IconName, { family: Family; glyph: string }> = {
   mapPin: { family: "mci", glyph: "map-marker-outline" },
   creditCard: { family: "mci", glyph: "credit-card-outline" },
   receiptText: { family: "mci", glyph: "receipt-text-outline" },
+  stethoscope: { family: "mci", glyph: "stethoscope" },
+  doctor: { family: "mci", glyph: "doctor" },
+  calendarClock: { family: "mci", glyph: "calendar-clock" },
+  ticket: { family: "mci", glyph: "ticket-confirmation-outline" },
+  hospital: { family: "mci", glyph: "hospital-box-outline" },
 };
 
 interface Props {

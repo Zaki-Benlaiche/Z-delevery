@@ -10,6 +10,7 @@ import { EmptyState } from "../../components/EmptyState";
 import { StatusBadge } from "../../components/StatusBadge";
 import { Icon, type IconName } from "../../components/Icon";
 import { ImageUploadField } from "../../components/ImageUploadField";
+import { DoctorQueueScreen } from "./DoctorQueueScreen";
 import { CLOUDINARY_ENABLED } from "../../config";
 import { useT } from "../../i18n";
 import { timeAgo } from "../../utils/time";
@@ -101,6 +102,9 @@ export function MerchantOrdersScreen() {
   const activeFilter = FILTERS.find((f) => f.key === filter)!;
   const visible = useMemo(() => all.filter((o) => activeFilter.match(o.status)), [all, activeFilter]);
   const isOpen = store.data?.is_open ?? false;
+
+  // عيادة طبيب → نعرض شاشة الطابور بدل طلبات المنتجات
+  if (store.data?.type === "clinic") return <DoctorQueueScreen clinic={store.data} />;
 
   return (
     <Screen padded={false} background="white">

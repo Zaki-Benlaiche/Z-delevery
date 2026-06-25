@@ -1,7 +1,42 @@
 /** أنواع TypeScript تعكس مخططات الـ Backend (Pydantic) */
 
 export type UserRole = "customer" | "merchant" | "driver" | "admin";
-export type MerchantType = "food" | "fresh" | "market";
+export type MerchantType = "food" | "fresh" | "market" | "clinic";
+
+export type AppointmentStatus = "waiting" | "serving" | "done" | "cancelled";
+
+export interface QueueInfo {
+  now_serving: number;
+  ahead: number;
+  est_wait_min: number;
+  total_in_queue: number;
+}
+
+export interface Appointment {
+  id: string;
+  clinic_id: string;
+  clinic_name: string | null;
+  day: string;            // ISO date
+  queue_number: number;
+  status: AppointmentStatus;
+  created_at: string;
+  queue: QueueInfo | null;
+}
+
+export interface ClinicQueueItem {
+  id: string;
+  queue_number: number;
+  status: AppointmentStatus;
+  patient_name: string | null;
+  created_at: string;
+}
+
+export interface ClinicQueue {
+  day: string;
+  now_serving: number;
+  waiting_count: number;
+  items: ClinicQueueItem[];
+}
 export type OrderStatus =
   | "pending"
   | "accepted"

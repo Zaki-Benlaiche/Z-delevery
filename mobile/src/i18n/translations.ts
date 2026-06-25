@@ -57,6 +57,7 @@ const ar: Dict = {
   "type.food": "مطعم",
   "type.fresh": "متجر طازج",
   "type.market": "بقالة",
+  "type.clinic": "عيادة",
 
   // المتجر
   "merchant.closedNow": "مغلق الآن",
@@ -457,6 +458,7 @@ const fr: Dict = {
   "type.food": "Restaurant",
   "type.fresh": "Frais",
   "type.market": "Épicerie",
+  "type.clinic": "Clinique",
 
   "merchant.closedNow": "Fermé",
   "merchant.rating": "Note",
