@@ -23,10 +23,11 @@ class MerchantType(str, enum.Enum):
 
 
 class AppointmentStatus(str, enum.Enum):
-    WAITING = "waiting"     # في الطابور
-    SERVING = "serving"     # يُخدَم الآن
+    REQUESTED = "requested" # أرسل المريض طلباً، بانتظار تعيين العيادة لرقمه
+    WAITING = "waiting"     # عيّنت العيادة رقمه، في الطابور
+    SERVING = "serving"     # يُخدَم الآن (محسوب من current_number)
     DONE = "done"           # انتهى
-    CANCELLED = "cancelled" # أُلغي
+    CANCELLED = "cancelled" # أُلغي/رُفض
 
 
 class OrderStatus(str, enum.Enum):

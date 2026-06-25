@@ -37,6 +37,8 @@ async def lifespan(app: FastAPI):
 
     # عمود صورة الملف الشخصي للمستخدم (create_all لا يضيف أعمدة لجدول موجود)
     await _safe_exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500)")
+    # عمود «الرقم الحالي» للعيادات (طابور يتحكّم به الطبيب)
+    await _safe_exec("ALTER TABLE merchants ADD COLUMN IF NOT EXISTS current_number INTEGER DEFAULT 0")
 
     await _safe_exec('ALTER TABLE merchants ALTER COLUMN "type" TYPE VARCHAR(20) USING "type"::text')
     # القيم القديمة قد تكون بأحرف كبيرة (أسماء enum) أو صغيرة (قيمه) — نطابق الحالتين

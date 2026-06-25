@@ -1,4 +1,4 @@
-"""مخططات المواعيد الطبية (نظام الطابور)"""
+"""مخططات المواعيد الطبية (طلب → تعيين رقم من العيادة → متابعة)"""
 import uuid
 from datetime import date, datetime
 
@@ -10,10 +10,10 @@ class AppointmentBookIn(BaseModel):
 
 
 class QueueInfo(BaseModel):
-    now_serving: int          # الرقم الجاري خدمته (0 إن لم يبدأ بعد)
-    ahead: int                # كم شخصاً أمامك
-    est_wait_min: int         # دقائق الانتظار التقديرية (يحسب الموبايل وقت الحضور من ساعته)
-    total_in_queue: int       # إجمالي المنتظرين اليوم
+    now_serving: int          # الرقم الحالي الذي تخدمه العيادة
+    ahead: int                # كم أمامك (رقمك - الرقم الحالي)
+    est_wait_min: int         # دقائق الانتظار التقديرية
+    total_in_queue: int       # إجمالي المنتظرين في الطابور
 
 
 class AppointmentOut(BaseModel):
@@ -24,13 +24,21 @@ class AppointmentOut(BaseModel):
     clinic_lat: float | None = None
     clinic_lng: float | None = None
     day: date
-    queue_number: int
-    status: str
+    queue_number: int          # 0 = لم تُعيّن العيادة رقماً بعد
+    status: str                # requested | waiting | done | cancelled
     created_at: datetime
     queue: QueueInfo | None = None
 
 
 # ---------- جانب الطبيب ----------
+class AcceptIn(BaseModel):
+    number: int | None = None  # الرقم الذي تعطيه العيادة (افتراضياً التالي)
+
+
+class SetCurrentIn(BaseModel):
+    number: int | None = None  # ضبط «الرقم الحالي» مباشرةً (إن غاب: +1)
+
+
 class ClinicQueueItem(BaseModel):
     id: uuid.UUID
     queue_number: int
@@ -41,6 +49,6 @@ class ClinicQueueItem(BaseModel):
 
 class ClinicQueueOut(BaseModel):
     day: date
-    now_serving: int
-    waiting_count: int
-    items: list[ClinicQueueItem] = Field(default_factory=list)
+    current_number: int                                   # الرقم الحالي (العدّاد)
+    requests: list[ClinicQueueItem] = Field(default_factory=list)  # طلبات بانتظار تعيين رقم
+    waiting: list[ClinicQueueItem] = Field(default_factory=list)   # في الطابور (رقم مُعيَّن)

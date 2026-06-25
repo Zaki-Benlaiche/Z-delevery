@@ -2,7 +2,7 @@
 import uuid
 
 from geoalchemy2 import Geography
-from sqlalchemy import Boolean, ForeignKey, Numeric, String, Text
+from sqlalchemy import Boolean, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,6 +24,8 @@ class Merchant(Base, UUIDMixin, TimestampMixin):
     open_hours: Mapped[str | None] = mapped_column(String(255))
     is_open: Mapped[bool] = mapped_column(Boolean, default=True)
     rating: Mapped[float] = mapped_column(Numeric(2, 1), default=0)
+    # للعيادات: «الرقم الحالي» الذي يُخدَم الآن — تتحكّم به العيادة (يشمل مرضى الحضور)
+    current_number: Mapped[int] = mapped_column(Integer, default=0)
     location: Mapped[object] = mapped_column(Geography(geometry_type="POINT", srid=4326))
 
     products: Mapped[list["Product"]] = relationship(
