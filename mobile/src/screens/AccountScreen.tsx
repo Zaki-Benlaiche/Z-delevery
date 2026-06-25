@@ -227,6 +227,20 @@ export function AccountScreen({ navigation }: Props) {
           </Pressable>
         ) : null}
 
+        {/* ===== مواعيدي الطبية (الزبون) ===== */}
+        {isCustomerOrGuest ? (
+          <Pressable
+            style={({ pressed }) => [styles.addressCard, pressed && { backgroundColor: colors.surfaceAlt }]}
+            onPress={() => (user ? navigation.navigate("MyTurn") : navigation.navigate("Connexion"))}
+          >
+            <View style={[styles.addressIcon, { backgroundColor: brandSoft }]}>
+              <Icon name="calendarClock" size={20} color={brand} />
+            </View>
+            <Text style={styles.addressLabel}>مواعيدي الطبية</Text>
+            <Icon name="chevronLeft" size={18} color={colors.textFaint} />
+          </Pressable>
+        ) : null}
+
         {/* ===== إعدادات المتجر (التاجر فقط) ===== */}
         {isMerchant ? (
           <>

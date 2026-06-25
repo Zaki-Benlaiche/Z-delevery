@@ -52,6 +52,7 @@ const CATEGORIES: Category[] = [
   { key: "food", labelKey: "home.catFood", subKey: "home.catFoodSub", emoji: "🍔", image: require("../../assets/categories/food.jpg"), color: "#FEF3C7" },
   { key: "fresh", labelKey: "home.catFresh", subKey: "home.catFreshSub", emoji: "🥩🥦", image: require("../../assets/categories/fresh.jpg"), color: "#ECFDF5" },
   { key: "market", labelKey: "home.catMarket", subKey: "home.catMarketSub", emoji: "🛒", image: require("../../assets/categories/market.jpg"), color: "#EFF6FF" },
+  { key: "clinic", labelKey: "home.catClinic", subKey: "home.catClinicSub", emoji: "🩺", image: require("../../assets/categories/clinic.jpg"), color: "#E6F4F4" },
 ];
 
 const TYPE_META: Record<MerchantType, { labelKey: string; emoji: string; tint: string }> = {
@@ -120,6 +121,12 @@ export function HomeScreen({ navigation }: Props) {
 
   const isBrowsing = !debouncedSearch;
   const merchants = query.data ?? [];
+
+  // العيادة → شاشة الحجز، وغيرها → صفحة المتجر (السلّة)
+  const openMerchant = (m: Merchant) => {
+    if (m.type === "clinic") navigation.navigate("ClinicBook", { clinicId: m.id });
+    else navigation.navigate("Merchant", { merchantId: m.id });
+  };
   const featured = isBrowsing
     ? [...merchants].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0)).slice(0, 6)
     : [];
@@ -194,8 +201,8 @@ export function HomeScreen({ navigation }: Props) {
         </>
       ) : null}
 
-      {/* الأقسام الرئيسية: Food / Fresh / Market */}
-      <View style={styles.catRow}>
+      {/* الأقسام الرئيسية: Food / Fresh / Market / أطباء */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.catRow}>
         {CATEGORIES.map((c) => {
           const active = activeCat === c.key;
           return (
@@ -227,22 +234,7 @@ export function HomeScreen({ navigation }: Props) {
             </Pressable>
           );
         })}
-      </View>
-
-      {/* بانر الأطباء — قسم مستقل (حجز موعد بنظام طابور) */}
-      <Pressable
-        style={({ pressed }) => [styles.docBanner, pressed && styles.pressed]}
-        onPress={() => navigation.navigate("Doctors")}
-      >
-        <View style={styles.docIcon}>
-          <Image source={require("../../assets/categories/clinic.jpg")} style={styles.docImg} resizeMode="cover" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.docTitle}>الأطباء والعيادات</Text>
-          <Text style={styles.docSub}>احجز موعدك بنظام الطابور — اعرف رقمك وكم أمامك</Text>
-        </View>
-        <Icon name="chevronLeft" size={20} color={colors.accent} />
-      </Pressable>
+      </ScrollView>
 
       {/* الأكثر طلباً (صفّ أفقي) */}
       {featured.length >= 3 ? (
@@ -257,7 +249,7 @@ export function HomeScreen({ navigation }: Props) {
               <FeaturedCard
                 key={m.id}
                 merchant={m}
-                onPress={() => navigation.navigate("Merchant", { merchantId: m.id })}
+                onPress={() => openMerchant(m)}
               />
             ))}
           </ScrollView>
@@ -324,7 +316,7 @@ export function HomeScreen({ navigation }: Props) {
           renderItem={({ item }) => (
             <MerchantCard
               merchant={item}
-              onPress={() => navigation.navigate("Merchant", { merchantId: item.id })}
+              onPress={() => openMerchant(item)}
             />
           )}
         />
@@ -413,8 +405,10 @@ export function MerchantCard({ merchant, onPress }: { merchant: Merchant; onPres
 
         {merchant.is_open ? (
           <View style={styles.etaBadge}>
-            <Icon name="scooter" size={14} color={colors.text} />
-            <Text style={styles.etaText}>{etaRange(merchant.distance_km)} {t("common.min")}</Text>
+            <Icon name={merchant.type === "clinic" ? "calendarClock" : "scooter"} size={14} color={colors.text} />
+            <Text style={styles.etaText}>
+              {merchant.type === "clinic" ? "احجز موعد" : `${etaRange(merchant.distance_km)} ${t("common.min")}`}
+            </Text>
           </View>
         ) : (
           <View style={styles.closedBadge}>
@@ -571,7 +565,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xs,
   },
   catCard: {
-    flex: 1,
+    width: 104,
     alignItems: "center",
     gap: spacing.xs,
     paddingVertical: spacing.md,
