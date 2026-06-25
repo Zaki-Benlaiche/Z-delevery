@@ -18,9 +18,8 @@ services:
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: zdelivry-db
-          property: connectionString
+        sync: false            # مُدارة يدوياً في لوحة Render (قاعدة Z-delevery2) — السرّ لا يُوضع في git
+                               # ملاحظة: قاعدة Render المجانية تنتهي كل ~30 يوماً؛ عند انتهائها أنشئ قاعدة جديدة وحدّث هذه القيمة
       - key: REDIS_URL
         value: memory://       # بدون Redis في النشر المجاني — نستخدم تخزيناً داخل الذاكرة
       - key: DEBUG
@@ -34,11 +33,5 @@ services:
       - key: ADMIN_PHONES
         sync: false            # تُكتَب يدوياً في لوحة Render (لتجنّب وضعها في git)
 
-databases:
-  - name: zdelivry-db
-    plan: free
-    region: frankfurt   # يجب أن تكون في نفس منطقة zdelivry-api للوصول الداخلي
-    databaseName: zdelivry
-    user: zdelivry
-    postgresMajorVersion: 16
-    # تنبيه: قاعدة البيانات المجانية تنتهي صلاحيتها بعد 90 يوماً — تحتاج إعادة إنشاء
+# ملاحظة: قاعدة البيانات لم تعد مُدارة عبر هذا الـ blueprint (تُنشأ يدوياً في لوحة Render
+# لأن القاعدة المجانية تنتهي كل ~30 يوماً). يُضبط DATABASE_URL يدوياً (sync:false أعلاه).
