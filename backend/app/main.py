@@ -203,3 +203,30 @@ async def root():
 @app.get("/health", tags=["النظام"])
 async def health():
     return {"status": "healthy"}
+
+
+# تشخيص مؤقّت — يُزال بعد حلّ مشكلة 500 على استعلامات DB
+@app.get("/api/_diag", tags=["النظام"])
+async def _diag():
+    from sqlalchemy import select, text as _text
+    from app.core.database import AsyncSessionLocal
+    from app.models.merchant import Merchant
+
+    out: dict[str, str] = {}
+
+    async def step(name, coro):
+        try:
+            await coro()
+            out[name] = "ok"
+        except Exception as e:  # noqa: BLE001
+            out[name] = f"{type(e).__name__}: {e}"
+
+    async with AsyncSessionLocal() as s:
+        await step("select_1", lambda: s.execute(_text("SELECT 1")))
+    async with AsyncSessionLocal() as s:
+        await step("count_merchants", lambda: s.execute(_text("SELECT count(*) FROM merchants")))
+    async with AsyncSessionLocal() as s:
+        await step("orm_merchant", lambda: s.execute(select(Merchant).limit(1)))
+    async with AsyncSessionLocal() as s:
+        await step("postgis_version", lambda: s.execute(_text("SELECT PostGIS_Version()")))
+    return out
