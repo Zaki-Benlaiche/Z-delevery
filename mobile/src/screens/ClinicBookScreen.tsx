@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
@@ -20,6 +21,7 @@ const ACCENT_SOFT = colors.accent + "16";
 export function ClinicBookScreen({ route, navigation }: Props) {
   const { clinicId } = route.params;
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
 
   const [when, setWhen] = useState<"today" | "tomorrow">("today");
@@ -121,7 +123,7 @@ export function ClinicBookScreen({ route, navigation }: Props) {
       </ScrollView>
 
       {/* زر الحجز */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: (insets.bottom || 0) + spacing.lg }]}>
         <Pressable
           onPress={onBook}
           disabled={book.isPending || (c && !c.is_open)}
