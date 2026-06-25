@@ -3,7 +3,7 @@
 export type UserRole = "customer" | "merchant" | "driver" | "admin";
 export type MerchantType = "food" | "fresh" | "market" | "clinic";
 
-export type AppointmentStatus = "waiting" | "serving" | "done" | "cancelled";
+export type AppointmentStatus = "requested" | "waiting" | "serving" | "done" | "cancelled";
 
 export interface QueueInfo {
   now_serving: number;
@@ -36,9 +36,9 @@ export interface ClinicQueueItem {
 
 export interface ClinicQueue {
   day: string;
-  now_serving: number;
-  waiting_count: number;
-  items: ClinicQueueItem[];
+  current_number: number;
+  requests: ClinicQueueItem[];
+  waiting: ClinicQueueItem[];
 }
 export type OrderStatus =
   | "pending"

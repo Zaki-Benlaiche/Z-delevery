@@ -39,7 +39,8 @@ export function MyTurnScreen({ route, navigation }: Props) {
   const loading = appointmentId ? single.isLoading : mineQ.isLoading;
   const q = appt?.queue;
   const ahead = q?.ahead ?? 0;
-  const isServing = appt?.status === "serving" || (!!appt && ahead === 0 && appt.status === "waiting");
+  const isRequested = appt?.status === "requested";
+  const isServing = !!appt && appt.status === "waiting" && ahead === 0;
 
   // نبض بطاقة "دورك الآن"
   const pulse = useRef(new Animated.Value(1)).current;
@@ -103,23 +104,33 @@ export function MyTurnScreen({ route, navigation }: Props) {
             </View>
           </View>
 
-          {/* بطاقة التذكرة */}
-          <Animated.View style={[styles.ticket, isServing && styles.ticketActive, { transform: [{ scale: pulse }] }]}>
-            {isServing ? <View style={styles.liveDot} /> : null}
-            <Text style={[styles.ticketLabel, isServing && styles.onText]}>رقمك في الطابور</Text>
-            <Text style={[styles.ticketNumber, isServing && styles.onText]}>{appt.queue_number}</Text>
-            {isServing ? (
-              <View style={styles.nowBadge}>
-                <Icon name="checkCircle" size={16} color="#fff" />
-                <Text style={styles.nowText}>دورك الآن — توجّه للطبيب</Text>
-              </View>
-            ) : (
-              <Text style={styles.ticketHint}>يُخدَم الآن رقم {serving}</Text>
-            )}
-          </Animated.View>
+          {/* حالة الطلب: بانتظار تعيين الرقم */}
+          {isRequested ? (
+            <View style={styles.pendingCard}>
+              <View style={styles.pendingIcon}><Icon name="hourglass" size={30} color={colors.warning} /></View>
+              <Text style={styles.pendingTitle}>تم إرسال طلبك</Text>
+              <Text style={styles.pendingSub}>
+                بانتظار أن تعطيك العيادة رقمك في الطابور. سيصلك إشعار فور التأكيد، ثم تتابع دورك هنا.
+              </Text>
+            </View>
+          ) : (
+            <Animated.View style={[styles.ticket, isServing && styles.ticketActive, { transform: [{ scale: pulse }] }]}>
+              {isServing ? <View style={styles.liveDot} /> : null}
+              <Text style={[styles.ticketLabel, isServing && styles.onText]}>رقمك في الطابور</Text>
+              <Text style={[styles.ticketNumber, isServing && styles.onText]}>{appt.queue_number}</Text>
+              {isServing ? (
+                <View style={styles.nowBadge}>
+                  <Icon name="checkCircle" size={16} color="#fff" />
+                  <Text style={styles.nowText}>دورك الآن — توجّه للطبيب</Text>
+                </View>
+              ) : (
+                <Text style={styles.ticketHint}>يُخدَم الآن رقم {serving}</Text>
+              )}
+            </Animated.View>
+          )}
 
           {/* شريط تقدّم الطابور */}
-          {!isServing ? (
+          {!isServing && !isRequested ? (
             <View style={styles.progressCard}>
               <View style={styles.progressHead}>
                 <Text style={styles.progressTitle}>تقدّم الطابور</Text>
@@ -139,7 +150,7 @@ export function MyTurnScreen({ route, navigation }: Props) {
           ) : null}
 
           {/* إحصاءات */}
-          {!isServing ? (
+          {!isServing && !isRequested ? (
             <View style={styles.statsRow}>
               <Stat icon="person" value={String(ahead)} label="أمامك" tint={colors.info} />
               <Stat icon="calendarClock" value={arrivalTime(q?.est_wait_min ?? 0)} label="وقت حضورك" tint={colors.accent} />
@@ -207,6 +218,11 @@ const styles = StyleSheet.create({
   clinicAvatar: { width: 48, height: 48, borderRadius: radii.pill, backgroundColor: colors.accent + "16", alignItems: "center", justifyContent: "center" },
   clinicName: { fontSize: fontSize.h4, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
   clinicSub: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 1 },
+
+  pendingCard: { alignItems: "center", backgroundColor: colors.warningSoft, borderRadius: radii.xxl, paddingVertical: spacing.xxl, paddingHorizontal: spacing.lg, gap: spacing.sm },
+  pendingIcon: { width: 64, height: 64, borderRadius: radii.pill, backgroundColor: "rgba(245,158,11,0.18)", alignItems: "center", justifyContent: "center" },
+  pendingTitle: { fontSize: fontSize.h3, fontWeight: fontWeight.extrabold, color: "#92400E", textAlign: "center" },
+  pendingSub: { fontSize: fontSize.small, color: "#B45309", textAlign: "center", lineHeight: 21, maxWidth: 300 },
 
   ticket: { alignItems: "center", backgroundColor: colors.surfaceAlt, borderRadius: radii.xxl, paddingVertical: spacing.xxl, borderWidth: 1.5, borderColor: colors.borderSoft },
   ticketActive: { backgroundColor: colors.accent, borderColor: colors.accent, ...shadows.accent },

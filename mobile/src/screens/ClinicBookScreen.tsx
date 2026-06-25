@@ -110,9 +110,9 @@ export function ClinicBookScreen({ route, navigation }: Props) {
         <View style={styles.howCard}>
           <Text style={styles.howTitle}>كيف يعمل؟</Text>
           {[
-            "احجز الآن لتأخذ رقمك في طابور اليوم",
-            "تابع كم شخصاً أمامك ووقت حضورك المتوقّع",
-            "احضر قبل دورك بقليل — لا انتظار طويل",
+            "أرسل طلبك، وتعطيك العيادة رقمك في الطابور",
+            "تابع الرقم الحالي وكم شخصاً أمامك ووقت حضورك",
+            "يصلك إشعار عند اقتراب دورك — احضر في الوقت",
           ].map((s, i) => (
             <View key={i} style={styles.stepRow}>
               <View style={styles.stepNum}><Text style={styles.stepNumText}>{i + 1}</Text></View>
@@ -135,7 +135,7 @@ export function ClinicBookScreen({ route, navigation }: Props) {
         >
           <Icon name="ticket" size={20} color="#fff" />
           <Text style={styles.bookText}>
-            {c && !c.is_open ? "العيادة مغلقة حالياً" : !user ? "سجّل الدخول للحجز" : "احجز موعد اليوم"}
+            {c && !c.is_open ? "العيادة مغلقة حالياً" : !user ? "سجّل الدخول للحجز" : "أرسل طلب الحجز"}
           </Text>
         </Pressable>
       </View>
