@@ -185,6 +185,8 @@ async def update_merchant(
     merchant = await _get_owned_merchant(merchant_id, user, db)
     data = payload.model_dump(exclude_unset=True)
     lat, lng = data.pop("lat", None), data.pop("lng", None)
+    if "type" in data and data["type"] is not None:
+        data["type"] = MerchantType(data["type"]).value  # نخزّن القيمة النصّية (food/clinic...)
     for field, value in data.items():
         setattr(merchant, field, value)
     if lat is not None and lng is not None:

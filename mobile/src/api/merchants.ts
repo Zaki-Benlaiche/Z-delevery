@@ -36,7 +36,7 @@ export const merchantsApi = {
 
   detail: (id: string) => api.get<MerchantDetail>(`/merchants/${id}`),
 
-  update: (id: string, payload: Partial<{ name: string; description: string | null; open_hours: string | null; is_open: boolean; logo_url: string | null }>) =>
+  update: (id: string, payload: Partial<{ name: string; type: MerchantType; description: string | null; open_hours: string | null; is_open: boolean; logo_url: string | null }>) =>
     api.patch<MerchantDetail>(`/merchants/${id}`, payload),
 
   addProduct: (merchantId: string, payload: ProductPayload) =>

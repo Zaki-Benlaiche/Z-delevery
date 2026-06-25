@@ -52,6 +52,7 @@ class MerchantCreate(BaseModel):
 
 class MerchantUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=160)
+    type: MerchantType | None = None
     description: str | None = None
     logo_url: str | None = None
     open_hours: str | None = None

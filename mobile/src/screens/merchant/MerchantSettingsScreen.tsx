@@ -24,6 +24,7 @@ export function MerchantSettingsScreen({ visible, onClose }: { visible: boolean;
   const s = store.data;
 
   const [name, setName] = useState("");
+  const [type, setType] = useState<MerchantType>("food");
   const [description, setDescription] = useState("");
   const [openHours, setOpenHours] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -32,6 +33,7 @@ export function MerchantSettingsScreen({ visible, onClose }: { visible: boolean;
   useEffect(() => {
     if (visible && s) {
       setName(s.name ?? "");
+      setType((s.type as MerchantType) ?? "food");
       setDescription(s.description ?? "");
       setOpenHours(s.open_hours ?? "");
       setIsOpen(s.is_open ?? false);
@@ -44,6 +46,7 @@ export function MerchantSettingsScreen({ visible, onClose }: { visible: boolean;
     mutationFn: () =>
       merchantsApi.update(s!.id, {
         name: name.trim(),
+        type,
         description: description.trim() || null,
         open_hours: openHours.trim() || null,
         is_open: isOpen,
@@ -96,13 +99,26 @@ export function MerchantSettingsScreen({ visible, onClose }: { visible: boolean;
             <Input label="وصف المتجر (اختياري)" value={description} onChangeText={setDescription} placeholder="نبذة قصيرة عن متجرك" multiline />
             <Input label="ساعات العمل (اختياري)" value={openHours} onChangeText={setOpenHours} placeholder="مثال: 09:00 - 23:00" icon="🕐" />
 
-            {/* نوع المتجر (للعرض فقط) */}
-            {s ? (
-              <View style={styles.typeBox}>
-                <Text style={styles.typeLabel}>نوع المتجر</Text>
-                <Text style={styles.typeValue}>{TYPE_LABEL[s.type] ?? s.type}</Text>
+            {/* نوع المتجر (قابل للتغيير) */}
+            <View>
+              <Text style={styles.typeHeading}>نوع المتجر</Text>
+              <View style={styles.typeChips}>
+                {(["food", "fresh", "market", "clinic"] as MerchantType[]).map((tp) => {
+                  const active = type === tp;
+                  return (
+                    <Pressable
+                      key={tp}
+                      onPress={() => setType(tp)}
+                      style={[styles.typeChip, active && styles.typeChipActive]}
+                    >
+                      <Text style={[styles.typeChipText, active && styles.typeChipTextActive]}>
+                        {TYPE_LABEL[tp]}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </View>
-            ) : null}
+            </View>
 
             {/* حالة الفتح */}
             <View style={styles.openRow}>
@@ -129,9 +145,12 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: "row-reverse", alignItems: "center", justifyContent: "space-between" },
   sheetTitle: { fontSize: fontSize.h3, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
 
-  typeBox: { flexDirection: "row-reverse", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.surface, borderRadius: radii.lg, padding: spacing.md },
-  typeLabel: { fontSize: fontSize.small, color: colors.textMuted },
-  typeValue: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.text },
+  typeHeading: { fontSize: fontSize.small, color: colors.textMuted, fontWeight: fontWeight.semibold, textAlign: "right", marginBottom: spacing.xs },
+  typeChips: { flexDirection: "row-reverse", flexWrap: "wrap", gap: spacing.sm },
+  typeChip: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: radii.pill, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: "transparent" },
+  typeChipActive: { backgroundColor: colors.accent + "16", borderColor: colors.accent },
+  typeChipText: { fontSize: fontSize.small, fontWeight: fontWeight.semibold, color: colors.textMuted },
+  typeChipTextActive: { color: colors.accent },
 
   openRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.md, backgroundColor: colors.surface, borderRadius: radii.lg, padding: spacing.md },
   openLabel: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.text, textAlign: "right" },
