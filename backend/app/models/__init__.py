@@ -1,4 +1,5 @@
 """تجميع كل النماذج ليكتشفها SQLAlchemy و Alembic"""
+from app.models.appointment import Appointment
 from app.models.driver import Driver
 from app.models.merchant import Merchant, Product
 from app.models.offer import Offer
@@ -17,4 +18,5 @@ __all__ = [
     "OrderItem",
     "OrderTracking",
     "Rating",
+    "Appointment",
 ]

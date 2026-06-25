@@ -19,6 +19,14 @@ class MerchantType(str, enum.Enum):
     FOOD = "food"       # مطاعم
     FRESH = "fresh"     # لحوم/دجاج/سمك/خضر/فواكه
     MARKET = "market"   # مواد غذائية وبقالة
+    CLINIC = "clinic"   # أطباء/عيادات (حجز موعد بنظام طابور)
+
+
+class AppointmentStatus(str, enum.Enum):
+    WAITING = "waiting"     # في الطابور
+    SERVING = "serving"     # يُخدَم الآن
+    DONE = "done"           # انتهى
+    CANCELLED = "cancelled" # أُلغي
 
 
 class OrderStatus(str, enum.Enum):
