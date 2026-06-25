@@ -235,7 +235,7 @@ export function HomeScreen({ navigation }: Props) {
         onPress={() => navigation.navigate("Doctors")}
       >
         <View style={styles.docIcon}>
-          <Icon name="stethoscope" size={24} color="#fff" />
+          <Image source={require("../../assets/categories/clinic.jpg")} style={styles.docImg} resizeMode="cover" />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.docTitle}>الأطباء والعيادات</Text>
@@ -630,11 +630,13 @@ const styles = StyleSheet.create({
     borderColor: colors.accent + "33",
   },
   docIcon: {
-    width: 48, height: 48, borderRadius: radii.pill,
+    width: 56, height: 56, borderRadius: radii.lg,
+    overflow: "hidden",
     backgroundColor: colors.accent,
-    alignItems: "center", justifyContent: "center",
+    borderWidth: 2, borderColor: "#fff",
     ...shadows.accent,
   },
+  docImg: { width: "100%", height: "100%" },
   docTitle: { fontSize: fontSize.bodyLg, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
   docSub: { fontSize: fontSize.small, color: colors.textMuted, textAlign: "right", marginTop: 2 },
 
