@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
     # القيم القديمة قد تكون بأحرف كبيرة (أسماء enum) أو صغيرة (قيمه) — نطابق الحالتين
     await _safe_exec("UPDATE merchants SET \"type\"='food' WHERE lower(\"type\")='restaurant'")
     await _safe_exec("UPDATE merchants SET \"type\"='market' WHERE lower(\"type\") IN ('other','clothing')")
-    await _safe_exec("UPDATE merchants SET \"type\"='food' WHERE \"type\" NOT IN ('food','fresh','market')")
+    await _safe_exec("UPDATE merchants SET \"type\"='food' WHERE \"type\" NOT IN ('food','fresh','market','clinic')")
 
     # مصالحة أدوار الأدمن مع ADMIN_PHONES (المصدر الوحيد للحقيقة):
     # نرقّي أرقام القائمة، وننزع الصلاحية عن أيّ أدمن رقمه ليس فيها (لأنّ الترقية لا تُلغى تلقائياً).
