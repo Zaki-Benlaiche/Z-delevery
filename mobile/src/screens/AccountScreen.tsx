@@ -22,7 +22,6 @@ import { Screen } from "../components/Screen";
 import { Icon, type IconName } from "../components/Icon";
 import { MerchantSettingsScreen } from "./merchant/MerchantSettingsScreen";
 import { driversApi } from "../api/drivers";
-import { merchantsApi } from "../api/merchants";
 import { meApi } from "../api/me";
 import { uploadToCloudinary, cloudinaryThumb } from "../api/upload";
 import { useAuth } from "../auth/context";
@@ -49,16 +48,14 @@ export function AccountScreen({ navigation }: Props) {
   const [storeSettingsOpen, setStoreSettingsOpen] = useState(false);
 
   const isDriver = user?.role === "driver";
+  // تاجر بالدور فقط — لا نستعلم عن ["my-merchant"] هنا حتى لا نُحرّك بوّابة التوجيه في RootNavigator
+  const isMerchant = user?.role === "merchant";
   // هويّة شاشة "حسابي" تركوازية موحّدة (للزبون والسائق) — باقي تطبيق الزبون يبقى برتقالياً
   const brand = colors.accent;
   const brandSoft = colors.accent + "16";
 
   const driverMe = useQuery({ queryKey: ["driver", "me"], queryFn: driversApi.me, enabled: isDriver, retry: false });
   const d = driverMe.data;
-
-  // ملكية متجر (مخزّنة مسبقاً من RootNavigator) — لإظهار إعدادات المتجر للتاجر
-  const myStore = useQuery({ queryKey: ["my-merchant"], queryFn: merchantsApi.mine, enabled: !!user && !isDriver, retry: false });
-  const ownsStore = !!myStore.data;
 
   const profile = useQuery({ queryKey: ["me", "profile"], queryFn: meApi.profile, enabled: !!user });
   const p = profile.data;
@@ -230,8 +227,8 @@ export function AccountScreen({ navigation }: Props) {
           </Pressable>
         ) : null}
 
-        {/* ===== إعدادات المتجر (التاجر) ===== */}
-        {ownsStore ? (
+        {/* ===== إعدادات المتجر (التاجر فقط) ===== */}
+        {isMerchant ? (
           <>
             <Text style={styles.groupTitle}>{t("account.storeSettings")}</Text>
             <View style={styles.group}>
