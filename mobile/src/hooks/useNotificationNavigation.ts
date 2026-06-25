@@ -12,13 +12,19 @@ export function useNotificationNavigation(
 
   useEffect(() => {
     const data = response?.notification.request.content.data as
-      | { screen?: string; order_id?: string }
+      | { screen?: string; order_id?: string; appointment_id?: string }
       | undefined;
     const nav = navRef.current;
-    if (!data?.order_id || !nav) return;
+    if (!nav || !data) return;
 
-    const params = { orderId: data.order_id };
     const navigate = nav.navigate as (screen: string, params: object) => void;
+    // موعد طبي → شاشة دوري
+    if (data.screen === "MyTurn" && data.appointment_id) {
+      navigate("MyTurn", { appointmentId: data.appointment_id });
+      return;
+    }
+    if (!data.order_id) return;
+    const params = { orderId: data.order_id };
     if (data.screen === "DriverOrder") {
       navigate("DriverOrder", params);
     } else if (data.screen === "OrderTracking" || data.screen === "OrderDetail") {

@@ -20,6 +20,9 @@ class AppointmentOut(BaseModel):
     id: uuid.UUID
     clinic_id: uuid.UUID
     clinic_name: str | None = None
+    clinic_phone: str | None = None
+    clinic_lat: float | None = None
+    clinic_lng: float | None = None
     day: date
     queue_number: int
     status: str

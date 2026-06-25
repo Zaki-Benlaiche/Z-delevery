@@ -52,7 +52,7 @@ const CATEGORIES: Category[] = [
   { key: "food", labelKey: "home.catFood", subKey: "home.catFoodSub", emoji: "🍔", image: require("../../assets/categories/food.jpg"), color: "#FEF3C7" },
   { key: "fresh", labelKey: "home.catFresh", subKey: "home.catFreshSub", emoji: "🥩🥦", image: require("../../assets/categories/fresh.jpg"), color: "#ECFDF5" },
   { key: "market", labelKey: "home.catMarket", subKey: "home.catMarketSub", emoji: "🛒", image: require("../../assets/categories/market.jpg"), color: "#EFF6FF" },
-  { key: "clinic", labelKey: "home.catClinic", subKey: "home.catClinicSub", emoji: "🩺", image: require("../../assets/categories/clinic.jpg"), color: "#E6F4F4" },
+  { key: "clinic", labelKey: "home.catClinic", subKey: "home.catClinicSub", emoji: "🩺", image: require("../../assets/categories/clinique.jpg"), color: "#E6F4F4" },
 ];
 
 const TYPE_META: Record<MerchantType, { labelKey: string; emoji: string; tint: string }> = {

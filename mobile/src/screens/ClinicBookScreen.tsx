@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -21,14 +22,22 @@ export function ClinicBookScreen({ route, navigation }: Props) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  const [when, setWhen] = useState<"today" | "tomorrow">("today");
+
   const clinic = useQuery({
     queryKey: ["merchant", clinicId],
     queryFn: () => merchantsApi.detail(clinicId),
   });
   const c = clinic.data;
 
+  const dayISO = () => {
+    const d = new Date();
+    if (when === "tomorrow") d.setDate(d.getDate() + 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
   const book = useMutation({
-    mutationFn: () => appointmentsApi.book(clinicId),
+    mutationFn: () => appointmentsApi.book(clinicId, dayISO()),
     onSuccess: (appt) => {
       queryClient.invalidateQueries({ queryKey: ["appointments", "me"] });
       navigation.replace("MyTurn", { appointmentId: appt.id });
@@ -70,6 +79,22 @@ export function ClinicBookScreen({ route, navigation }: Props) {
             <Text style={[styles.stateText, { color: c?.is_open ? colors.success : colors.textMuted }]}>
               {c?.is_open ? "● مفتوح الآن" : "● مغلق"}
             </Text>
+          </View>
+        </View>
+
+        {/* اختيار اليوم */}
+        <View>
+          <Text style={styles.dayHeading}>اختر اليوم</Text>
+          <View style={styles.dayRow}>
+            {([["today", "اليوم"], ["tomorrow", "غداً"]] as const).map(([k, lbl]) => {
+              const active = when === k;
+              return (
+                <Pressable key={k} onPress={() => setWhen(k)} style={[styles.dayChip, active && styles.dayChipActive]}>
+                  <Icon name="calendarClock" size={16} color={active ? "#fff" : colors.textMuted} />
+                  <Text style={[styles.dayChipText, active && styles.dayChipTextActive]}>{lbl}</Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
 
@@ -147,6 +172,13 @@ const styles = StyleSheet.create({
   openPill: { backgroundColor: colors.successSoft },
   closedPill: { backgroundColor: colors.surface },
   stateText: { fontSize: fontSize.small, fontWeight: fontWeight.bold },
+
+  dayHeading: { fontSize: fontSize.small, color: colors.textMuted, fontWeight: fontWeight.semibold, textAlign: "right", marginBottom: spacing.xs },
+  dayRow: { flexDirection: "row-reverse", gap: spacing.sm },
+  dayChip: { flex: 1, flexDirection: "row-reverse", alignItems: "center", justifyContent: "center", gap: spacing.xs, height: 48, borderRadius: radii.lg, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: "transparent" },
+  dayChipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+  dayChipText: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.textMuted },
+  dayChipTextActive: { color: "#fff" },
 
   infoCard: { backgroundColor: colors.background, borderRadius: radii.xl, borderWidth: 1, borderColor: colors.borderSoft, padding: spacing.sm, ...shadows.sm },
   infoRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.md, padding: spacing.sm },

@@ -8,10 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.core.database import get_db
+from app.core.geo import read_point
 from app.models.appointment import Appointment
 from app.models.enums import AppointmentStatus, UserRole
 from app.models.merchant import Merchant
 from app.models.user import User
+from app.services.notifications import fire_and_forget, send_push
 from app.schemas.appointment import (
     AppointmentBookIn,
     AppointmentOut,
@@ -84,10 +86,15 @@ async def _queue_info(appt: Appointment, db: AsyncSession) -> QueueInfo:
 
 async def _to_out(appt: Appointment, db: AsyncSession, *, with_queue: bool = True) -> AppointmentOut:
     clinic = await db.get(Merchant, appt.clinic_id)
+    owner = await db.get(User, clinic.user_id) if clinic else None
+    coords = read_point(clinic.location) if clinic else None
     return AppointmentOut(
         id=appt.id,
         clinic_id=appt.clinic_id,
         clinic_name=clinic.name if clinic else None,
+        clinic_phone=owner.phone if owner else None,
+        clinic_lat=coords[0] if coords else None,
+        clinic_lng=coords[1] if coords else None,
         day=appt.day,
         queue_number=appt.queue_number,
         status=appt.status,
@@ -235,4 +242,34 @@ async def call_next(
         nxt.status = AppointmentStatus.SERVING.value
     await db.commit()
 
+    await _notify_near_turn(clinic_id, d, nxt, db)
     return await clinic_queue(clinic_id, d, db, user)
+
+
+async def _notify_near_turn(clinic_id: uuid.UUID, day: date, serving: Appointment | None, db: AsyncSession) -> None:
+    """إشعار push: من حان دوره، ومن اقترب دوره (أوّل منتظِرَين)."""
+    clinic = await db.get(Merchant, clinic_id)
+    cname = clinic.name if clinic else "العيادة"
+
+    async def push(appt: Appointment, title: str, body: str) -> None:
+        u = await db.get(User, appt.customer_id)
+        if u and u.expo_push_token:
+            fire_and_forget(send_push(
+                u.expo_push_token, title, body,
+                data={"appointment_id": str(appt.id), "screen": "MyTurn"},
+            ))
+
+    if serving is not None:
+        await push(serving, "🩺 حان دورك الآن", f"توجّه إلى {cname} — أنت التالي على الطبيب")
+
+    # أوّل منتظِرَين بعد الجاري → "اقترب دورك"
+    waiting = (await db.execute(
+        select(Appointment).where(
+            Appointment.clinic_id == clinic_id, Appointment.day == day,
+            Appointment.status == AppointmentStatus.WAITING.value,
+        ).order_by(Appointment.queue_number).limit(2)
+    )).scalars().all()
+    for idx, appt in enumerate(waiting):
+        ahead = idx + 1  # أمامه الجاري (+ من قبله)
+        msg = "أنت التالي! استعدّ للدخول" if ahead == 1 else f"اقترب دورك — بقي {ahead} أمامك"
+        await push(appt, f"⏳ {cname}", msg)
