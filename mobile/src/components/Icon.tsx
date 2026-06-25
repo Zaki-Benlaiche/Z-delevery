@@ -56,7 +56,15 @@ export type IconName =
   | "bike"
   | "wallet"
   | "clockFast"
-  | "mail";
+  | "mail"
+  | "flame"
+  | "hourglass"
+  | "bagCheck"
+  | "checkCircle"
+  | "closeCircle"
+  | "mapPin"
+  | "creditCard"
+  | "receiptText";
 
 const MAP: Record<IconName, { family: Family; glyph: string }> = {
   search: { family: "ion", glyph: "search" },
@@ -110,6 +118,14 @@ const MAP: Record<IconName, { family: Family; glyph: string }> = {
   wallet: { family: "ion", glyph: "wallet-outline" },
   clockFast: { family: "mci", glyph: "clock-fast" },
   mail: { family: "ion", glyph: "mail-outline" },
+  flame: { family: "mci", glyph: "fire" },
+  hourglass: { family: "mci", glyph: "timer-sand" },
+  bagCheck: { family: "ion", glyph: "bag-check-outline" },
+  checkCircle: { family: "mci", glyph: "check-circle" },
+  closeCircle: { family: "mci", glyph: "close-circle-outline" },
+  mapPin: { family: "mci", glyph: "map-marker-outline" },
+  creditCard: { family: "mci", glyph: "credit-card-outline" },
+  receiptText: { family: "mci", glyph: "receipt-text-outline" },
 };
 
 interface Props {

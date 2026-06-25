@@ -7,7 +7,6 @@ import { ordersApi } from "../../api/orders";
 import type { Order, OrderStatus } from "../../api/types";
 import { Screen } from "../../components/Screen";
 import { EmptyState } from "../../components/EmptyState";
-import { PriceTag } from "../../components/PriceTag";
 import { StatusBadge } from "../../components/StatusBadge";
 import { Icon, type IconName } from "../../components/Icon";
 import { ImageUploadField } from "../../components/ImageUploadField";
@@ -17,16 +16,28 @@ import { timeAgo } from "../../utils/time";
 import { colors, fontSize, fontWeight, radii, shadows, spacing } from "../../theme/colors";
 
 // الإجراء التالي المتاح لكل حالة (يُعرض كأزرار)
-const NEXT: Partial<Record<OrderStatus, { status: OrderStatus; label: string; danger?: boolean }[]>> = {
+const NEXT: Partial<Record<OrderStatus, { status: OrderStatus; label: string; icon: IconName; danger?: boolean }[]>> = {
   pending: [
-    { status: "accepted", label: "قبول الطلب" },
-    { status: "cancelled", label: "رفض", danger: true },
+    { status: "accepted", label: "قبول الطلب", icon: "check" },
+    { status: "cancelled", label: "رفض", icon: "close", danger: true },
   ],
-  accepted: [{ status: "preparing", label: "بدء التحضير" }],
-  preparing: [{ status: "ready", label: "جاهز للاستلام" }],
+  accepted: [{ status: "preparing", label: "بدء التحضير", icon: "hourglass" }],
+  preparing: [{ status: "ready", label: "جاهز للاستلام", icon: "bagCheck" }],
 };
 
-// مجموعات التصفية — كل مجموعة تضمّ حالات الطلب التي تخصّها
+// أيقونة عصرية لكل حالة طلب
+const STATUS_ICON: Record<OrderStatus, IconName> = {
+  pending: "flame",
+  accepted: "checkCircle",
+  preparing: "hourglass",
+  ready: "bagCheck",
+  picked_up: "scooter",
+  on_the_way: "scooter",
+  delivered: "checkCircle",
+  cancelled: "closeCircle",
+};
+
+// مجموعات التصفية
 type FilterKey = "all" | "new" | "active" | "ready" | "done";
 const FILTERS: { key: FilterKey; label: string; match: (s: OrderStatus) => boolean }[] = [
   { key: "all", label: "الكل", match: () => true },
@@ -36,7 +47,15 @@ const FILTERS: { key: FilterKey; label: string; match: (s: OrderStatus) => boole
   { key: "done", label: "منتهية", match: (s) => ["picked_up", "on_the_way", "delivered", "cancelled"].includes(s) },
 ];
 
-const ACCENT_SOFT = colors.accent + "14";
+function money(n: number): string {
+  return `${Math.round(n).toLocaleString("fr-DZ")} دج`;
+}
+
+function isToday(iso: string): boolean {
+  const d = new Date(iso);
+  const n = new Date();
+  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+}
 
 export function MerchantOrdersScreen() {
   const { t } = useT();
@@ -74,29 +93,26 @@ export function MerchantOrdersScreen() {
   const all = orders.data ?? [];
   const counts = useMemo(() => {
     const c: Record<FilterKey, number> = { all: all.length, new: 0, active: 0, ready: 0, done: 0 };
-    for (const o of all) {
-      for (const f of FILTERS) if (f.key !== "all" && f.match(o.status)) c[f.key] += 1;
-    }
+    for (const o of all) for (const f of FILTERS) if (f.key !== "all" && f.match(o.status)) c[f.key] += 1;
     return c;
   }, [all]);
 
+  const todayCount = useMemo(() => all.filter((o) => isToday(o.created_at)).length, [all]);
   const activeFilter = FILTERS.find((f) => f.key === filter)!;
   const visible = useMemo(() => all.filter((o) => activeFilter.match(o.status)), [all, activeFilter]);
-  const pendingCount = counts.new;
-
   const isOpen = store.data?.is_open ?? false;
 
   return (
     <Screen padded={false} background="white">
       {/* رأس المتجر */}
       <View style={styles.header}>
-        <View style={styles.logoWrap}>
+        <View style={styles.logoRing}>
           {CLOUDINARY_ENABLED && store.data ? (
             <ImageUploadField
               value={store.data.logo_url}
               onChange={(url) => setLogo.mutate(url)}
               shape="circle"
-              size={48}
+              size={46}
               label=""
               folder="zdelivry/logos"
             />
@@ -108,11 +124,14 @@ export function MerchantOrdersScreen() {
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.storeName} numberOfLines={1}>{store.data?.name ?? "متجري"}</Text>
-          <View style={[styles.statePill, isOpen ? styles.statePillOn : styles.statePillOff]}>
-            <View style={[styles.stateDot, { backgroundColor: isOpen ? colors.success : colors.textFaint }]} />
-            <Text style={[styles.stateText, { color: isOpen ? colors.success : colors.textMuted }]}>
-              {isOpen ? "مفتوح الآن" : "مغلق"}
-            </Text>
+          <View style={styles.subRow}>
+            <View style={[styles.statePill, isOpen ? styles.statePillOn : styles.statePillOff]}>
+              <View style={[styles.stateDot, { backgroundColor: isOpen ? colors.success : colors.textFaint }]} />
+              <Text style={[styles.stateText, { color: isOpen ? colors.success : colors.textMuted }]}>
+                {isOpen ? "مفتوح الآن" : "مغلق"}
+              </Text>
+            </View>
+            <Text style={styles.todayText}>{todayCount} طلب اليوم</Text>
           </View>
         </View>
         <Switch
@@ -125,20 +144,12 @@ export function MerchantOrdersScreen() {
 
       {/* شريط التصفية بالعدّادات */}
       <View style={styles.filterBar}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterRow}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
           {FILTERS.map((f) => {
             const active = f.key === filter;
             const n = counts[f.key];
             return (
-              <Pressable
-                key={f.key}
-                onPress={() => setFilter(f.key)}
-                style={[styles.chip, active && styles.chipActive]}
-              >
+              <Pressable key={f.key} onPress={() => setFilter(f.key)} style={[styles.chip, active && styles.chipActive]}>
                 <Text style={[styles.chipText, active && styles.chipTextActive]}>{f.label}</Text>
                 {n > 0 ? (
                   <View style={[styles.chipCount, active && styles.chipCountActive]}>
@@ -161,13 +172,13 @@ export function MerchantOrdersScreen() {
           <RefreshControl refreshing={orders.isFetching && !orders.isLoading} onRefresh={() => orders.refetch()} tintColor={colors.primary} />
         }
         ListHeaderComponent={
-          pendingCount > 0 && filter !== "done" ? (
+          counts.new > 0 && filter !== "done" ? (
             <View style={styles.alertBanner}>
               <View style={styles.alertIcon}>
-                <Icon name="bell" size={16} color={colors.warning} />
+                <Icon name="flame" size={16} color={colors.warning} />
               </View>
               <Text style={styles.alertText}>
-                {pendingCount === 1 ? "طلب جديد بانتظار ردّك" : `${pendingCount} طلبات جديدة بانتظار ردّك`}
+                {counts.new === 1 ? "طلب جديد بانتظار ردّك" : `${counts.new} طلبات جديدة بانتظار ردّك`}
               </Text>
             </View>
           ) : null
@@ -208,21 +219,29 @@ function OrderCard({
   const actions = NEXT[order.status] ?? [];
   const isNew = order.status === "pending";
   const itemCount = order.items.reduce((s, i) => s + i.qty, 0);
-  const payIcon: IconName = order.payment_method === "card" ? "card" : "cash";
+  const sColor = colors.status[order.status];
+  const sSoft = sColor + "16";
+  const payIcon: IconName = order.payment_method === "card" ? "creditCard" : "cash";
   const payLabel = order.payment_method === "card" ? "بطاقة" : "نقداً";
 
   return (
     <View style={[styles.card, isNew && styles.cardNew]}>
+      {/* شريط الحالة الجانبي */}
+      <View style={[styles.accentBar, { backgroundColor: sColor }]} />
+
       {/* ترويسة البطاقة */}
       <View style={styles.cardHead}>
-        <View style={[styles.cardIcon, isNew && styles.cardIconNew]}>
-          <Icon name="receipt" size={18} color={isNew ? "#fff" : colors.accent} />
+        <View style={[styles.statusIcon, { backgroundColor: sSoft }]}>
+          <Icon name={STATUS_ICON[order.status]} size={20} color={sColor} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.orderId}>طلب #{order.id.slice(0, 8)}</Text>
-          <Text style={styles.orderMeta}>
-            {itemCount} عنصر · {timeAgo(order.created_at, t)}
-          </Text>
+          <Text style={styles.orderId} numberOfLines={1}>طلب #{order.id.slice(0, 8).toUpperCase()}</Text>
+          <View style={styles.metaRow}>
+            <Icon name="clock" size={12} color={colors.textFaint} />
+            <Text style={styles.orderMeta}>{timeAgo(order.created_at, t)}</Text>
+            <View style={styles.metaDot} />
+            <Text style={styles.orderMeta}>{itemCount} عنصر</Text>
+          </View>
         </View>
         <StatusBadge status={order.status} size="sm" />
       </View>
@@ -242,20 +261,20 @@ function OrderCard({
       {/* عنوان التسليم */}
       {order.delivery_details ? (
         <View style={styles.addrRow}>
-          <Icon name="location" size={15} color={colors.textMuted} />
+          <Icon name="mapPin" size={16} color={colors.textMuted} />
           <Text style={styles.addrText} numberOfLines={2}>{order.delivery_details}</Text>
         </View>
       ) : null}
 
-      {/* تذييل: المجموع + الدفع */}
+      {/* تذييل: الدفع + المجموع */}
       <View style={styles.foot}>
         <View style={styles.payChip}>
-          <Icon name={payIcon} size={13} color={colors.textMuted} />
+          <Icon name={payIcon} size={14} color={colors.textMuted} />
           <Text style={styles.payText}>{payLabel}</Text>
         </View>
         <View style={styles.totalWrap}>
           <Text style={styles.totalLabel}>الإجمالي</Text>
-          <PriceTag amount={Number(order.total)} size="md" />
+          <Text style={styles.totalValue}>{money(Number(order.total))}</Text>
         </View>
       </View>
 
@@ -274,7 +293,7 @@ function OrderCard({
                 pending && { opacity: 0.6 },
               ]}
             >
-              {!a.danger ? <Icon name="check" size={16} color="#fff" /> : null}
+              <Icon name={a.icon} size={17} color={a.danger ? colors.danger : "#fff"} />
               <Text style={[styles.actionText, a.danger ? styles.actionTextDanger : styles.actionTextPrimary]}>
                 {a.label}
               </Text>
@@ -286,6 +305,8 @@ function OrderCard({
   );
 }
 
+const ACCENT_SOFT = colors.accent + "14";
+
 const styles = StyleSheet.create({
   // رأس المتجر
   header: {
@@ -296,30 +317,38 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     paddingBottom: spacing.md,
   },
-  logoWrap: { width: 48, height: 48 },
+  logoRing: {
+    width: 54,
+    height: 54,
+    borderRadius: radii.pill,
+    borderWidth: 2,
+    borderColor: ACCENT_SOFT,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   logoFallback: {
-    width: 48,
-    height: 48,
+    width: 46,
+    height: 46,
     borderRadius: radii.pill,
     backgroundColor: ACCENT_SOFT,
     alignItems: "center",
     justifyContent: "center",
   },
-  storeName: { fontSize: fontSize.h3, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
+  storeName: { fontSize: fontSize.h2, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
+  subRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.sm, marginTop: 4 },
   statePill: {
     flexDirection: "row-reverse",
     alignItems: "center",
     gap: spacing.xs,
-    alignSelf: "flex-end",
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
     borderRadius: radii.pill,
-    marginTop: 3,
   },
   statePillOn: { backgroundColor: colors.successSoft },
   statePillOff: { backgroundColor: colors.surface },
   stateDot: { width: 6, height: 6, borderRadius: 3 },
   stateText: { fontSize: fontSize.caption + 1, fontWeight: fontWeight.bold },
+  todayText: { fontSize: fontSize.caption + 1, color: colors.textFaint, fontWeight: fontWeight.semibold },
 
   // شريط التصفية
   filterBar: { borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
@@ -332,11 +361,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: radii.pill,
     backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: "transparent",
   },
-  chipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
-  chipText: { fontSize: fontSize.small, fontWeight: fontWeight.semibold, color: colors.textMuted },
+  chipActive: { backgroundColor: colors.accent, ...shadows.accent },
+  chipText: { fontSize: fontSize.small, fontWeight: fontWeight.bold, color: colors.textMuted },
   chipTextActive: { color: "#fff" },
   chipCount: {
     minWidth: 18,
@@ -347,7 +374,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  chipCountActive: { backgroundColor: "rgba(255,255,255,0.25)" },
+  chipCountActive: { backgroundColor: "rgba(255,255,255,0.28)" },
   chipCountText: { fontSize: fontSize.caption, fontWeight: fontWeight.extrabold, color: colors.textMuted },
   chipCountTextActive: { color: "#fff" },
 
@@ -376,29 +403,33 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderRadius: radii.xl,
     padding: spacing.md,
+    paddingInlineStart: spacing.md + 6,
     gap: spacing.md,
     borderWidth: 1,
     borderColor: colors.borderSoft,
+    overflow: "hidden",
     ...shadows.sm,
   },
-  cardNew: { borderColor: colors.accent + "55", ...shadows.md },
+  cardNew: { ...shadows.md, borderColor: colors.accent + "44" },
+  accentBar: { position: "absolute", insetInlineStart: 0, top: 0, bottom: 0, width: 5 },
+
   cardHead: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.md },
-  cardIcon: {
-    width: 40, height: 40, borderRadius: radii.md,
-    backgroundColor: ACCENT_SOFT,
+  statusIcon: {
+    width: 44, height: 44, borderRadius: radii.md,
     alignItems: "center", justifyContent: "center",
   },
-  cardIconNew: { backgroundColor: colors.accent },
-  orderId: { fontSize: fontSize.body, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right" },
-  orderMeta: { fontSize: fontSize.caption + 1, color: colors.textMuted, textAlign: "right", marginTop: 2 },
+  orderId: { fontSize: fontSize.body, fontWeight: fontWeight.extrabold, color: colors.text, textAlign: "right", letterSpacing: 0.3 },
+  metaRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.xs, marginTop: 3 },
+  orderMeta: { fontSize: fontSize.caption + 1, color: colors.textMuted },
+  metaDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: colors.textFaint, marginHorizontal: 2 },
 
   // العناصر
   items: { gap: spacing.xs + 2 },
   itemRow: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.sm },
   qtyChip: {
-    minWidth: 30,
+    minWidth: 32,
     paddingHorizontal: spacing.xs,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: radii.sm,
     backgroundColor: ACCENT_SOFT,
     alignItems: "center",
@@ -432,13 +463,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.xs,
     backgroundColor: colors.surface,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 1,
     borderRadius: radii.pill,
   },
-  payText: { fontSize: fontSize.caption + 1, fontWeight: fontWeight.semibold, color: colors.textMuted },
-  totalWrap: { flexDirection: "row-reverse", alignItems: "center", gap: spacing.sm },
+  payText: { fontSize: fontSize.small, fontWeight: fontWeight.semibold, color: colors.textMuted },
+  totalWrap: { flexDirection: "row-reverse", alignItems: "baseline", gap: spacing.sm },
   totalLabel: { fontSize: fontSize.caption + 1, color: colors.textMuted },
+  totalValue: { fontSize: fontSize.h3, fontWeight: fontWeight.extrabold, color: colors.text },
 
   // الأزرار
   actions: { flexDirection: "row-reverse", gap: spacing.sm },
@@ -448,8 +480,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.xs,
-    height: 46,
-    borderRadius: radii.lg,
+    height: 48,
+    borderRadius: radii.pill,
   },
   actionPrimary: { backgroundColor: colors.accent, ...shadows.accent },
   actionDanger: { backgroundColor: colors.dangerSoft, flex: 0, paddingHorizontal: spacing.xl },
