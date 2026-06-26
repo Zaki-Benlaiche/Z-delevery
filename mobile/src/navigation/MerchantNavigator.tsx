@@ -1,7 +1,9 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useQuery } from "@tanstack/react-query";
 
 import { Icon, type IconName } from "../components/Icon";
+import { merchantsApi } from "../api/merchants";
 import { AccountScreen } from "../screens/AccountScreen";
 import { AboutScreen } from "../screens/AboutScreen";
 import { FeedbackScreen } from "../screens/FeedbackScreen";
@@ -26,6 +28,9 @@ function tabIcon(name: IconName, focused: IconName) {
 function MerchantTabs() {
   const { t } = useT();
   const bottomInset = useSafeAreaInsets().bottom;
+  // نوع المتجر يحدّد التبويبات: العيادة = طابور + حساب فقط (بلا منتجات/عروض)
+  const store = useQuery({ queryKey: ["my-merchant"], queryFn: merchantsApi.mine, retry: false });
+  const isClinic = store.data?.type === "clinic";
   return (
     <Tab.Navigator
       screenOptions={{
@@ -46,18 +51,25 @@ function MerchantTabs() {
       <Tab.Screen
         name="MerchantOrdersTab"
         component={MerchantOrdersScreen}
-        options={{ tabBarLabel: "الطلبات", tabBarIcon: tabIcon("receipt", "receiptFill") }}
+        options={{
+          tabBarLabel: isClinic ? "الطابور" : "الطلبات",
+          tabBarIcon: isClinic ? tabIcon("ticket", "ticket") : tabIcon("receipt", "receiptFill"),
+        }}
       />
-      <Tab.Screen
-        name="MerchantProductsTab"
-        component={MerchantProductsScreen}
-        options={{ tabBarLabel: "منتجاتي", tabBarIcon: tabIcon("bag", "bag") }}
-      />
-      <Tab.Screen
-        name="MerchantOffersTab"
-        component={MerchantOffersScreen}
-        options={{ tabBarLabel: "العروض", tabBarIcon: tabIcon("tag", "tag") }}
-      />
+      {!isClinic ? (
+        <Tab.Screen
+          name="MerchantProductsTab"
+          component={MerchantProductsScreen}
+          options={{ tabBarLabel: "منتجاتي", tabBarIcon: tabIcon("bag", "bag") }}
+        />
+      ) : null}
+      {!isClinic ? (
+        <Tab.Screen
+          name="MerchantOffersTab"
+          component={MerchantOffersScreen}
+          options={{ tabBarLabel: "العروض", tabBarIcon: tabIcon("tag", "tag") }}
+        />
+      ) : null}
       <Tab.Screen
         name="MerchantAccountTab"
         component={AccountScreen as React.ComponentType}
