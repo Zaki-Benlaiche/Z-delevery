@@ -11,7 +11,7 @@ type Dict = Record<string, string>;
 
 const ar: Dict = {
   // عام
-  "app.name": "Z-delivry",
+  "app.name": "Rserve-Vite",
   "app.tagline": "توصيلك أسرع وأقرب",
   "common.currency": "دج",
   "common.retry": "إعادة المحاولة",
@@ -147,7 +147,7 @@ const ar: Dict = {
   "orders.noneFilter": "لا طلبات في هذه الحالة",
 
   // الحساب
-  "account.welcome": "مرحباً بك في Z-delivry",
+  "account.welcome": "مرحباً بك في Rserve-Vite",
   "account.guestHint": "أنت تتصفّح كضيف — تصفّح المتاجر بحرّية، وسنحفظ رقمك تلقائياً عند أوّل طلب.",
   "account.haveAccount": "لديك حساب؟ سجّل الدخول",
   "account.loginCtaTitle": "تسجيل الدخول",
@@ -164,7 +164,7 @@ const ar: Dict = {
   "account.more": "حول الخدمة",
   "account.notifications": "الإشعارات",
   "account.about": "تعريف بالتطبيق",
-  "account.aboutText": "Z-delivry منصّة توصيل جزائرية تجمع المطاعم والمتاجر الطازجة والمواد الغذائية في مكان واحد، وتوصلها إليك بسرعة عبر فريق سائقينا.",
+  "account.aboutText": "Rserve-Vite منصّة توصيل جزائرية تجمع المطاعم والمتاجر الطازجة والمواد الغذائية في مكان واحد، وتوصلها إليك بسرعة عبر فريق سائقينا.",
   "account.feedback": "رأيك في الخدمة",
   "account.feedbackText": "يسعدنا رأيك! راسلنا على support@zdelivry.dz بملاحظاتك واقتراحاتك.",
   "account.guest": "ضيف",
@@ -176,7 +176,7 @@ const ar: Dict = {
   "account.merchant": "تاجر",
   "account.permTitle": "الإذن مطلوب",
   "account.permMsg": "اسمح بالوصول إلى الصور لاختيار صورة الملف.",
-  "account.memberTag": "عضو Z-delivry",
+  "account.memberTag": "عضو Rserve-Vite",
   "account.version": "الإصدار 1.0.0",
   "account.partnerSection": "كن شريكاً",
   "account.guestHeroTitle": "مرحباً بك!",
@@ -209,7 +209,7 @@ const ar: Dict = {
   "about.madeIn": "صُنع في الجزائر 🇩🇿",
 
   // رأيك
-  "feedback.prompt": "كيف تقيّم تجربتك مع Z-delivry؟",
+  "feedback.prompt": "كيف تقيّم تجربتك مع Rserve-Vite؟",
   "feedback.rate1": "سيّئ",
   "feedback.rate2": "مقبول",
   "feedback.rate3": "جيّد",
@@ -221,7 +221,7 @@ const ar: Dict = {
   "feedback.thanksTitle": "شكراً لك! 🙏",
   "feedback.thanksMsg": "رأيك يساعدنا على تحسين الخدمة باستمرار.",
   "feedback.done": "تمّ",
-  "feedback.emailSubject": "تقييم تطبيق Z-delivry",
+  "feedback.emailSubject": "تقييم تطبيق Rserve-Vite",
 
   // تتبّع الطلب
   "track.live": "● بثّ مباشر",
@@ -339,7 +339,7 @@ const ar: Dict = {
   "driver.deliveredMsg": "أحسنت! يمكنك استلام طلبٍ جديد",
   "driver.callError": "تعذّر الاتّصال",
   "driver.toggleError": "تعذّر التبديل",
-  "driver.joinTitle": "انضمّ إلى سائقي Z-delivry",
+  "driver.joinTitle": "انضمّ إلى سائقي Rserve-Vite",
   "driver.joinSub": "سجّل في خطوة واحدة وابدأ كسب المال من التوصيل في منطقتك",
   "driver.benefitEarnTitle": "أرباح فورية",
   "driver.benefitEarnSub": "تكسب رسوم كل توصيلة تنجزها",
@@ -382,12 +382,12 @@ const ar: Dict = {
   "connexion.phoneHint": "سنرسل لك رمز تأكيد عبر هذا الرقم",
 
   // الانضمام كشريك
-  "partner.section": "انضمّ إلى Z-delivry",
+  "partner.section": "انضمّ إلى Rserve-Vite",
   "partner.addStore": "أضف متجرك",
   "partner.addStoreSub": "ابدأ بيع منتجاتك واستقبل الطلبات",
   "partner.becomeDriver": "انضمّ للتوصيل",
   "partner.becomeDriverSub": "وصّل الطلبات بمركبتك واربح",
-  "partner.title": "انضمّ إلى Z-delivry",
+  "partner.title": "انضمّ إلى Rserve-Vite",
   "partner.subtitle": "اختر كيف تريد الانضمام إلى منصّتنا",
   "partner.tabStore": "متجر",
   "partner.tabDriver": "سائق",
@@ -417,7 +417,7 @@ const ar: Dict = {
 };
 
 const fr: Dict = {
-  "app.name": "Z-delivry",
+  "app.name": "Rserve-Vite",
   "app.tagline": "Votre livraison plus vite, plus proche",
   "common.currency": "DA",
   "common.retry": "Réessayer",
@@ -545,7 +545,7 @@ const fr: Dict = {
   "orders.itemCount": "{n} articles",
   "orders.noneFilter": "Aucune commande dans cette catégorie",
 
-  "account.welcome": "Bienvenue sur Z-delivry",
+  "account.welcome": "Bienvenue sur Rserve-Vite",
   "account.guestHint": "Vous naviguez en invité — explorez librement, nous enregistrerons votre numéro à la première commande.",
   "account.haveAccount": "Vous avez un compte ? Connectez-vous",
   "account.loginCtaTitle": "Se connecter",
@@ -562,7 +562,7 @@ const fr: Dict = {
   "account.more": "À propos",
   "account.notifications": "Notifications",
   "account.about": "À propos de l'app",
-  "account.aboutText": "Z-delivry est une plateforme de livraison algérienne qui réunit restaurants, magasins frais et épiceries en un seul endroit, livrés rapidement par nos livreurs.",
+  "account.aboutText": "Rserve-Vite est une plateforme de livraison algérienne qui réunit restaurants, magasins frais et épiceries en un seul endroit, livrés rapidement par nos livreurs.",
   "account.feedback": "Votre avis",
   "account.feedbackText": "Votre avis compte ! Écrivez-nous à support@zdelivry.dz.",
   "account.guest": "Invité",
@@ -574,7 +574,7 @@ const fr: Dict = {
   "account.merchant": "Commerçant",
   "account.permTitle": "Autorisation requise",
   "account.permMsg": "Autorisez l'accès aux photos pour choisir une image de profil.",
-  "account.memberTag": "Membre Z-delivry",
+  "account.memberTag": "Membre Rserve-Vite",
   "account.version": "Version 1.0.0",
   "account.partnerSection": "Devenir partenaire",
   "account.guestHeroTitle": "Bienvenue !",
@@ -605,7 +605,7 @@ const fr: Dict = {
   "about.rights": "Tous droits réservés",
   "about.madeIn": "Conçu en Algérie 🇩🇿",
 
-  "feedback.prompt": "Comment évaluez-vous votre expérience avec Z-delivry ?",
+  "feedback.prompt": "Comment évaluez-vous votre expérience avec Rserve-Vite ?",
   "feedback.rate1": "Mauvais",
   "feedback.rate2": "Passable",
   "feedback.rate3": "Bien",
@@ -617,7 +617,7 @@ const fr: Dict = {
   "feedback.thanksTitle": "Merci ! 🙏",
   "feedback.thanksMsg": "Votre avis nous aide à améliorer le service.",
   "feedback.done": "Terminé",
-  "feedback.emailSubject": "Avis sur l'app Z-delivry",
+  "feedback.emailSubject": "Avis sur l'app Rserve-Vite",
 
   "track.live": "● En direct",
   "track.offline": "○ Hors ligne",
@@ -732,7 +732,7 @@ const fr: Dict = {
   "driver.deliveredMsg": "Bravo ! Vous pouvez accepter une nouvelle commande",
   "driver.callError": "Impossible d'appeler",
   "driver.toggleError": "Échec du changement",
-  "driver.joinTitle": "Rejoignez les livreurs Z-delivry",
+  "driver.joinTitle": "Rejoignez les livreurs Rserve-Vite",
   "driver.joinSub": "Inscrivez-vous en une étape et commencez à gagner de l'argent en livrant dans votre région",
   "driver.benefitEarnTitle": "Gains immédiats",
   "driver.benefitEarnSub": "Gagnez les frais de chaque livraison effectuée",
@@ -773,12 +773,12 @@ const fr: Dict = {
   "connexion.cta": "Continuer",
   "connexion.phoneHint": "Un code de confirmation vous sera envoyé",
 
-  "partner.section": "Rejoignez Z-delivry",
+  "partner.section": "Rejoignez Rserve-Vite",
   "partner.addStore": "Ajoutez votre magasin",
   "partner.addStoreSub": "Vendez vos produits et recevez des commandes",
   "partner.becomeDriver": "Devenez livreur",
   "partner.becomeDriverSub": "Livrez avec votre véhicule et gagnez",
-  "partner.title": "Rejoignez Z-delivry",
+  "partner.title": "Rejoignez Rserve-Vite",
   "partner.subtitle": "Choisissez comment rejoindre la plateforme",
   "partner.tabStore": "Magasin",
   "partner.tabDriver": "Livreur",

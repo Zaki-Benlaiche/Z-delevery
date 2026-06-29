@@ -1,4 +1,4 @@
-"""نقطة دخول تطبيق Z-delivry — Backend"""
+"""نقطة دخول تطبيق Rserve-Vite — Backend"""
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -171,7 +171,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
-    description="منصّة توصيل الطلبات — Z-delivry API",
+    description="منصّة توصيل الطلبات — Rserve-Vite API",
     lifespan=lifespan,
 )
 

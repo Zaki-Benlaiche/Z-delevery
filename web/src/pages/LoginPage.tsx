@@ -49,7 +49,7 @@ export function LoginPage() {
   return (
     <div style={styles.wrap}>
       <div style={styles.card}>
-        <h1 style={styles.brand}>Z-delivry · لوحة التاجر</h1>
+        <h1 style={styles.brand}>Rserve-Vite · لوحة التاجر</h1>
         <p style={styles.tag}>أدر متجرك واستقبل الطلبات</p>
 
         {step === "phone" ? (

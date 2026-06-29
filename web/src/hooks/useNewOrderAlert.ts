@@ -83,9 +83,9 @@ function showNotification(count: number): void {
   if (typeof Notification === "undefined" || Notification.permission !== "granted")
     return;
   try {
-    new Notification("طلب جديد · Z-delivry", {
+    new Notification("طلب جديد · Rserve-Vite", {
       body: count === 1 ? "وصلك طلب جديد!" : `وصلتك ${count} طلبات جديدة!`,
-      icon: "/favicon.svg",
+      icon: "/favicon.png",
       tag: "z-new-order",
     });
   } catch {

@@ -35,9 +35,9 @@ export function Layout({ children }: { children: ReactNode }) {
     <div style={styles.shell}>
       <aside style={styles.sidebar}>
         <div style={styles.brand}>
-          <div style={styles.logoBadge}>Z</div>
+          <div style={styles.logoBadge}>R</div>
           <div>
-            <div style={styles.brandTitle}>Z-delivry</div>
+            <div style={styles.brandTitle}>Rserve-Vite</div>
             <div style={styles.brandSub}>لوحة التاجر</div>
           </div>
         </div>

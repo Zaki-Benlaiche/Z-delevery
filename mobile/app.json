@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Z-delivry",
+    "name": "Rserve-Vite",
     "slug": "z-delivry",
     "version": "0.1.0",
     "orientation": "portrait",
@@ -17,10 +17,9 @@
     "android": {
       "package": "com.zdelivry.app",
       "adaptiveIcon": {
-        "backgroundColor": "#FFFFFF",
+        "backgroundColor": "#02050F",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundImage": "./assets/android-icon-background.png"
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [

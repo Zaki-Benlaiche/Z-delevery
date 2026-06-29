@@ -61,7 +61,7 @@ export function LoginScreen({ navigation }: Props) {
               <Text style={styles.logoEmoji}>🛵</Text>
             </View>
 
-            <Text style={styles.brand}>Z-delivry</Text>
+            <Text style={styles.brand}>Rserve-Vite</Text>
             <Text style={styles.tag}>توصيلك أسرع وأقرب</Text>
           </View>
 

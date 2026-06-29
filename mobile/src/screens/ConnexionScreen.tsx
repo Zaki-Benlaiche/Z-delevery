@@ -80,7 +80,7 @@ export function ConnexionScreen({ navigation, route }: Props) {
             <View style={styles.logoBadge}>
               <Icon name={heroIcon} size={40} color="#fff" />
             </View>
-            <Text style={styles.brand}>Z-delivry</Text>
+            <Text style={styles.brand}>Rserve-Vite</Text>
             <Text style={styles.tag}>{t("app.tagline")}</Text>
           </View>
 
