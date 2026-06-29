@@ -101,5 +101,5 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   main: { overflowY: "auto", background: colors.canvas },
-  content: { padding: 32, maxWidth: 1100, margin: "0 auto" },
+  content: { padding: 32, maxWidth: 1280, margin: "0 auto" },
 };

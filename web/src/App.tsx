@@ -12,7 +12,9 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { SetupPage } from "./pages/SetupPage";
 import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
 import { AdminMerchantsPage } from "./pages/admin/AdminMerchantsPage";
+import { AdminMerchantDetailPage } from "./pages/admin/AdminMerchantDetailPage";
 import { AdminDriversPage } from "./pages/admin/AdminDriversPage";
+import { AdminDriverDetailPage } from "./pages/admin/AdminDriverDetailPage";
 import { AdminOrdersPage } from "./pages/admin/AdminOrdersPage";
 
 /** يحرس الطرق الخاصّة بالتاجر — يعيد التوجيه حسب حالة المصادقة والمتجر */
@@ -34,7 +36,9 @@ function AdminArea() {
     <Routes>
       <Route path="/admin" element={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
       <Route path="/admin/merchants" element={<AdminLayout><AdminMerchantsPage /></AdminLayout>} />
+      <Route path="/admin/merchants/:id" element={<AdminLayout><AdminMerchantDetailPage /></AdminLayout>} />
       <Route path="/admin/drivers" element={<AdminLayout><AdminDriversPage /></AdminLayout>} />
+      <Route path="/admin/drivers/:id" element={<AdminLayout><AdminDriverDetailPage /></AdminLayout>} />
       <Route path="/admin/orders" element={<AdminLayout><AdminOrdersPage /></AdminLayout>} />
       <Route path="*" element={<Navigate to="/admin" replace />} />
     </Routes>
